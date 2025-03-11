@@ -14,6 +14,7 @@ class Customer extends Model
         'phone',
         'district',
         'customer_id',
+        'branch_id',
     ];
 
     public function sales()
@@ -21,10 +22,21 @@ class Customer extends Model
         return $this->hasMany(Sale::class);
     }
 
-    public static function generateCustomerId($district)
+    public function branch()
     {
-       $districtcode = [
+        return $this->belongsTo(Branch::class);
+    }
 
-       ];
+    public static function generateCustomerId($branchName)
+    {
+       $branch = Branch::where('name', $branchName)->first();
+
+       $prefix = $branch ? $branch->code : 'UN';
+
+       $lastCustomer = self::where('customer_id', 'Like', $prefix . '%')->latest()->first();
+
+       $nextId = $lastCustomer ? ((int) substr($lastCustomer->customer_id, strlen($prefix))) + 1 : 1;
+
+       return $prefix . str_pad($nextId, 4, '0', STR_PAD_LEFT);
     }
 }

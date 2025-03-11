@@ -8,4 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'buying_price',
+        'selling_price',
+        'stock_quantity',
+        'branch_id',
+    ];
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

@@ -46,6 +46,11 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'seller_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -56,9 +61,4 @@ class User extends Authenticatable
         return $this->role === 'worker';
     }
 
-    public function sales()
-    {
-        return $this->hasMany(Sale::class, 'seller_id');
-    }
-    
 }

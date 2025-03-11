@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->string('district');
             $table->string('customer_id')->unique();
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

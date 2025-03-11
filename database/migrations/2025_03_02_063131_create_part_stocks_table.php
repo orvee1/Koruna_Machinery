@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('part_stocks', function (Blueprint $table) {
             $table->id();
+            $table->string('product_name');
+            $table->decimal('buy_value', 10, 2);
+            $table->integer('quantity')->default(0);
+            $table->decimal('amount', 10, 2);
+            $table->decimal('sell_value', 10, 2);
+            $table->decimal('total_profit', 10, 2);
             $table->timestamps();
         });
     }
