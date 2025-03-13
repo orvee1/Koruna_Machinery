@@ -58,21 +58,21 @@ class AdminController extends Controller
     /**
      * Delete a Worker or Admin (Admin Cannot Delete Themselves)
      */
-    public function deleteUser($id)
-    {
-        $user = User::findOrFail($id);
+    // public function deleteUser($id)
+    // {
+    //     $user = User::findOrFail($id);
 
-        // Prevent deleting self
-        if ($user->id === auth()->id()) {
-            return redirect()->route('admin.users')->with('error', 'You cannot delete your own account.');
-        }
+    //     // Prevent deleting self
+    //     if ($user->id === auth()->id()) {
+    //         return redirect()->route('admin.users')->with('error', 'You cannot delete your own account.');
+    //     }
 
-        // Prevent deleting non-admin/worker roles
-        if (!in_array($user->role, ['admin', 'worker'])) {
-            return redirect()->route('admin.users')->with('error', 'Invalid user role.');
-        }
+    //     // Prevent deleting non-admin/worker roles
+    //     if (!in_array($user->role, ['admin', 'worker'])) {
+    //         return redirect()->route('admin.users')->with('error', 'Invalid user role.');
+    //     }
 
-        $user->delete();
-        return redirect()->route('admin.users')->with('success', ucfirst($user->role) . ' deleted successfully.');
-    }
+    //     $user->delete();
+    //     return redirect()->route('admin.users')->with('success', ucfirst($user->role) . ' deleted successfully.');
+    // }
 }
