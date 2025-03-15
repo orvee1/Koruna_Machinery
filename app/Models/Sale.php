@@ -30,4 +30,26 @@ class Sale extends Model
     {
         return $this->belongsTo(User::class, 'seller_id');
     }
+
+    public function adjustStocOnSale($quantity)
+    {
+        $product = $this->product;
+        $stock = Stock::where('product_id', $product->id)->first();
+        if($stock)
+        {
+            $stock->decreaseStock($quantity);
+        }
+        $product->adjustStockQuantity($quantity);
+    }
+
+    public function adjustStockOnReturn($quantity)
+    {
+        $product = $this->product;
+        $stock = Stock::where('product_id', $product->id)->first();
+        if($stock)
+        {
+            $stock->increaseStock($quantity);
+        }
+        $product->restoreStockQuantity($quantity);
+    }
 }
