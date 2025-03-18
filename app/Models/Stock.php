@@ -24,4 +24,16 @@ class Stock extends Model
     {
         return $this->hasOneThrough(Branch::class, Product::class, 'id', 'id', 'product_id', 'branch_id');
     }
+
+    public function decreaseStock($quantity)
+    {
+        $this->quantity -= $quantity;
+        $this->save();
+    }
+
+    public function increaseStock($quantity)
+    {
+        $this->quantity += $quantity;
+        $this->save();
+    }
 }

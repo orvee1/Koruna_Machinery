@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('seller_id')->constrained('users')->onDelete('cascade');
+            $table->integer('quantity');
             $table->decimal('total_amount', 10, 2);
             $table->decimal('paid_amount', 10, 2)->default(0.00);
             $table->decimal('due_amount', 10, 2)->storedAs('total_amount - paid_amount');

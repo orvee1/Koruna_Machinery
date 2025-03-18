@@ -26,4 +26,17 @@ class Product extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+    
+    public function adjustStockQuantity($quantity)
+    {
+        $this->stock_quantity -= $quantity;
+        $this->save();
+    }
+
+    public function restoreStockQuantity($quantity)
+    {
+        $this->stock_quantity += $quantity;
+        $this->save();
+    }
+
 }
