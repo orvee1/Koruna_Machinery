@@ -14,7 +14,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'checkRole:admin'])->group(function () {
-    // Branch routes
-    Route::resource('admin/branches', BranchController::class);
+// Route::middleware(['auth', 'checkRole:admin'])->group(function () {
+//     // Branch routes
+//     Route::resource('admin/branches', BranchController::class);
+// });
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('branches', BranchController::class);
 });
