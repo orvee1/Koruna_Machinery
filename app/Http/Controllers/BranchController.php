@@ -24,13 +24,13 @@ class BranchController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:5|unique:branches,code', 
+            // 'code' => 'required|string|max:5|unique:branches,code', 
         ]);
 
       
         Branch::create([
             'name' => $request->name,
-            'code' => $request->code,
+            // 'code' => $request->code,
         ]);
 
         return redirect()->route('admin.branches.index')->with('success', 'Branch created successfully!');
@@ -53,13 +53,13 @@ class BranchController extends Controller
         // Validation
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:5|unique:branches,code,' . $id, // Ignore uniqueness for the current branch
+            // 'code' => 'required|string|max:5|unique:branches,code,' . $id, // Ignore uniqueness for the current branch
         ]);
 
         $branch = Branch::findOrFail($id);
         $branch->update([
             'name' => $request->name,
-            'code' => $request->code,
+            // 'code' => $request->code,
         ]);
 
         return redirect()->route('admin.branches.index')->with('success', 'Branch updated successfully!');

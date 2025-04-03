@@ -21,9 +21,9 @@
                     <td>{{ $branch->code }}</td>
                     <td>
                         <a href="{{ route('admin.branches.edit', $branch->id) }}" class="btn btn-warning">Edit</a>
-                        <form action="{{ route('admin.branches.destroy', $branch->id) }}" method="POST" style="display:inline;">
+                        {{-- <form action="{{ route('admin.branches.destroy', $branch->id) }}" method="POST" style="display:inline;">
                             @csrf
-                        </form>
+                        </form> --}}
                     </td>
                 </tr>
             @endforeach

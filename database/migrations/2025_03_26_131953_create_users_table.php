@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('role', ['admin', 'worker','manager'])->default('worker');
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->string('worker_id')->unique()->nullable();
+            $table->string('manager_id')->unique()->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
