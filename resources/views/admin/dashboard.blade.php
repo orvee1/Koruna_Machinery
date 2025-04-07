@@ -41,18 +41,16 @@
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->phone }}</td>
                     <td>{{ ucfirst($user->role) }}</td>
-                    <td>{{ $user->branch->name }}</td>
+                    <td>{{ $user->branch->name ?? 'No Branch' }}</td>
                     <td>
                         <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                        </form>
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
+
+    <!-- Pagination Links -->
+    {{-- {{ $users->links() }}  <!-- This will show pagination links --> --}}
 </div>
 @endsection
