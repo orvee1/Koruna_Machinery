@@ -79,6 +79,7 @@
                 <div class="mb-3">
                     <label for="branch_id" class="form-label">Branch</label>
                     <select class="form-select @error('branch_id') is-invalid @enderror" id="branch_id" name="branch_id" required>
+                        <option value="" @if(old('branch') === '') selected @endif>Select Branch</option> 
                         <option value="" @if(old('branch_id') === '') selected @endif>No Branch</option> <!-- Default for admin -->
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}" @if(old('branch_id') == $branch->id) selected @endif>{{ $branch->name }}</option>

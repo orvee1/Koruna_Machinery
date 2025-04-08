@@ -47,6 +47,18 @@ class Branch extends Model
         return $this->hasMany(Product::class);
     }
 
+    // One-to-many relationship with PartStocks through Products
+    public function partStocks()
+    {
+        return $this->hasManyThrough(PartStock::class, Product::class);
+    }
+
+    // One-to-many relationship with sales
+    public function sale()
+    {
+        return $this->hasMany(Sale::class);
+    }
+
     // One-to-many relationship with customers
     public function customer()
     {

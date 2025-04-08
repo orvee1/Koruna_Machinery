@@ -61,18 +61,33 @@ class AdminController extends Controller
   
     public function updateUser(Request $request, User $user)
     {
+      
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'required|unique:users,phone,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id, 
+            'phone' => 'required|unique:users,phone,' . $user->id, 
+            'password' => 'nullable|string|min:6|confirmed', 
+            'password_confirmation' => 'nullable|string|min:6',
             'role' => 'required|in:admin,worker,manager',
-            'branch_id' => 'nullable|exists:branches,id',
+            'branch_id' => 'nullable|exists:branches,id', 
         ]);
-
+    
+       
+        if ($request->has('password') && $request->password) {
+            $user->password = bcrypt($request->password);
+        }
+    
+        
+        if ($request->role === 'admin') {
+            $request->merge(['branch_id' => null]);
+        }
+    
+       
         $user->update($request->all());
-
+    
         return redirect()->route('admin.dashboard')->with('success', 'User updated successfully!');
     }
+    
 
    
 }

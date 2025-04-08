@@ -28,4 +28,17 @@ class Product extends Model
     {
         return $this->hasMany(Stock::class);
     }
+
+    // Relationship with part stocks
+    public function partStock()
+    {
+        return $this->hasMany(PartStock::class);
+    }
+    
+    // Method to adjust stock for the product
+    public function adjustStockQuantity($quantity)
+    {
+        $this->stock_quantity -= $quantity;
+        $this->save();
+    }
 }
