@@ -7,7 +7,7 @@
     <table class="table">
         <thead>
             <tr>
-                <th>#</th>
+                <th>SL No</th>
                 <th>Name</th>
                 <th>Code</th>
                 <th>Actions</th>
@@ -21,6 +21,7 @@
                     <td>{{ $branch->code }}</td>
                     <td>
                         <a href="{{ route('admin.branches.edit', $branch->id) }}" class="btn btn-warning">Edit</a>
+                        <a href="{{ route('admin.branches.show', $branch->id) }}" class="btn btn-info btn-sm me-2">Show</a>
                         {{-- <form action="{{ route('admin.branches.destroy', $branch->id) }}" method="POST" style="display:inline;">
                             @csrf
                         </form> --}}

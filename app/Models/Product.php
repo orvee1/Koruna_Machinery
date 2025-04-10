@@ -35,31 +35,15 @@ class Product extends Model
         return $this->hasMany(PartStock::class);
     }
     
-    // Method to adjust stock for the product
-    //     public function adjustStockQuantity($quantity)
-    // {
-    //     if ($this->stock_quantity >= $quantity) {
-    //         $this->stock_quantity -= $quantity;
-    //         $this->save();
-    //     } else {
-    //         // Handle the case where there's not enough stock
-    //         throw new \Exception("Not enough stock available.");
-    //     }
-    // }
-
-    //     public function totalStockAvailable()
-    // {
-    //     $partStock = $this->partStock->sum('quantity');
-    //     return $this->stock_quantity + $partStock;
-    // }
 
     public function calculateTotalPurchaseAmount($buying_price, $stock_quantity)
     {
-        // Total cost of the purchased products (quantity * purchase price)
-        $this->total_purchase_amount = $this->$buying_price * $stock_quantity;
+        $this->buying_price = $buying_price;
+        $this->stock_quantity = $stock_quantity;
+        $this->total_purchase_amount = $buying_price * $stock_quantity;
         $this->save();
     }
-
+    
     public function updatePayment($amount)
     {
         $this->paid_amount += $amount;

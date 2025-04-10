@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('branches', BranchController::class);
+    Route::get('/admin/branches/{branch}', [BranchController::class, 'show'])->name('admin.branches.show');
 });
 
 

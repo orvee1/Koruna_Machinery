@@ -43,6 +43,7 @@ class CustomerController extends Controller
     {
       
         $customer->load('branch'); 
+        
 
         return view('admin.customers.show', compact('customer'));
     }

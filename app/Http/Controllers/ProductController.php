@@ -36,20 +36,23 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+       $product = $request->validate([
             'name' => 'required|string|max:255',
             'buying_price' => 'required|numeric',
             'selling_price' => 'required|numeric',
             'stock_quantity' => 'required|integer',
             'branch_id' => 'required|exists:branches,id',
         ]);
-
+    
+        // Create the product
         $product = Product::create($request->all());
-
-        $product->calculateTotalPurchaseAmount($request->stock_quantity);
-
+    
+        // Calculate the total purchase amount after product creation
+        $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
+    
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
+    
 
     /**
      * Show the form for editing the specified product.
@@ -64,21 +67,24 @@ class ProductController extends Controller
      * Update the specified product in storage.
      */
     public function update(Request $request, Product $product)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'buying_price' => 'required|numeric',
-            'selling_price' => 'required|numeric',
-            'stock_quantity' => 'required|integer',
-            'branch_id' => 'required|exists:branches,id',
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'buying_price' => 'required|numeric',
+        'selling_price' => 'required|numeric',
+        'stock_quantity' => 'required|integer',
+        'branch_id' => 'required|exists:branches,id',
+    ]);
 
-        $product = Product::create($request->all());
+    // Update the product
+    $product->update($request->all());
 
-        $product->calculateTotalPurchaseAmount($request->stock_quantity);
+    // Recalculate the total purchase amount after product update
+    $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
-    }
+    return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
+}
+
 
 
 
