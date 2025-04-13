@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('part_stocks', function (Blueprint $table) {
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->id();
             $table->string('product_name');
             $table->decimal('buy_value', 10, 2);
