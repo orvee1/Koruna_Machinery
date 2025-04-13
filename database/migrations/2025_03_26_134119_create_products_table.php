@@ -19,7 +19,6 @@ return new class extends Migration
             $table->integer('stock_quantity')->default(0);
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->decimal('total_purchase_amount', 10, 2)->default(0);  
-            $table->decimal('paid_amount', 10, 2)->default(0);
             $table->timestamps();
         });
     }
