@@ -40,7 +40,7 @@ class ProductController extends Controller
        $product = $request->validate([
             'name' => 'required|string|max:255',
             'buying_price' => 'required|numeric',
-            'selling_price' => 'required|numeric',
+            'selling_price' => 'nullable|numeric',
             'stock_quantity' => 'required|integer',
             'branch_id' => 'required|exists:branches,id',
         ]);

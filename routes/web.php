@@ -3,7 +3,9 @@
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PartStockController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockController;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
 
@@ -62,3 +64,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');  // Update the product
     Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('admin.products.updatePayment');
     // Route::post('products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('admin.products.adjustStock');
+
+    // Stock Routes
+    Route::get('/admin/stocks', [StockController::class, 'index'])->name('admin.stocks.index');  // List all stock entries
+    Route::get('/admin/stocks/create', [StockController::class, 'create'])->name('admin.stocks.create');  // Show the form to create a new stock entry
+    Route::post('/admin/stocks', [StockController::class, 'store'])->name('admin.stocks.store');  // Store a new stock entry
+    Route::get('/admin/stocks/{stock}', [StockController::class, 'show'])->name('admin.stocks.show');  // Show a specific stock entry's details
+    Route::get('/admin/stocks/{stock}/edit', [StockController::class, 'edit'])->name('admin.stocks.edit');  // Edit an existing stock entry
+    Route::put('/admin/stocks/{stock}', [StockController::class, 'update'])->name('admin.stocks.update');  // Update the stock entry
+    Route::delete('/admin/stocks/{stock}', [StockController::class, 'destroy'])->name('admin.stocks.destroy');  // Delete a stock entry
+
+    // Part Stock Routes
+    Route::get('/admin/partstocks', [PartStockController::class, 'index'])->name('admin.partstocks.index');  // List all part stock entries
+    Route::get('/admin/partstocks/create', [PartStockController::class, 'create'])->name('admin.partstocks.create');  // Show the form to create a new part stock entry
+    Route::post('/admin/partstocks', [PartStockController::class, 'store'])->name('admin.partstocks.store');  // Store a new part stock entry
+    Route::get('/admin/partstocks/{partStock}', [PartStockController::class, 'show'])->name('admin.partstocks.show');  // Show a specific part stock entry's details
+    Route::get('/admin/partstocks/{partStock}/edit', [PartStockController::class, 'edit'])->name('admin.partstocks.edit');  // Edit an existing part stock entry
+    Route::put('/admin/partstocks/{partStock}', [PartStockController::class, 'update'])->name('admin.partstocks.update');  // Update the part stock entry

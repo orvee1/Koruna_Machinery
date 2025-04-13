@@ -15,11 +15,11 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->id();
             $table->string('product_name');
-            $table->decimal('buy_value', 10, 2);
+            $table->float('buy_value', 10, 2);
             $table->integer('quantity')->default(0);
-            $table->decimal('amount', 10, 2);
-            $table->decimal('sell_value', 10, 2);
-            $table->decimal('total_profit', 10, 2);
+            $table->float('amount', 10, 2);
+            $table->float('sell_value', 10, 2);
+            $table->float('total_profit', 10, 2);
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->timestamps();
         });

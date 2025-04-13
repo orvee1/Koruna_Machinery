@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\PartStock;
 use App\Models\Product;
+use App\Models\Sale;
 use Illuminate\Http\Request;
 
 class BranchController extends Controller
@@ -49,8 +51,8 @@ class BranchController extends Controller
         // Get all related data for the branch
         $customers = Customer::where('branch_id', $branch->id)->get();  
         $products = Product::where('branch_id', $branch->id)->get();    
-        $sales = $branch->sale;         
-        $partStocks = $branch->partStocks; 
+        $sales = Sale::where('branch_id', $branch->id)->get();         
+        $partStocks = PartStock::where('branch_id', $branch->id)->get(); 
         // Calculate total income and expense
         $totalIncome = $sales->sum('total_amount');
         $totalExpense = $partStocks->sum('amount'); // Sum of all part stocks (buying price)

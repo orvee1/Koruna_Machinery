@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,16 +9,18 @@ class PartStock extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_name', 'buy_value', 'quantity', 'amount', 'sell_value', 'total_profit', 'product_id'
+        'product_name', 'buy_value', 'quantity', 'amount', 'sell_value', 'total_profit', 'product_id', 'branch_id'
     ];
 
+    // Relationship with product
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
+    // Relationship with branch
     public function branch()
     {
-        return $this->belongsToThrough(Branch::class, Product::class);
+        return $this->belongsTo(Branch::class);
     }
 }

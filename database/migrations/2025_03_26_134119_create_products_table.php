@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->decimal('buying_price', 10, 2);
-            $table->decimal('selling_price', 10, 2);
+            $table->decimal('selling_price', 10, 2)->nullable();
             $table->integer('stock_quantity')->default(0);
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->decimal('total_purchase_amount', 10, 2)->default(0);  
