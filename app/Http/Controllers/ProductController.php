@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Branch;
+use App\Models\ProductPayment;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -106,10 +107,23 @@ class ProductController extends Controller
     public function updatePayment(Product $product, Request $request)
     {
         $request->validate([
-            'payment_amount' => 'required|numeric|min:1',
+            'paid_amount' => 'required|numeric|min:1',
+            'payment_date' => 'required|date',
         ]);
 
+        $productPayment = new ProductPayment([
+            'product_id' => $product->id,
+            'paid_amount' => $request->payment_amount,
+            'payment_date' => $request->payment_date,
+        ]);
+
+        $productPayment->save();
+
+        $product->paid_amount += $request->payment_amount;
+        $product->save();
         $product->updatePayment($request->payment_amount);
+        $product->remainingBalance();
+        $product->save();
 
         return back()->with('success', 'Payment updated successfully.');
     }
