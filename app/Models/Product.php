@@ -34,6 +34,11 @@ class Product extends Model
     {
         return $this->hasMany(PartStock::class);
     }
+
+    public function payments()
+    {
+        return $this->hasMany(ProductPayment::class);
+    }
     
 
     public function calculateTotalPurchaseAmount($buying_price, $stock_quantity)
@@ -41,12 +46,6 @@ class Product extends Model
         $this->buying_price = $buying_price;
         $this->stock_quantity = $stock_quantity;
         $this->total_purchase_amount = $buying_price * $stock_quantity;
-        $this->save();
-    }
-    
-    public function updatePayment($amount)
-    {
-        $this->paid_amount += $amount;
         $this->save();
     }
 

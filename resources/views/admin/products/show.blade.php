@@ -54,9 +54,9 @@
     <form action="{{ route('admin.products.updatePayment', $product->id) }}" method="POST">
         @csrf
         <div class="form-group mb-3">
-            <label for="payment_amount">Payment Amount</label>
-            <input type="number" id="payment_amount" name="payment_amount" class="form-control @error('payment_amount') is-invalid @enderror" value="{{ old('payment_amount') }}" required min="1">
-            @error('payment_amount')
+            <label for="paid_amount">Paid Amount</label>
+            <input type="number" id="paid_amount" name="paid_amount" class="form-control @error('paid_amount') is-invalid @enderror" value="{{ old('paid_amount') }}" required min="1">
+            @error('paid_amount')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>

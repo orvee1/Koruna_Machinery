@@ -110,29 +110,29 @@ class ProductController extends Controller
             'paid_amount' => 'required|numeric|min:1',
             'payment_date' => 'required|date',
         ]);
-
-        $productPayment = new ProductPayment([
+    
+       
+        $product_payment = new ProductPayment([
             'product_id' => $product->id,
-            'paid_amount' => $request->payment_amount,
+            'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
         ]);
-
-        $productPayment->save();
-
-        $product->paid_amount += $request->payment_amount;
+    
+        $product_payment->save();
+        
+        $product->paid_amount += $request->paid_amount;
         $product->save();
-        $product->updatePayment($request->payment_amount);
-        $product->remainingBalance();
-        $product->save();
-
+    
         return back()->with('success', 'Payment updated successfully.');
     }
+    
 
     /**
      * Show the details of a specific product.
      */
     public function show(Product $product)
     {
-        return view('admin.products.show', compact('product'));
+        $payments = $product->payments()->orderBy('payment_date', 'desc')->get();
+        return view('admin.products.show', compact('product','payments'));
     }
 }

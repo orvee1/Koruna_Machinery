@@ -17,14 +17,4 @@ class ProductPayment extends Model
         return $this->belongsTo(Product::class);
     }
 
-    // public function updatePayment($amount)
-    // {
-    //     $this->paid_amount += $amount;
-    //     $this->save();
-    // }
-
-    // public function remainingBalance()
-    // {
-    //     return $this->total_purchase_amount - $this->paid_amount;
-    // }
 }
