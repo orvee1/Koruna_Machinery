@@ -33,7 +33,7 @@ class PartStockController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+       $partStock = $request->validate([
             'product_name' => 'required|string|max:255',
             'buy_value' => 'required|numeric',
             'quantity' => 'required|integer|min:1',
@@ -41,24 +41,13 @@ class PartStockController extends Controller
             'product_id' => 'required|exists:products,id',
             'branch_id' => 'required|exists:branches,id',
         ]);
+
+        $partStock = PartStock::create($request->all());
+
     
-        // Calculate the amount and total profit automatically
-        $amount = $request->buy_value * $request->quantity;
-        $total_profit = ($request->sell_value - $request->buy_value) * $request->quantity;
-    
-        // Prepare data for PartStock creation
-        $data = $request->all();
-        $data['amount'] = $amount;
-        $data['total_profit'] = $total_profit;
-    
-        // Create the part stock
-        $partStock = PartStock::create($data);
-    
-        // Update the stock quantity of the product
-        $product = $partStock->product;
-        $product->stock_quantity += $request->quantity;
-        $product->save();
-    
+        // Calculate the total purchase amount after part stock creation
+        $partStock->calculateTotalPurchaseAmount($request->buy_value, $request->quantity);
+        
         // Redirect to the index with a success message
         return redirect()->route('admin.partstocks.index')->with('success', 'Part stock added successfully.');
     }
@@ -88,22 +77,27 @@ class PartStockController extends Controller
         'branch_id' => 'required|exists:branches,id',
     ]);
 
-    // Before updating, adjust the stock quantity of the product
-    $product = $partStock->product;
-    $product->stock_quantity -= $partStock->quantity; // Remove old quantity
-    $product->stock_quantity += $request->quantity; // Add new quantity
-    $product->save();
+    $partStock->update($request->all());
 
-    // Recalculate amount and total profit for the updated data
-    $amount = $request->buy_value * $request->quantity;
-    $total_profit = ($request->sell_value - $request->buy_value) * $request->quantity;
-
-    // Update part stock with the new values
-    $partStock->update(array_merge($request->all(), ['amount' => $amount, 'total_profit' => $total_profit]));
+    $partStock->calculateTotalPurchaseAmount($request->buy_value, $request->quantity);
 
     return redirect()->route('admin.partstocks.index')->with('success', 'Part stock updated successfully.');
 }
 
+public function calculateTotalPurchase(Product $product, Request $request)
+{
+    $request->validate([
+        'quantity' => 'required|integer|min:1',
+        'buy_value' => 'required|numeric',
+    ]);
+
+    $product->buy_value = $request->buy_value;
+    $product->quantity = $request->quantity;
+    $product->save();
+    $product->calculateTotalPurchaseAmount($request->buy_value, $request->quantity);
+
+    return back()->with('success', 'Total purchase amount updated successfully.');
+}
 
    
     /**

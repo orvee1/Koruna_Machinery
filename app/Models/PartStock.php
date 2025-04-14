@@ -23,4 +23,24 @@ class PartStock extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function calculateTotalPurchaseAmount($buy_value, $quantity)
+    {
+        $this->buy_value = $buy_value;
+        $this->quantity = $quantity;
+        $this->total_purchase_amount = $buy_value * $quantity;
+        $this->save();
+    }
+
+    public function calculateAmountAndProfit()
+    {
+        // Calculate the total amount based on buying value and quantity
+        $this->amount = $this->buy_value * $this->quantity;
+
+        // Calculate the total profit based on selling value and buying value
+        $this->total_profit = ($this->sell_value - $this->buy_value) * $this->quantity;
+
+        // Save the values in the database
+        $this->save();
+    }
 }

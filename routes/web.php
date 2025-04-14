@@ -3,8 +3,12 @@
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DepositHistoryController;
+use App\Http\Controllers\InvestmentHistoryController;
+use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\PartStockController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StockController;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
@@ -81,3 +85,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/admin/partstocks/{partStock}', [PartStockController::class, 'show'])->name('admin.partstocks.show');  // Show a specific part stock entry's details
     Route::get('/admin/partstocks/{partStock}/edit', [PartStockController::class, 'edit'])->name('admin.partstocks.edit');  // Edit an existing part stock entry
     Route::put('/admin/partstocks/{partStock}', [PartStockController::class, 'update'])->name('admin.partstocks.update');  // Update the part stock entry
+
+    // Investors Routes
+    Route::get('/admin/investors', [InvestorController::class, 'index'])->name('admin.investors.index');  // List all investors
+    Route::get('/admin/investors/create', [InvestorController::class, 'create'])->name('admin.investors.create');  // Show the form to create a new investor
+    Route::post('/admin/investors', [InvestorController::class, 'store'])->name('admin.investors.store');  // Store a new investor
+    Route::get('/admin/investors/{investor}', [InvestorController::class, 'show'])->name('admin.investors.show');  // Show a specific investor's details
+    Route::get('/admin/investors/{investor}/edit', [InvestorController::class, 'edit'])->name('admin.investors.edit');  // Edit an existing investor
+    Route::put('/admin/investors/{investor}', [InvestorController::class, 'update'])->name('admin.investors.update');  // Update the investor
+    Route::post('/admin/investors/{investor}/add-investment-history', [InvestorController::class, 'addInvestmentHistory'])->name('investors.addInvestmentHistory');
+    Route::post('/admin/investors/{investor}/add-deposit-history', [InvestorController::class, 'addDepositHistory'])->name('investors.addDepositHistory');
+
+    // Investment History Routes
+    Route::get('/admin/investment-histories', [InvestmentHistoryController::class, 'index'])->name('admin.investmentHistories.index');  // List all investment histories
+    Route::get('/admin/investment-histories/create', [InvestmentHistoryController::class, 'create'])->name('admin.investmentHistories.create');  // Show the form to create a new investment history
+    Route::post('/admin/investment-histories', [InvestmentHistoryController::class, 'store'])->name('admin.investmentHistories.store');  // Store a new investment history
+    Route::get('/admin/investment-histories/{investmentHistory}', [InvestmentHistoryController::class, 'show'])->name('admin.investmentHistories.show');  // Show a specific investment history's details
+    Route::get('/admin/investment-histories/{investmentHistory}/edit', [InvestmentHistoryController::class, 'edit'])->name('admin.investmentHistories.edit');  // Edit an existing investment history
+    Route::put('/admin/investment-histories/{investmentHistory}', [InvestmentHistoryController::class, 'update'])->name('admin.investmentHistories.update');  // Update the investment history
+
+    // Sales Routes
+    Route::get('/admin/sales', [SaleController::class, 'index'])->name('admin.sales.index');  // List all sales
+    Route::get('/admin/sales/create', [SaleController::class, 'create'])->name('admin.sales.create');  // Show the form to create a new sale
+    Route::post('/admin/sales', [SaleController::class, 'store'])->name('admin.sales.store');  // Store a new sale
+    Route::get('/admin/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');  // Show a specific sale's details
+    Route::get('/admin/sales/{sale}/edit', [SaleController::class, 'edit'])->name('admin.sales.edit');  // Edit an existing sale
+    Route::put('/admin/sales/{sale}', [SaleController::class, 'update'])->name('admin.sales.update');  // Update the sale
+
+    // Deposit History Routes
+    Route::get('/admin/deposit-histories', [DepositHistoryController::class, 'index'])->name('admin.depositHistories.index');  // List all deposit histories
+    Route::get('/admin/deposit-histories/create', [DepositHistoryController::class, 'create'])->name('admin.depositHistories.create');  // Show the form to create a new deposit history
+    Route::post('/admin/deposit-histories', [DepositHistoryController::class, 'store'])->name('admin.depositHistories.store');  // Store a new deposit history
+    Route::get('/admin/deposit-histories/{depositHistory}', [DepositHistoryController::class, 'show'])->name('admin.depositHistories.show');  // Show a specific deposit history's details
+    Route::get('/admin/deposit-histories/{depositHistory}/edit', [DepositHistoryController::class, 'edit'])->name('admin.depositHistories.edit');  // Edit an existing deposit history
+    Route::put('/admin/deposit-histories/{depositHistory}', [DepositHistoryController::class, 'update'])->name('admin.depositHistories.update');  // Update the deposit history

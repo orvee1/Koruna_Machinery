@@ -9,9 +9,15 @@ class DepositHistory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['investor_id', 'amount', 'payment_method', 'payment_date'];
+    // Define fillable attributes for mass assignment
+    protected $fillable = [
+        'investor_id', 
+        'amount', 
+        'payment_method', 
+        'payment_date',
+    ];
 
-    // Relationship with investor
+    // Relationship with Investor
     public function investor()
     {
         return $this->belongsTo(Investor::class);
