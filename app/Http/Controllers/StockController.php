@@ -38,7 +38,7 @@ class StockController extends Controller
             'supplier_name' => 'required|string|max:255',
             'buying_price' => 'required|numeric',
             'quantity' => 'required|integer|min:1',
-            'total_amount' => 'required|numeric',
+            'total_amount' => 'nullable|numeric',
             'deposit_amount' => 'nullable|numeric',
             'due_amount' => 'nullable|numeric',
             'purchase_date' => 'required|date',
