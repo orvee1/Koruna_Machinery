@@ -15,7 +15,7 @@ class InvestorController extends Controller
     public function index()
     {
         // Get all investors with their investment histories and deposit histories
-        $investors = Investor::with('investmentHistories', 'depositHistories')->paginate(10);
+        $investors = Investor::with('investmentHistories')->paginate(10);
         return view('admin.investors.index', compact('investors'));
     }
 
@@ -89,7 +89,7 @@ class InvestorController extends Controller
     public function show(Investor $investor)
     {
         // Load investment histories and deposit histories of the investor
-        $investor->load('investmentHistories', 'depositHistories');
+        $investor->load('investmentHistories');
 
         return view('admin.investors.show', compact('investor'));
     }
@@ -120,29 +120,4 @@ class InvestorController extends Controller
         return back()->with('success', 'Investment history added and balance updated.');
     }
 
-    /**
-     * Add a deposit history for the investor.
-     */
-    public function addDepositHistory(Request $request, Investor $investor)
-    {
-        $request->validate([
-            'amount' => 'required|decimal:0,2',
-            'description' => 'nullable|string|max:255',
-        ]);
-
-        // Create a new deposit history record
-        $depositHistory = new DepositHistory([
-            'amount' => $request->amount,
-            'description' => $request->description,
-        ]);
-
-        // Associate the deposit history with the investor
-        $investor->depositHistories()->save($depositHistory);
-
-        // Update the balance and check if the panel should be closed
-        $investor->balance += $request->amount;
-        $investor->closePanel(); // Check if the panel should be closed
-
-        return back()->with('success', 'Deposit history added and balance updated.');
-    }
 }

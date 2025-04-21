@@ -43,7 +43,7 @@
                 </tr>
                 <tr>
                     <th>Paid Amount</th>
-                    <td>{{ $product->paid_amount }}</td>
+                    <td>{{ $product->paidAmount() }}</td>
                 </tr>
                 <tr>
                     <th>Remaining Balance</th>

@@ -43,7 +43,7 @@
 
         <div class="form-group mb-3">
             <label for="buying_price">Buying Price</label>
-            <input type="number" id="buying_price" name="buying_price" class="form-control @error('buying_price') is-invalid @enderror" value="{{ old('buying_price') }}" required>
+            <input type="number" step="0.01" id="buying_price" name="buying_price" class="form-control @error('buying_price') is-invalid @enderror" value="{{ old('buying_price') }}" required>
             @error('buying_price')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -59,7 +59,7 @@
 
         <div class="form-group mb-3">
             <label for="total_amount">Total Amount</label>
-            <input type="number" id="total_amount" name="total_amount" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount') }}" required>
+            <input type="number" step="0.01" id="total_amount" name="total_amount" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount') }}" required>
             @error('total_amount')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -67,7 +67,7 @@
 
         <div class="form-group mb-3">
             <label for="deposit_amount">Deposit Amount</label>
-            <input type="number" id="deposit_amount" name="deposit_amount" class="form-control @error('deposit_amount') is-invalid @enderror" value="{{ old('deposit_amount') }}">
+            <input type="number" step="0.01" id="deposit_amount" name="deposit_amount" class="form-control @error('deposit_amount') is-invalid @enderror" value="{{ old('deposit_amount') }}">
             @error('deposit_amount')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -75,7 +75,7 @@
 
         <div class="form-group mb-3">
             <label for="due_amount">Due Amount</label>
-            <input type="number" id="due_amount" name="due_amount" class="form-control @error('due_amount') is-invalid @enderror" value="{{ old('due_amount') }}">
+            <input type="number" step="0.01" id="due_amount" name="due_amount" class="form-control @error('due_amount') is-invalid @enderror" value="{{ old('due_amount') }}">
             @error('due_amount')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

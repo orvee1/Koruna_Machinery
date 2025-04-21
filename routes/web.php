@@ -84,7 +84,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/admin/partstocks', [PartStockController::class, 'store'])->name('admin.partstocks.store');  // Store a new part stock entry
     Route::get('/admin/partstocks/{partStock}', [PartStockController::class, 'show'])->name('admin.partstocks.show');  // Show a specific part stock entry's details
     Route::get('/admin/partstocks/{partStock}/edit', [PartStockController::class, 'edit'])->name('admin.partstocks.edit');  // Edit an existing part stock entry
-    Route::put('/admin/partstocks/{partStock}', [PartStockController::class, 'update'])->name('admin.partstocks.update');  // Update the part stock entry
+    Route::put('/admin/partstocks/{partStock}', [PartStockController::class, 'update'])->name('admin.partstocks.update');
+    Route::post('partstocks/{partStock}/update-payment', [PartStockController::class, 'updatePayment'])->name('admin.partstocks.updatePayment');
+      // Update the part stock entry
 
     // Investors Routes
     Route::get('/admin/investors', [InvestorController::class, 'index'])->name('admin.investors.index');  // List all investors

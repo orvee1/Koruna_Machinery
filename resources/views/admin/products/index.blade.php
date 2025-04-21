@@ -17,6 +17,51 @@
         </div>
     @endif
 
+    <form method="GET" action="{{ route('admin.products.index') }}" class="mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="date" 
+                       name="date" 
+                       class="form-control @if(request('date')) border-success @endif"
+                       value="{{ old('date', request('date')) }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-filter-circle me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+    
+
+    <!-- Search Form -->
+    <form action="{{ route('admin.products.index') }}" method="GET" class="mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <input type="text" 
+                       name="search" 
+                       class="form-control @if(request('search')) border-info @endif" 
+                       placeholder="Search by Product or Supplier" 
+                       value="{{ old('search', request('search')) }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+
     <!-- Button to create new product -->
     <a href="{{ route('admin.products.create') }}" class="btn btn-primary mb-3">Add New Product</a>
 

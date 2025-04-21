@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PartStock;
 use App\Models\Product;
 use App\Models\Branch;
+use App\Models\PartStockPayment;
 use Illuminate\Http\Request;
 
 class PartStockController extends Controller
@@ -108,6 +109,27 @@ class PartStockController extends Controller
         // Redirect to the index with a success message
         return redirect()->route('admin.partstocks.index')->with('success', 'Part stock updated successfully.');
     }
+
+    public function updatePayment(Request $request, PartStock $partStock)
+    {
+        $request->validate([
+            'paid_amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+        ]);
+    
+        // Create new payment record for the part stock
+        $payment = new PartStockPayment([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'part_stock_id' => $partStock->id,
+        ]);
+    
+        // Save payment related to the part stock
+        $payment->save();
+    
+        return back()->with('success', 'Payment updated successfully.');
+    }
+    
 
     /**
      * Show the details of a specific part stock entry.

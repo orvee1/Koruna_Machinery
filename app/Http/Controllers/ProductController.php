@@ -17,10 +17,32 @@ class ProductController extends Controller
     /**
      * Display a list of all products.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('branch')->paginate(10); // Fetch products with branch relationship
-        return view('admin.products.index', compact('products'));
+        // Get the selected date from the request or use today's date if not provided
+        $date = $request->get('date', null);  // Allow null for the first load, so we get all records initially
+        $search = $request->get('search', '');
+    
+        $query = Product::with('branch');
+    
+        // Apply the search query for product name and supplier name
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', '%' . $search . '%');
+                //   ->orWhere('supplier_name', 'like', '%' . $search . '%');
+            });
+        }
+    
+        // If a date is provided, filter by that date
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+    
+        // Fetch part stocks with the necessary relationships and pagination
+        $products = $query->paginate(10);
+    
+        // Return the view with the filtered part stocks
+        return view('admin.products.index', compact('products', 'date', 'search'));
     }
 
     /**
@@ -37,7 +59,7 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-       $product = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'buying_price' => 'required|decimal:0,2',
             'selling_price' => 'nullable|decimal:0,2',
@@ -49,7 +71,7 @@ class ProductController extends Controller
         $product = Product::create($request->all());
     
         // Calculate the total purchase amount after product creation
-        $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
+        // $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
     
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
@@ -89,20 +111,20 @@ class ProductController extends Controller
 
 
 
-    public function calculateTotalPurchase(Product $product, Request $request)
-    {
-        $request->validate([
-            'stock_quantity' => 'required|integer|min:1',
-            'buying_price' => 'required|decimal:0,2',
-        ]);
+    // public function calculateTotalPurchase(Product $product, Request $request)
+    // {
+    //     $request->validate([
+    //         'stock_quantity' => 'required|integer|min:1',
+    //         'buying_price' => 'required|decimal:0,2',
+    //     ]);
 
-        $product->buying_price = $request->buying_price;
-        $product->stock_quantity = $request->stock_quantity;
-        $product->save();
-        $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
+    //     $product->buying_price = $request->buying_price;
+    //     $product->stock_quantity = $request->stock_quantity;
+    //     $product->save();
+    //     $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
 
-        return back()->with('success', 'Total purchase amount updated successfully.');
-    }
+    //     return back()->with('success', 'Total purchase amount updated successfully.');
+    // }
 
     public function updatePayment(Product $product, Request $request)
     {
@@ -120,9 +142,6 @@ class ProductController extends Controller
     
         $product_payment->save();
         
-        $product->paid_amount += $request->paid_amount;
-        $product->save();
-    
         return back()->with('success', 'Payment updated successfully.');
     }
     

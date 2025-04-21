@@ -17,6 +17,24 @@ class Product extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    protected static function booted()
+    {
+        static::creating(function ($product) {
+            // Calculate the total amount and total profit
+            $product->total_purchase_amount = $product->buying_price * $product->stock_quantity;
+
+            // Automatically set the created_at date (ignore time)
+            if (!$product->created_at) {
+                $product->created_at = now()->toDateString();  // Only set the date part, not the time
+            }
+        });
+    }
+
+    public function scopeFilterByDate($query, $date)
+    {
+        return $query->whereDate('created_at', $date);  // Use whereDate to filter by date only (ignores time)
+    }
+
     // Relationship with sales
     public function sale()
     {
@@ -29,29 +47,20 @@ class Product extends Model
         return $this->hasMany(Stock::class);
     }
 
-    // Relationship with part stocks
-    public function partStock()
-    {
-        return $this->hasMany(PartStock::class);
-    }
-
     public function payments()
     {
         return $this->hasMany(ProductPayment::class);
     }
     
-
-    public function calculateTotalPurchaseAmount($buying_price, $stock_quantity)
+    public function paidAmount()
     {
-        $this->buying_price = $buying_price;
-        $this->stock_quantity = $stock_quantity;
-        $this->total_purchase_amount = $buying_price * $stock_quantity;
-        $this->save();
+        return $this->payments->sum('paid_amount');
     }
 
     public function remainingBalance()
     {
-        return $this->total_purchase_amount - $this->paid_amount;
+        $totalPaid = $this->payments->sum('paid_amount');
+        return $this->total_purchase_amount - $totalPaid;
     }
 
 }

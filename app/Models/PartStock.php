@@ -47,4 +47,21 @@ class PartStock extends Model
     {
         return $query->whereDate('created_at', $date);  // Use whereDate to filter by date only (ignores time)
     }
+
+    public function payments()
+    {
+        return $this->hasMany(PartStockPayment::class);
+    }
+
+    // Calculate remaining balance
+    public function paidAmount()
+    {
+        return $this->payments->sum('paid_amount');
+    }
+    // Calculate remaining balance
+    public function remainingBalance()
+    {
+        $totalPaid = $this->payments->sum('paid_amount');
+        return $this->amount - $totalPaid;
+    }
 }
