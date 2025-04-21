@@ -24,6 +24,10 @@
             <td>{{ $partStock->product_name }}</td>
         </tr>
         <tr>
+            <th>Supplier Name</th>
+            <td>{{ $partStock->supplier_name }}</td>
+        </tr>
+        <tr>
             <th>Buy Value</th>
             <td>{{ $partStock->buy_value }}</td>
         </tr>

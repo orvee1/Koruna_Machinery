@@ -12,20 +12,42 @@ class PartStockController extends Controller
     /**
      * Display a listing of the part stocks.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $partStocks = PartStock::with('product', 'branch')->paginate(10); // Fetch part stocks with product and branch relationships
-        return view('admin.partstocks.index', compact('partStocks'));
+        // Get the selected date from the request or use today's date if not provided
+        $date = $request->get('date', null);  // Allow null for the first load, so we get all records initially
+        $search = $request->get('search', '');
+    
+        $query = PartStock::with('branch');
+    
+        // Apply the search query for product name and supplier name
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', '%' . $search . '%')
+                  ->orWhere('supplier_name', 'like', '%' . $search . '%');
+            });
+        }
+    
+        // If a date is provided, filter by that date
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+    
+        // Fetch part stocks with the necessary relationships and pagination
+        $partStocks = $query->paginate(10);
+    
+        // Return the view with the filtered part stocks
+        return view('admin.partstocks.index', compact('partStocks', 'date', 'search'));
     }
+    
 
     /**
      * Show the form for creating a new part stock entry.
      */
     public function create()
     {
-        $products = Product::all();
         $branches = Branch::all();
-        return view('admin.partstocks.create', compact('products', 'branches'));
+        return view('admin.partstocks.create', compact('branches'));
     }
 
     /**
@@ -33,79 +55,69 @@ class PartStockController extends Controller
      */
     public function store(Request $request)
     {
-       $partStock = $request->validate([
+        // Validate the incoming request data
+        $request->validate([
             'product_name' => 'required|string|max:255',
-            'buy_value' => 'required|numeric',
+            'supplier_name' => 'required|string|max:255',
+            'buy_value' => 'required|decimal:0,2',
             'quantity' => 'required|integer|min:1',
-            'sell_value' => 'required|numeric',
-            'product_id' => 'required|exists:products,id',
+            'sell_value' => 'required|decimal:0,2',
             'branch_id' => 'required|exists:branches,id',
         ]);
 
+        // Create the part stock using the validated data
         $partStock = PartStock::create($request->all());
 
-    
-        // Calculate the total purchase amount after part stock creation
-        $partStock->calculateTotalPurchaseAmount($request->buy_value, $request->quantity);
-        
+        // Automatically calculate the amount and total profit
+        // $partStock->calculateAmountAndProfit();  // This will calculate the amount and profit
+
         // Redirect to the index with a success message
         return redirect()->route('admin.partstocks.index')->with('success', 'Part stock added successfully.');
     }
-    
-    
+
     /**
      * Show the form for editing the specified part stock entry.
      */
     public function edit(PartStock $partStock)
     {
-        $products = Product::all();
         $branches = Branch::all();
-        return view('admin.partstocks.edit', compact('partStock', 'products', 'branches'));
+        return view('admin.partstocks.edit', compact('partStock', 'branches'));
     }
 
     /**
      * Update the specified part stock entry in the database.
      */
     public function update(Request $request, PartStock $partStock)
-{
-    $request->validate([
-        'product_name' => 'required|string|max:255',
-        'buy_value' => 'required|numeric',
-        'quantity' => 'required|integer|min:1',
-        'sell_value' => 'required|numeric',
-        'product_id' => 'required|exists:products,id',
-        'branch_id' => 'required|exists:branches,id',
-    ]);
+    {
+        // Validate the incoming request data
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'supplier_name' => 'required|string|max:255',
+            'buy_value' => 'required|decimal:0,2',
+            'quantity' => 'required|integer|min:1',
+            'sell_value' => 'required|decimal:0,2',
+            'branch_id' => 'required|exists:branches,id',
+        ]);
 
-    $partStock->update($request->all());
+        // Update the part stock with the validated data
+        $partStock->update($request->all());
 
-    $partStock->calculateTotalPurchaseAmount($request->buy_value, $request->quantity);
+        // Recalculate the amount and total profit
+        // $partStock->calculateAmountAndProfit();  // This will calculate the amount and profit
 
-    return redirect()->route('admin.partstocks.index')->with('success', 'Part stock updated successfully.');
-}
+        // Redirect to the index with a success message
+        return redirect()->route('admin.partstocks.index')->with('success', 'Part stock updated successfully.');
+    }
 
-public function calculateTotalPurchase(Product $product, Request $request)
-{
-    $request->validate([
-        'quantity' => 'required|integer|min:1',
-        'buy_value' => 'required|numeric',
-    ]);
-
-    $product->buy_value = $request->buy_value;
-    $product->quantity = $request->quantity;
-    $product->save();
-    $product->calculateTotalPurchaseAmount($request->buy_value, $request->quantity);
-
-    return back()->with('success', 'Total purchase amount updated successfully.');
-}
-
-   
     /**
      * Show the details of a specific part stock entry.
      */
     public function show(PartStock $partStock)
     {
-        $partStock->load('product', 'branch'); // Load related product and branch data
+        // Load the related product and branch data
+        $partStock->load('branch');
+
+        // Return the view for showing the part stock details
         return view('admin.partstocks.show', compact('partStock'));
     }
 }

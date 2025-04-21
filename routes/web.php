@@ -111,11 +111,3 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/admin/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');  // Show a specific sale's details
     Route::get('/admin/sales/{sale}/edit', [SaleController::class, 'edit'])->name('admin.sales.edit');  // Edit an existing sale
     Route::put('/admin/sales/{sale}', [SaleController::class, 'update'])->name('admin.sales.update');  // Update the sale
-
-    // Deposit History Routes
-    Route::get('/admin/deposit-histories', [DepositHistoryController::class, 'index'])->name('admin.depositHistories.index');  // List all deposit histories
-    Route::get('/admin/deposit-histories/create', [DepositHistoryController::class, 'create'])->name('admin.depositHistories.create');  // Show the form to create a new deposit history
-    Route::post('/admin/deposit-histories', [DepositHistoryController::class, 'store'])->name('admin.depositHistories.store');  // Store a new deposit history
-    Route::get('/admin/deposit-histories/{depositHistory}', [DepositHistoryController::class, 'show'])->name('admin.depositHistories.show');  // Show a specific deposit history's details
-    Route::get('/admin/deposit-histories/{depositHistory}/edit', [DepositHistoryController::class, 'edit'])->name('admin.depositHistories.edit');  // Edit an existing deposit history
-    Route::put('/admin/deposit-histories/{depositHistory}', [DepositHistoryController::class, 'update'])->name('admin.depositHistories.update');  // Update the deposit history

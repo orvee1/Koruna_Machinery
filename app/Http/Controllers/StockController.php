@@ -36,11 +36,11 @@ class StockController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'supplier_name' => 'required|string|max:255',
-            'buying_price' => 'required|numeric',
+            'buying_price' => 'required|decimal:0,2',
             'quantity' => 'required|integer|min:1',
-            'total_amount' => 'nullable|numeric',
-            'deposit_amount' => 'nullable|numeric',
-            'due_amount' => 'nullable|numeric',
+            'total_amount' => 'nullable|decimal:0,2',
+            'deposit_amount' => 'nullable|decimal:0,2',
+            'due_amount' => 'nullable|decimal:0,2',
             'purchase_date' => 'required|date',
             'branch_id' => 'required|exists:branches,id',
         ]);
@@ -73,11 +73,11 @@ class StockController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'supplier_name' => 'required|string|max:255',
-            'buying_price' => 'required|numeric',
+            'buying_price' => 'required|decimal:0,2',
             'quantity' => 'required|integer|min:1',
-            'total_amount' => 'required|numeric',
-            'deposit_amount' => 'nullable|numeric',
-            'due_amount' => 'nullable|numeric',
+            'total_amount' => 'required|decimal:0,2',
+            'deposit_amount' => 'nullable|decimal:0,2',
+            'due_amount' => 'nullable|decimal:0,2',
             'purchase_date' => 'required|date',
             'branch_id' => 'required|exists:branches,id',
         ]);

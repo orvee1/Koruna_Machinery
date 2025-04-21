@@ -39,8 +39,8 @@ class ProductController extends Controller
     {
        $product = $request->validate([
             'name' => 'required|string|max:255',
-            'buying_price' => 'required|numeric',
-            'selling_price' => 'nullable|numeric',
+            'buying_price' => 'required|decimal:0,2',
+            'selling_price' => 'nullable|decimal:0,2',
             'stock_quantity' => 'required|integer',
             'branch_id' => 'required|exists:branches,id',
         ]);
@@ -71,8 +71,8 @@ class ProductController extends Controller
 {
     $request->validate([
         'name' => 'required|string|max:255',
-        'buying_price' => 'required|numeric',
-        'selling_price' => 'required|numeric',
+        'buying_price' => 'required|decimal:0,2',
+        'selling_price' => 'nullable|decimal:0,2',
         'stock_quantity' => 'required|integer',
         'branch_id' => 'required|exists:branches,id',
     ]);
@@ -93,7 +93,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'stock_quantity' => 'required|integer|min:1',
-            'buying_price' => 'required|numeric',
+            'buying_price' => 'required|decimal:0,2',
         ]);
 
         $product->buying_price = $request->buying_price;
@@ -107,7 +107,7 @@ class ProductController extends Controller
     public function updatePayment(Product $product, Request $request)
     {
         $request->validate([
-            'paid_amount' => 'required|numeric|min:1',
+            'paid_amount' => 'required|decimal:0,2',
             'payment_date' => 'required|date',
         ]);
     

@@ -42,8 +42,8 @@ class InvestmentHistoryController extends Controller
             'investor_id' => 'required|exists:investors,id',
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'buying_price' => 'required|numeric',
-            'total_cost' => 'required|numeric',
+            'buying_price' => 'required|decimal:0,2',
+            'total_cost' => 'required|decimal:0,2',
         ]);
 
         // Create the investment history record
@@ -76,8 +76,8 @@ class InvestmentHistoryController extends Controller
             'investor_id' => 'required|exists:investors,id',
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'buying_price' => 'required|numeric',
-            'total_cost' => 'required|numeric',
+            'buying_price' => 'required|decimal:0,2',
+            'total_cost' => 'required|decimal:0,2',
         ]);
 
         // Update the investment history record

@@ -35,8 +35,8 @@ class InvestorController extends Controller
         // Validate the incoming request
         $request->validate([
             'name' => 'required|string|max:255',
-            'total_investment' => 'required|numeric',
-            'balance' => 'required|numeric',
+            'total_investment' => 'required|decimal:0,2',
+            'balance' => 'required|decimal:0,2',
             'status' => 'required|in:active,closed',
         ]);
 
@@ -65,8 +65,8 @@ class InvestorController extends Controller
         // Validate the incoming request
         $request->validate([
             'name' => 'required|string|max:255',
-            'total_investment' => 'required|numeric',
-            'balance' => 'required|numeric',
+            'total_investment' => 'required|decimal:0,2',
+            'balance' => 'required|decimal:0,2',
             'status' => 'required|in:active,closed',
         ]);
 
@@ -100,7 +100,7 @@ class InvestorController extends Controller
     public function addInvestmentHistory(Request $request, Investor $investor)
     {
         $request->validate([
-            'amount' => 'required|numeric',
+            'amount' => 'required|decimal:0,2',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -126,7 +126,7 @@ class InvestorController extends Controller
     public function addDepositHistory(Request $request, Investor $investor)
     {
         $request->validate([
-            'amount' => 'required|numeric',
+            'amount' => 'required|decimal:0,2',
             'description' => 'nullable|string|max:255',
         ]);
 

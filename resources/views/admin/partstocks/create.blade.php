@@ -26,15 +26,23 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-    
+
+        <div class="form-group">
+            <label for="supplier_name">Supplier Name</label>
+            <input type="text" id="supplier_name" name="supplier_name" class="form-control @error('supplier_name') is-invalid @enderror" value="{{ old('supplier_name') }}" required>
+            @error('supplier_name')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
         <div class="form-group">
             <label for="buy_value">Buy Value</label>
-            <input type="number" id="buy_value" name="buy_value" class="form-control @error('buy_value') is-invalid @enderror" value="{{ old('buy_value') }}" required>
+            <input type="number" step="0.01" id="buy_value" name="buy_value" class="form-control @error('buy_value') is-invalid @enderror" value="{{ old('buy_value') }}" required>
             @error('buy_value')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-    
+
         <div class="form-group">
             <label for="quantity">Quantity</label>
             <input type="number" id="quantity" name="quantity" class="form-control @error('quantity') is-invalid @enderror" value="{{ old('quantity') }}" required>
@@ -42,15 +50,15 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-    
+
         <div class="form-group">
             <label for="sell_value">Sell Value</label>
-            <input type="number" id="sell_value" name="sell_value" class="form-control @error('sell_value') is-invalid @enderror" value="{{ old('sell_value') }}" required>
+            <input type="number" step="0.01" id="sell_value" name="sell_value" class="form-control @error('sell_value') is-invalid @enderror" value="{{ old('sell_value') }}" required>
             @error('sell_value')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-    
+
         <div class="form-group">
             <label for="branch_id">Branch</label>
             <select name="branch_id" id="branch_id" class="form-select @error('branch_id') is-invalid @enderror">
@@ -62,9 +70,9 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-    
+
         <button type="submit" class="btn btn-success mt-3">Save Part Stock</button>
     </form>
-    
 </div>
 @endsection
+@section('scripts')
