@@ -70,9 +70,6 @@ class ProductController extends Controller
         // Create the product
         $product = Product::create($request->all());
     
-        // Calculate the total purchase amount after product creation
-        // $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
-    
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
     
@@ -103,28 +100,11 @@ class ProductController extends Controller
     $product->update($request->all());
 
     // Recalculate the total purchase amount after product update
-    $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
+    // $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
 
     return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
 }
 
-
-
-
-    // public function calculateTotalPurchase(Product $product, Request $request)
-    // {
-    //     $request->validate([
-    //         'stock_quantity' => 'required|integer|min:1',
-    //         'buying_price' => 'required|decimal:0,2',
-    //     ]);
-
-    //     $product->buying_price = $request->buying_price;
-    //     $product->stock_quantity = $request->stock_quantity;
-    //     $product->save();
-    //     $product->calculateTotalPurchaseAmount($request->buying_price, $request->stock_quantity);
-
-    //     return back()->with('success', 'Total purchase amount updated successfully.');
-    // }
 
     public function updatePayment(Product $product, Request $request)
     {

@@ -17,6 +17,51 @@
         </div>
     @endif
 
+    <form method="GET" action="{{ route('admin.stocks.index') }}" class="mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="date" 
+                       name="date" 
+                       class="form-control @if(request('date')) border-success @endif"
+                       value="{{ old('date', request('date')) }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-filter-circle me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+    
+
+    <!-- Search Form -->
+    <form action="{{ route('admin.stocks.index') }}" method="GET" class="mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <input type="text" 
+                       name="search" 
+                       class="form-control @if(request('search')) border-info @endif" 
+                       placeholder="Search by Product or Supplier" 
+                       value="{{ old('search', request('search')) }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+
     <!-- Button to create new stock -->
     <a href="{{ route('admin.stocks.create') }}" class="btn btn-primary mb-3">Add New Stock</a>
 
@@ -29,6 +74,7 @@
                 <th>Supplier Name</th>
                 <th>Quantity</th>
                 <th>Total Amount</th>
+                <th>Due Amount</th>
                 <th>Purchase Date</th>
                 <th>Actions</th>
             </tr>
@@ -41,6 +87,7 @@
                     <td>{{ $stock->supplier_name }}</td>
                     <td>{{ $stock->quantity }}</td>
                     <td>{{ $stock->total_amount }}</td>
+                    <td>{{ $stock->due_amount }}</td>
                     <td>{{ $stock->purchase_date }}</td>
                     <td>
                         <a href="{{ route('admin.stocks.show', $stock->id) }}" class="btn btn-info btn-sm">View</a>

@@ -12,10 +12,32 @@ class StockController extends Controller
     /**
      * Display a listing of the stocks.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $stocks = Stock::with('product', 'branch')->paginate(10); // Fetch stocks with product and branch relationships
-        return view('admin.stocks.index', compact('stocks'));
+        // Get the selected date from the request or use today's date if not provided
+        $date = $request->get('date', null);  // Allow null for the first load, so we get all records initially
+        $search = $request->get('search', '');
+    
+        $query = Stock::with('branch');
+    
+        // Apply the search query for product name and supplier name
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', '%' . $search . '%')
+                  ->orWhere('supplier_name', 'like', '%' . $search . '%');
+            });
+        }
+    
+        // If a date is provided, filter by that date
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+    
+        // Fetch part stocks with the necessary relationships and pagination
+        $stock = $query->paginate(10);
+    
+        // Return the view with the filtered part stocks
+        return view('admin.stocks.index', compact('stocks', 'date', 'search'));
     }
 
     /**
@@ -38,9 +60,7 @@ class StockController extends Controller
             'supplier_name' => 'required|string|max:255',
             'buying_price' => 'required|decimal:0,2',
             'quantity' => 'required|integer|min:1',
-            'total_amount' => 'nullable|decimal:0,2',
             'deposit_amount' => 'nullable|decimal:0,2',
-            'due_amount' => 'nullable|decimal:0,2',
             'purchase_date' => 'required|date',
             'branch_id' => 'required|exists:branches,id',
         ]);
@@ -48,9 +68,9 @@ class StockController extends Controller
         $stock = Stock::create($request->all());
 
         // After creating the stock, update the stock quantity for the product
-        $product = $stock->product;
-        $product->stock_quantity += $request->quantity;
-        $product->save();
+        // $product = $stock->product;
+        // $product->stock_quantity += $request->quantity;
+        // $product->save();
 
         return redirect()->route('admin.stocks.index')->with('success', 'Stock added successfully.');
     }
@@ -75,18 +95,16 @@ class StockController extends Controller
             'supplier_name' => 'required|string|max:255',
             'buying_price' => 'required|decimal:0,2',
             'quantity' => 'required|integer|min:1',
-            'total_amount' => 'required|decimal:0,2',
             'deposit_amount' => 'nullable|decimal:0,2',
-            'due_amount' => 'nullable|decimal:0,2',
             'purchase_date' => 'required|date',
             'branch_id' => 'required|exists:branches,id',
         ]);
 
         // Before updating, update the stock quantity for the product
-        $product = $stock->product;
-        $product->stock_quantity -= $stock->quantity; // Remove old stock quantity
-        $product->stock_quantity += $request->quantity; // Add the new stock quantity
-        $product->save();
+        // $product = $stock->product;
+        // $product->stock_quantity -= $stock->quantity; // Remove old stock quantity
+        // $product->stock_quantity += $request->quantity; // Add the new stock quantity
+        // $product->save();
 
         $stock->update($request->all());
 
@@ -99,9 +117,9 @@ class StockController extends Controller
     public function destroy(Stock $stock)
     {
         // Before deleting, update the stock quantity for the product
-        $product = $stock->product;
-        $product->stock_quantity -= $stock->quantity;
-        $product->save();
+        $stock = $stock->stock;
+        $stock->quantity -= $stock->quantity;
+        $stock->save();
 
         $stock->delete();
 
@@ -110,7 +128,7 @@ class StockController extends Controller
 
     public function show(Stock $stock)
     {
-        // Load related product and branch data
+        // Load related stock and branch data
         $stock->load('product', 'branch');
 
         // Pass stock data to the view
