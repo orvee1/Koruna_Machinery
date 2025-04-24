@@ -111,7 +111,7 @@
             @enderror
         </div>
 
-        <div class="form-group">
+        {{-- <div class="form-group">
             <label for="part_stock_id">Part Stock</label>
             <select name="part_stock_id" id="part_stock_id" class="form-control @error('part_stock_id') is-invalid @enderror">
                 @foreach($products as $product)
@@ -121,7 +121,7 @@
             @error('part_stock_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
-        </div>
+        </div> --}}
 
         <button type="submit" class="btn btn-success mt-3">Save Sale</button>
     </form>

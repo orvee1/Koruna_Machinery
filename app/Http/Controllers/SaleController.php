@@ -49,7 +49,7 @@ class SaleController extends Controller
             'payment_status' => 'required|in:paid,pending',
             'investor_id' => 'nullable|exists:investors,id',
             'branch_id' => 'required|exists:branches,id',
-            'part_stock_id' => 'required|exists:part_stocks,id',  // Assuming part stock id is passed to manage part stock
+            // 'part_stock_id' => 'required|exists:part_stocks,id',  // Assuming part stock id is passed to manage part stock
         ]);
 
         // Store the sale
@@ -97,7 +97,7 @@ class SaleController extends Controller
             'payment_status' => 'required|in:paid,pending',
             'investor_id' => 'nullable|exists:investors,id',
             'branch_id' => 'required|exists:branches,id',
-            'part_stock_id' => 'required|exists:part_stocks,id',  // Assuming part stock id is passed to manage part stock
+            // 'part_stock_id' => 'required|exists:part_stocks,id',  // Assuming part stock id is passed to manage part stock
         ]);
 
         // Adjust stock based on the sale (Revert previous stock change and adjust new stock)
@@ -114,11 +114,11 @@ class SaleController extends Controller
     public function adjustStockOnSale(Sale $sale, $quantity, $partStockId)
     {
         // Decrease part stock
-        $partStock = PartStock::find($partStockId);
-        if ($partStock && $partStock->quantity >= $quantity) {
-            $partStock->quantity -= $quantity;
-            $partStock->save();
-        }
+        // $partStock = PartStock::find($partStockId);
+        // if ($partStock && $partStock->quantity >= $quantity) {
+        //     $partStock->quantity -= $quantity;
+        //     $partStock->save();
+        // }
 
         // Adjust product stock
         $product = $sale->product;
@@ -134,11 +134,11 @@ class SaleController extends Controller
     public function adjustStockOnReturn(Sale $sale, $quantity, $partStockId)
     {
         // Increase part stock
-        $partStock = PartStock::find($partStockId);
-        if ($partStock) {
-            $partStock->quantity += $quantity;
-            $partStock->save();
-        }
+        // $partStock = PartStock::find($partStockId);
+        // if ($partStock) {
+        //     $partStock->quantity += $quantity;
+        //     $partStock->save();
+        // }
 
         // Adjust product stock
         $product = $sale->product;

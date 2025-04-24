@@ -14,17 +14,21 @@ return new class extends Migration
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('part_stock_id')->nullable()->constrained('part_stocks')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('seller_id')->constrained('users')->onDelete('cascade');
             $table->integer('quantity');
-            $table->decimal('total_amount', 10, 2);
-            $table->decimal('paid_amount', 10, 2)->default(0.00);
-            $table->decimal('due_amount', 10, 2)->storedAs('total_amount - paid_amount');
-            $table->enum('payment_status', ['paid', 'due'])->default('due');
+            $table->decimal('unit_price', 10,2);             // price per item
+            $table->decimal('total_amount', 10, 2);          // storedAs('quantity * unit_price')
+            $table->decimal('paid_amount', 10, 2)->default(0);
+            $table->decimal('due_amount', 10, 2)              // storedAs('total_amount - paid_amount')
+                  ->storedAs('total_amount - paid_amount');
+            $table->enum('payment_status', ['paid','due'])->default('due');
             $table->foreignId('investor_id')->nullable()->constrained('investors')->onDelete('cascade');
             $table->timestamps();
         });
+        
     }
 
     /**
