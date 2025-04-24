@@ -7,13 +7,17 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    //     $this->middleware('checkRole:admin');
-    // }
 
-    
+    public function __construct()
+    {
+    $this->middleware(function ($request, $next) {
+        if (auth()->user()?->role !== 'admin') {
+            abort(403);
+        }
+        return $next($request);
+    });
+    }
+
     public function dashboard()
     {
         $users = User::with('branch')->get(); // Eager load the branch relationship

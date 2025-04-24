@@ -8,11 +8,7 @@ use Illuminate\Http\Request;
 
 class WorkerController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('checkRole:worker');
-    }
+
 
     // Worker Dashboard (branch-specific)
     public function dashboard()

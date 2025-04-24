@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BranchSelectorController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\DepositHistoryController;
 use App\Http\Controllers\InvestmentHistoryController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\PartStockController;
+use App\Http\Controllers\PartstockSaleController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ProductSaleController;
 use App\Http\Controllers\StockController;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
@@ -24,10 +25,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::middleware(['auth', 'checkRole:admin'])->group(function () {
-//     // Branch routes
-//     Route::resource('admin/branches', BranchController::class);
-// });
+Route::middleware(['auth'])->group(function () {
+  Route::get('/admin/select-branch', [BranchSelectorController::class, 'show'])->name('admin.select-branch');
+  Route::post('/admin/select-branch', [BranchSelectorController::class, 'set'])->name('admin.select-branch.set');
+
+  Route::get('/dashboard', function () {
+      return view('dashboard'); // main layout view
+  })->name('dashboard');
+});
+
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('branches', BranchController::class);
@@ -35,9 +41,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 
-
-// Admin Routes
-// Route::middleware(['auth', 'checkRole:admin'])->group(function () {
 
     // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
@@ -67,7 +70,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/admin/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');  // Edit an existing product
     Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');  // Update the product
     Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('admin.products.updatePayment');
-    // Route::post('products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('admin.products.adjustStock');
+    
 
     // Stock Routes
     Route::get('/admin/stocks', [StockController::class, 'index'])->name('admin.stocks.index');  // List all stock entries
@@ -106,10 +109,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/admin/investment-histories/{investmentHistory}/edit', [InvestmentHistoryController::class, 'edit'])->name('admin.investmentHistories.edit');  // Edit an existing investment history
     Route::put('/admin/investment-histories/{investmentHistory}', [InvestmentHistoryController::class, 'update'])->name('admin.investmentHistories.update');  // Update the investment history
 
-    // Sales Routes
-    Route::get('/admin/sales', [SaleController::class, 'index'])->name('admin.sales.index');  // List all sales
-    Route::get('/admin/sales/create', [SaleController::class, 'create'])->name('admin.sales.create');  // Show the form to create a new sale
-    Route::post('/admin/sales', [SaleController::class, 'store'])->name('admin.sales.store');  // Store a new sale
-    Route::get('/admin/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');  // Show a specific sale's details
-    Route::get('/admin/sales/{sale}/edit', [SaleController::class, 'edit'])->name('admin.sales.edit');  // Edit an existing sale
-    Route::put('/admin/sales/{sale}', [SaleController::class, 'update'])->name('admin.sales.update');  // Update the sale
+ 
+    // Product Sale Routes
+    
+    Route::middleware(['auth'])->group(function () {
+      Route::resource('/admin/product-sales', ProductSaleController::class)->except(['show']);
+  });
+  
+  // PartStock Sale Routes
+  
+  Route::middleware(['auth'])->group(function () {
+    Route::resource('/admin/partstock-sales', PartstockSaleController::class)->except(['show']);
+});
+
+  
