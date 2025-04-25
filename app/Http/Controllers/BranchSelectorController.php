@@ -18,7 +18,7 @@ class BranchSelectorController extends Controller
     {
         $request->validate(['branch_id' => 'required|exists:branches,id']);
         session(['active_branch_id' => $request->branch_id]);
-        return redirect()->route('dashboard');
+        return redirect()->route('admin.dashboard');
     }
     
 }

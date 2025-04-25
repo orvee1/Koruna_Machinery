@@ -6,6 +6,7 @@ use App\Http\Controllers\BranchSelectorController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\InvestmentHistoryController;
 use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PartStockController;
 use App\Http\Controllers\PartstockSaleController;
 use App\Http\Controllers\ProductController;
@@ -24,6 +25,9 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
   Route::get('/admin/select-branch', [BranchSelectorController::class, 'show'])->name('admin.select-branch');

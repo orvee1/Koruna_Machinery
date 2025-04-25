@@ -45,33 +45,57 @@
         <div class="sidebar p-2">
             <h4>Dashboard</h4>
             <nav class="nav flex-column">
+                {{-- Admin Menu (No branch restriction) --}}
                 @if(auth()->user()->role === 'admin')
                     <span class="fw-bold text-secondary">User & Branch</span>
                     <a href="{{ route('admin.branches.index') }}" class="nav-link">Branches</a>
                     <a href="{{ route('admin.dashboard') }}" class="nav-link">Users</a>
                     <a href="{{ route('admin.customers.index') }}" class="nav-link">Customers</a>
-                @endif
-
-                @if(in_array(auth()->user()->role, ['admin', 'manager']))
+            
                     <span class="fw-bold text-secondary mt-3">Inventory</span>
                     <a href="{{ route('admin.products.index') }}" class="nav-link">Products</a>
                     <a href="{{ route('admin.stocks.index') }}" class="nav-link">Stocks</a>
                     <a href="{{ route('admin.partstocks.index') }}" class="nav-link">Part Stocks</a>
-                @endif
-
-                @if(in_array(auth()->user()->role, ['admin', 'manager', 'worker']))
+            
                     <span class="fw-bold text-secondary mt-3">Sales</span>
-                    <a href="{{ route('admin.product-sales.index') }}" class="nav-link">Product Sales</a>
-                    <a href="{{ route('admin.partstock-sales.index') }}" class="nav-link">Partstock Sales</a>
-                @endif
-
-                @if(auth()->user()->role === 'admin')
+                    <a href="{{ route('product-sales.index') }}" class="nav-link">Product Sales</a>
+                    <a href="{{ route('partstock-sales.index') }}" class="nav-link">Part Stock Sales</a>
+            
                     <span class="fw-bold text-secondary mt-3">Investors</span>
                     <a href="{{ route('admin.investors.index') }}" class="nav-link">Investor List</a>
                     <a href="{{ route('admin.investmentHistories.index') }}" class="nav-link">Investment Histories</a>
-                    {{-- <a href="#" class="nav-link">Deposit Histories</a> --}} <!-- handled via investor details -->
+                @endif
+            
+                {{-- Manager Menu (Branch-bound Access) --}}
+                @if(auth()->user()->role === 'manager')
+                    <span class="fw-bold text-secondary mt-3">Branch Inventory</span>
+                    <a href="{{ route('admin.products.index') }}" class="nav-link">Products</a>
+                    <a href="{{ route('admin.stocks.index') }}" class="nav-link">Stocks</a>
+                    <a href="{{ route('admin.partstocks.index') }}" class="nav-link">Part Stocks</a>
+            
+                    <span class="fw-bold text-secondary mt-3">Branch Sales</span>
+                    <a href="{{ route('product-sales.index') }}" class="nav-link">Product Sales</a>
+                    <a href="{{ route('partstock-sales.index') }}" class="nav-link">Part Stock Sales</a>
+            
+                    <span class="fw-bold text-secondary mt-3">Branch Customers</span>
+                    <a href="{{ route('admin.customers.index') }}" class="nav-link">Customers</a>
+            
+                    <span class="fw-bold text-secondary mt-3">Branch Investors</span>
+                    <a href="{{ route('admin.investors.index') }}" class="nav-link">Investor List</a>
+                @endif
+            
+                {{-- Worker Menu (Branch-bound, Limited Access) --}}
+                @if(auth()->user()->role === 'worker')
+                    <span class="fw-bold text-secondary mt-3">Branch Work Access</span>
+                    <a href="{{ route('admin.products.index') }}" class="nav-link">Products</a>
+                    <a href="{{ route('admin.stocks.index') }}" class="nav-link">Stocks</a>
+                    <a href="{{ route('admin.partstocks.index') }}" class="nav-link">Part Stocks</a>
+                    <a href="{{ route('admin.customers.index') }}" class="nav-link">Customers</a>
+                    <a href="{{ route('product-sales.index') }}" class="nav-link">Product Sales</a>
+                    <a href="{{ route('partstock-sales.index') }}" class="nav-link">Part Stock Sales</a>
                 @endif
             </nav>
+            
         </div>
 
         <!-- Main Content -->
