@@ -44,16 +44,16 @@ class LoginController extends Controller
         if ($user->role === 'admin') {
             return redirect()->route('admin.select-branch');
         }
-
-        // Auto set active branch for manager and worker
+    
         session(['active_branch_id' => $user->branch_id]);
-
+    
         if ($user->role === 'manager') {
             return redirect()->route('manager.dashboard');
         } elseif ($user->role === 'worker') {
             return redirect()->route('worker.dashboard');
         }
-
-        return abort(403, 'Unauthorized role.');
+    
+        return redirect()->route('dashboard'); // ✅ Corrected
     }
+    
 }
