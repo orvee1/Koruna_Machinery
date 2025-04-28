@@ -17,7 +17,7 @@ class InvestmentHistoryController extends Controller
         // Fetch all investment histories along with their investor and product relationships
         $investmentHistories = InvestmentHistory::with('investor', 'product')->paginate(10);
 
-        return view('admin.investmentHistories.index', compact('investmentHistories'));
+        return view('admin.investment-histories.index', compact('investmentHistories'));
     }
 
     /**
@@ -29,7 +29,7 @@ class InvestmentHistoryController extends Controller
         $investors = Investor::all();
         $products = Product::all();
 
-        return view('admin.investmentHistories.create', compact('investors', 'products'));
+        return view('admin.investment-histories.create', compact('investors', 'products'));
     }
 
     /**
@@ -51,7 +51,7 @@ class InvestmentHistoryController extends Controller
 
         // After creating, you can perform additional operations like updating the investor's balance, etc.
 
-        return redirect()->route('admin.investmentHistories.index')->with('success', 'Investment history created successfully.');
+        return redirect()->route('admin.investment-histories.index')->with('success', 'Investment history created successfully.');
     }
 
     /**
@@ -63,7 +63,7 @@ class InvestmentHistoryController extends Controller
         $investors = Investor::all();
         $products = Product::all();
 
-        return view('admin.investmentHistories.edit', compact('investmentHistory', 'investors', 'products'));
+        return view('admin.investment-histories.edit', compact('investmentHistory', 'investors', 'products'));
     }
 
     /**
@@ -83,7 +83,7 @@ class InvestmentHistoryController extends Controller
         // Update the investment history record
         $investmentHistory->update($request->all());
 
-        return redirect()->route('admin.investmentHistories.index')->with('success', 'Investment history updated successfully.');
+        return redirect()->route('admin.investment-histories.index')->with('success', 'Investment history updated successfully.');
     }
 
     /**
@@ -95,6 +95,6 @@ class InvestmentHistoryController extends Controller
      */
     public function show(InvestmentHistory $investmentHistory)
     {
-        return view('admin.investmentHistories.show', compact('investmentHistory'));
+        return view('admin.investment-histories.show', compact('investmentHistory'));
     }
 }

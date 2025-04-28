@@ -22,6 +22,7 @@
                     <tr>
                         <th>SL No</th>
                         <th>Name</th>
+                        <th>Branch Code</th>
                         <th>Created At</th>
                         <th>Actions</th>
                     </tr>
@@ -31,6 +32,7 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $branch->name }}</td>
+                            <td>{{ $branch->code }}</td>
                             <td>{{ $branch->created_at->format('d M Y') }}</td>
                             <td>
                                 <a href="{{ route('admin.branches.show', $branch->id) }}" class="btn btn-info btn-sm">View</a>

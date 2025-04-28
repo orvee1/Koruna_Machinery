@@ -83,4 +83,5 @@ class PartstockSale extends Model
     {
         return $this->belongsTo(Investor::class);
     }
+    
 }

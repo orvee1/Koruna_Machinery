@@ -19,43 +19,50 @@ use App\Http\Controllers\{
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes
+| Authentication Routes (Public)
 |--------------------------------------------------------------------------
 */
 
-// Login page
+// Show Login Form
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+
+// Submit Login
+Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+
+// Logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes
+| Authenticated User Routes (Must be logged in)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
+Route::middleware('auth')->group(function () {
 
-    // Select Branch (For Admins)
+    // Branch Selection for Admins
     Route::get('/admin/select-branch', [BranchSelectorController::class, 'show'])->name('admin.select-branch');
     Route::post('/admin/select-branch', [BranchSelectorController::class, 'set'])->name('admin.select-branch.set');
 
-    // Common Dashboard Redirect
+    // Common Dashboard
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------
-    | Admin Only Area
+    | Admin Routes (Admin role only)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['checkRole:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('checkRole:admin')->prefix('admin')->name('admin.')->group(function () {
+
+        // Admin Dashboard
+        Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
         // Branches
         Route::resource('branches', BranchController::class);
 
-        // Users
-        Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        // Users Management
+        Route::get('users', [AdminController::class, 'indexUsers'])->name('users.index');
         Route::get('users/create', [AdminController::class, 'createUser'])->name('users.create');
         Route::post('users', [AdminController::class, 'storeUser'])->name('users.store');
         Route::get('users/{user}', [AdminController::class, 'showUser'])->name('users.show');
@@ -86,13 +93,23 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Common Authenticated Routes (Admin + Manager + Worker)
+    | Common Routes (Admin + Manager + Worker)
     |--------------------------------------------------------------------------
     */
-    Route::resource('product-sales', ProductSaleController::class)->except(['show']);
-    Route::resource('partstock-sales', PartstockSaleController::class)->except(['show']);
 
+    // Product Sales
+    Route::resource('product-sales', ProductSaleController::class)->except('show');
+
+    // Part Stock Sales
+    Route::resource('partstock-sales', PartstockSaleController::class)->except('show');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Temporary Admin Registration Routes (Commented)
+|--------------------------------------------------------------------------
+| Only enable during development if necessary!
+*/
+
 // Route::get('/register-admin', [RegisterAdminController::class, 'showForm'])->name('register-admin');
-// Route::post('/register-admin', [RegisterAdminController ::class, 'store'])->name('register-admin.store');
+// Route::post('/register-admin', [RegisterAdminController::class, 'store'])->name('register-admin.store');

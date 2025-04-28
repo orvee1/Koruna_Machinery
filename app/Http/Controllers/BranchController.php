@@ -9,13 +9,8 @@ class BranchController extends Controller
 {
     public function __construct()
     {
-        // Only allow Admins to access this controller
-        $this->middleware(function ($request, $next) {
-            if (!auth()->check() || auth()->user()->role !== 'admin') {
-                abort(403, 'Unauthorized access.');
-            }
-            return $next($request);
-        });
+        // Only Admin can access this controller
+        $this->middleware('checkRole:admin');
     }
 
     public function index()
@@ -28,7 +23,7 @@ class BranchController extends Controller
     {
         return view('admin.branches.create');
     }
-    
+
     public function store(Request $request)
     {
         $request->validate([
@@ -56,7 +51,7 @@ class BranchController extends Controller
         $partstockIncome = $branch->partstockSales->sum('total_amount');
         $totalIncome = $productIncome + $partstockIncome;
 
-        $productExpense = $branch->products->sum(function($product) {
+        $productExpense = $branch->products->sum(function ($product) {
             return $product->buying_price * $product->stock_quantity;
         });
 

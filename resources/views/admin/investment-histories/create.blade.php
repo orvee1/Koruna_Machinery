@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Investment History')
+@section('title', 'Create Investment History')
 
 @section('content')
 <div class="container">
-    <h1>Edit Investment History</h1>
+    <h1>Add New Investment History</h1>
 
     <!-- Display success or error messages -->
     @if(session('success'))
@@ -17,15 +17,14 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.investmentHistories.update', $investmentHistory->id) }}" method="POST">
+    <form action="{{ route('admin.investment-histories.store') }}" method="POST">
         @csrf
-        @method('PUT')
 
         <div class="form-group">
             <label for="investor_id">Investor</label>
             <select id="investor_id" name="investor_id" class="form-control @error('investor_id') is-invalid @enderror" required>
                 @foreach($investors as $investor)
-                    <option value="{{ $investor->id }}" @if($investmentHistory->investor_id == $investor->id) selected @endif>{{ $investor->name }}</option>
+                    <option value="{{ $investor->id }}" @if(old('investor_id') == $investor->id) selected @endif>{{ $investor->name }}</option>
                 @endforeach
             </select>
             @error('investor_id')
@@ -37,7 +36,7 @@
             <label for="product_id">Product</label>
             <select id="product_id" name="product_id" class="form-control @error('product_id') is-invalid @enderror" required>
                 @foreach($products as $product)
-                    <option value="{{ $product->id }}" @if($investmentHistory->product_id == $product->id) selected @endif>{{ $product->name }}</option>
+                    <option value="{{ $product->id }}" @if(old('product_id') == $product->id) selected @endif>{{ $product->name }}</option>
                 @endforeach
             </select>
             @error('product_id')
@@ -47,7 +46,7 @@
 
         <div class="form-group">
             <label for="quantity">Quantity</label>
-            <input type="number" id="quantity" name="quantity" class="form-control @error('quantity') is-invalid @enderror" value="{{ old('quantity', $investmentHistory->quantity) }}" required>
+            <input type="number" id="quantity" name="quantity" class="form-control @error('quantity') is-invalid @enderror" value="{{ old('quantity') }}" required>
             @error('quantity')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -55,7 +54,7 @@
 
         <div class="form-group">
             <label for="buying_price">Buying Price</label>
-            <input type="number" id="buying_price" name="buying_price" class="form-control @error('buying_price') is-invalid @enderror" value="{{ old('buying_price', $investmentHistory->buying_price) }}" required>
+            <input type="number" id="buying_price" name="buying_price" class="form-control @error('buying_price') is-invalid @enderror" value="{{ old('buying_price') }}" required>
             @error('buying_price')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -63,13 +62,13 @@
 
         <div class="form-group">
             <label for="total_cost">Total Cost</label>
-            <input type="number" id="total_cost" name="total_cost" class="form-control @error('total_cost') is-invalid @enderror" value="{{ old('total_cost', $investmentHistory->total_cost) }}" required>
+            <input type="number" id="total_cost" name="total_cost" class="form-control @error('total_cost') is-invalid @enderror" value="{{ old('total_cost') }}" required>
             @error('total_cost')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
 
-        <button type="submit" class="btn btn-success mt-3">Update Investment History</button>
+        <button type="submit" class="btn btn-success mt-3">Save Investment History</button>
     </form>
 </div>
 @endsection

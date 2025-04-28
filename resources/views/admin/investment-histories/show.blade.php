@@ -29,6 +29,6 @@
         </tr>
     </table>
 
-    <a href="{{ route('admin.investmentHistories.index') }}" class="btn btn-primary">Back to Investment Histories</a>
+    <a href="{{ route('admin.investment-histories.index') }}" class="btn btn-primary">Back to Investment Histories</a>
 </div>
 @endsection

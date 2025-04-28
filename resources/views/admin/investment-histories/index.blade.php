@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <a href="{{ route('admin.investmentHistories.create') }}" class="btn btn-primary mb-3">Add New Investment History</a>
+    <a href="{{ route('admin.investment-histories.create') }}" class="btn btn-primary mb-3">Add New Investment History</a>
 
     <table class="table table-striped">
         <thead>

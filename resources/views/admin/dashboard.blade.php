@@ -51,7 +51,7 @@
                 @if(auth()->user()->role === 'admin')
                     <span class="fw-bold text-secondary">User & Branch</span>
                     <a href="{{ route('admin.branches.index') }}" class="nav-link">Branches</a>
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Users</a>
+                    <a href="{{ route('admin.users.index') }}" class="nav-link">Users</a>
                     <a href="{{ route('admin.customers.index') }}" class="nav-link">Customers</a>
 
                     <span class="fw-bold text-secondary mt-3">Inventory</span>
@@ -65,7 +65,7 @@
 
                     <span class="fw-bold text-secondary mt-3">Investors</span>
                     <a href="{{ route('admin.investors.index') }}" class="nav-link">Investor List</a>
-                    <a href="{{ route('admin.investmentHistories.index') }}" class="nav-link">Investment Histories</a>
+                    <a href="{{ route('admin.investment-histories.index') }}" class="nav-link">Investment Histories</a>
                 @endif
 
                 {{-- Manager Menu --}}

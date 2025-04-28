@@ -17,6 +17,16 @@ class Customer extends Model
         return $this->belongsTo(Branch::class);
     }
 
+        public function productSales()
+    {
+        return $this->hasMany(ProductSale::class);
+    }
+
+    public function partsStockSales()
+    {
+    return $this->hasMany(PartStockSale::class);
+    }
+
     // Generate a unique customer_id based on branch's first two letters
     public static function boot()
     {
