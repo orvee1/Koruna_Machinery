@@ -45,7 +45,7 @@
         <!-- Sidebar -->
         <div class="sidebar p-2 d-flex flex-column justify-content-between">
             <div>
-                <h5><a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a></h5>
+                <h5><a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a></h5>
                 <nav class="nav flex-column">
                     {{-- Admin Menu --}}
                     @if(auth()->user()->role === 'admin')

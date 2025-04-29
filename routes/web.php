@@ -44,52 +44,68 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 | Authenticated Routes (Logged-in users only)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'checkRole:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Admins: Branch Selection
-    Route::get('/admin/select-branch', [BranchSelectorController::class, 'show'])->name('admin.select-branch');
-    Route::post('/admin/select-branch', [BranchSelectorController::class, 'set'])->name('admin.select-branch.set');
+    // Dashboard
+    Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // Common Dashboard (after branch selection)
-    Route::get('/dashboard', function () {
-        $branchId = session('active_branch_id');
-
-        $totalCustomers = Customer::where('branch_id', $branchId)->count();
-        $totalProducts = Product::where('branch_id', $branchId)->count();
-        $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('paid_amount');
-        $totalPartStockSales = PartstockSale::where('branch_id', $branchId)->sum('paid_amount');
-        $totalSales = $totalProductSales + $totalPartStockSales;
-        $totalInvestors = Investor::where('branch_id', $branchId)->count();
-
-        return view('admin.dashboard', compact('totalCustomers', 'totalProducts', 'totalSales', 'totalInvestors'));
-    })->name('dashboard');
-    
     /*
-    |--------------------------------------------------------------------------
-    | Admin Routes
-    |--------------------------------------------------------------------------
+    |-------------------------------------------------------------------------- 
+    | Branch Selector (Admin-only)
+    |-------------------------------------------------------------------------- 
     */
-    Route::middleware('checkRole:admin')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('select-branch', [BranchSelectorController::class, 'show'])->name('select-branch');
+    Route::post('select-branch', [BranchSelectorController::class, 'set'])->name('select-branch.set');
 
-        Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    /*
+    |-------------------------------------------------------------------------- 
+    | Branch & User Management
+    |-------------------------------------------------------------------------- 
+    */
+    Route::resource('branches', BranchController::class);
+    Route::resource('users', AdminController::class)->only([
+        'index', 'create', 'store', 'show', 'edit', 'update'
+    ]);
 
-        Route::resource('branches', BranchController::class);
-        Route::resource('users', AdminController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-        Route::resource('customers', CustomerController::class);
-        Route::resource('products', ProductController::class);
-        Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('products.updatePayment');
+    /*
+    |-------------------------------------------------------------------------- 
+    | Customer Management
+    |-------------------------------------------------------------------------- 
+    */
+    Route::resource('customers', CustomerController::class);
 
-        Route::resource('stocks', StockController::class);
-        Route::resource('partstocks', PartStockController::class);
-        Route::post('partstocks/{partStock}/update-payment', [PartStockController::class, 'updatePayment'])->name('partstocks.updatePayment');
+    /*
+    |-------------------------------------------------------------------------- 
+    | Inventory: Products, Stocks, Part Stocks
+    |-------------------------------------------------------------------------- 
+    */
+    Route::resource('products', ProductController::class);
+    Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('products.updatePayment');
 
-        Route::resource('investors', InvestorController::class);
-        Route::post('investors/{investor}/add-investment-history', [InvestorController::class, 'addInvestmentHistory'])->name('investors.addInvestmentHistory');
+    Route::resource('stocks', StockController::class);
 
-        Route::resource('investment-histories', InvestmentHistoryController::class);
-        Route::resource('product-sales', ProductSaleController::class);
-        Route::resource('partstock-sales', PartstockSaleController::class);
-    });
+    Route::resource('partstocks', PartStockController::class);
+    Route::post('partstocks/{partStock}/update-payment', [PartStockController::class, 'updatePayment'])->name('partstocks.updatePayment');
+
+    /*
+    |-------------------------------------------------------------------------- 
+    | Sales Management
+    |-------------------------------------------------------------------------- 
+    */
+    Route::resource('product-sales', ProductSaleController::class);
+    Route::resource('partstock-sales', PartstockSaleController::class);
+
+    /*
+    |-------------------------------------------------------------------------- 
+    | Investment Management
+    |-------------------------------------------------------------------------- 
+    */
+    Route::resource('investors', InvestorController::class);
+    Route::post('investors/{investor}/add-investment-history', [InvestorController::class, 'addInvestmentHistory'])
+        ->name('investors.addInvestmentHistory');
+
+    Route::resource('investment-histories', InvestmentHistoryController::class);
+});
 
     /*
     |--------------------------------------------------------------------------
@@ -132,7 +148,6 @@ Route::middleware('auth')->group(function () {
     | Common for Admin, Manager, Worker
     |--------------------------------------------------------------------------
     */
-});
 
 /*
 |--------------------------------------------------------------------------
