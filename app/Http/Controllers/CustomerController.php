@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +29,8 @@ class CustomerController extends Controller
 
     public function create()
     {
-        return view('admin.customers.create');
+        $branches = Branch::all();
+        return view('admin.customers.create', compact('branches'));
     }
 
     public function store(Request $request)

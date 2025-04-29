@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,8 @@ class ProductController extends Controller
 
     public function create()
     {
-        return view('admin.products.create');
+        $branches = Branch::all();
+        return view('admin.products.create', compact('branches'));
     }
 
     public function store(Request $request)

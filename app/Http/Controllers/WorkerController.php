@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 use App\Models\Stock;
 use App\Models\Customer;
 use App\Models\PartStock;
+use App\Models\PartstockSale;
+use App\Models\Product;
+use App\Models\ProductSale;
 use Illuminate\Http\Request;
 
 class WorkerController extends Controller
@@ -11,14 +14,46 @@ class WorkerController extends Controller
 
 
     // Worker Dashboard (branch-specific)
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $workerBranch = auth()->user()->branch_id;
-        $stocks = Stock::where('branch_id', $workerBranch)->get();
-        $customers = Customer::where('branch_id', $workerBranch)->get();
-        // $partStocks = PartStock::where('branch_id', $workerBranch)->get();
+        $branchId = auth()->user()->branch_id;
 
-        return view('worker.dashboard', compact('stocks', 'customers', 'partStocks'));
+        // Query Building
+        $salesQuery = ProductSale::where('branch_id', $branchId);
+
+        if ($request->filled('date')) {
+            $salesQuery->whereDate('created_at', $request->input('date'));
+        }
+        if ($request->filled('month')) {
+            $salesQuery->whereMonth('created_at', $request->input('month'));
+        }
+        if ($request->filled('year')) {
+            $salesQuery->whereYear('created_at', $request->input('year'));
+        }
+
+        $partstockSalesQuery = PartstockSale::where('branch_id', $branchId);
+
+        if ($request->filled('date')) {
+            $partstockSalesQuery->whereDate('created_at', $request->input('date'));
+        }
+        if ($request->filled('month')) {
+            $partstockSalesQuery->whereMonth('created_at', $request->input('month'));
+        }
+        if ($request->filled('year')) {
+            $partstockSalesQuery->whereYear('created_at', $request->input('year'));
+        }
+
+        // Calculations
+        $totalProducts = Product::where('branch_id', $branchId)->count();
+        $totalStocks = Stock::where('branch_id', $branchId)->count();
+        $totalCustomers = Customer::where('branch_id', $branchId)->count();
+        $totalProductSales = $salesQuery->sum('paid_amount');
+        $totalPartstockSales = $partstockSalesQuery->sum('paid_amount');
+        $totalSales = $totalProductSales + $totalPartstockSales;
+
+        return view('worker.dashboard', compact(
+            'totalProducts', 'totalStocks', 'totalCustomers', 'totalSales'
+        ));
     }
 
     // Add stock to the branch (workers can add stock)

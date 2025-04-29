@@ -38,7 +38,7 @@ class ProductSaleController extends Controller
         }
 
         $sales = $query->latest()->paginate(20);
-        return view('admin.product_sales.index', compact('sales'));
+        return view('admin.product-sales.index', compact('sales'));
     }
 
     public function create()
@@ -52,7 +52,7 @@ class ProductSaleController extends Controller
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
-        return view('admin.product_sales.create', compact('products', 'customers'));
+        return view('admin.product-sales.create', compact('products', 'customers'));
     }
 
     public function store(Request $request)
@@ -79,9 +79,10 @@ class ProductSaleController extends Controller
             'quantity' => $validated['quantity'],
             'unit_price' => $validated['unit_price'],
             'paid_amount' => $validated['paid_amount'],
+            'due_amount' => ($validated['quantity'] * $validated['unit_price']) - $validated['paid_amount'],
         ]);
 
-        return redirect()->route('product-sales.index')->with('success', 'Product Sale added successfully.');
+        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale added successfully.');
     }
 
     public function edit(ProductSale $productSale)
@@ -95,7 +96,7 @@ class ProductSaleController extends Controller
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
-        return view('admin.product_sales.edit', compact('productSale', 'products', 'customers'));
+        return view('admin.product-sales.edit', compact('productSale', 'products', 'customers'));
     }
 
     public function update(Request $request, ProductSale $productSale)
@@ -116,8 +117,21 @@ class ProductSaleController extends Controller
 
         $productSale->update($validated);
 
-        return redirect()->route('product-sales.index')->with('success', 'Product Sale updated successfully.');
+        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale updated successfully.');
     }
+
+        public function show(ProductSale $productSale)
+    {
+        $user = Auth::user();
+
+        // Worker রা তাদের ব্রাঞ্চের ডেটা ছাড়া অন্য কিছু দেখতে পারবে না
+        if ($user->role !== 'admin' && $productSale->branch_id !== session('active_branch_id')) {
+            abort(403, 'Unauthorized Access');
+        }
+
+        return view('admin.product-sales.show', compact('productSale'));
+    }
+
 
     public function destroy(ProductSale $productSale)
     {
@@ -129,6 +143,6 @@ class ProductSaleController extends Controller
 
         $productSale->delete();
 
-        return redirect()->route('product-sales.index')->with('success', 'Product Sale deleted successfully.');
+        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale deleted successfully.');
     }
 }

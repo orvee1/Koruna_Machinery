@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Investor;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,8 @@ class InvestorController extends Controller
 
     public function create()
     {
-        return view('admin.investors.create');
+        $branches = Branch::all();
+        return view('admin.investors.create', compact('branches'));
     }
 
     public function store(Request $request)

@@ -38,7 +38,7 @@ class PartstockSaleController extends Controller
         }
 
         $sales = $query->latest()->paginate(20);
-        return view('admin.partstock_sales.index', compact('sales'));
+        return view('admin.partstock-sales.index', compact('sales'));
     }
 
     public function create()
@@ -52,7 +52,7 @@ class PartstockSaleController extends Controller
         $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
-        return view('admin.partstock_sales.create', compact('partStocks', 'customers'));
+        return view('admin.partstock-sales.create', compact('partStocks', 'customers'));
     }
 
     public function store(Request $request)
@@ -81,7 +81,7 @@ class PartstockSaleController extends Controller
             'paid_amount' => $validated['paid_amount'],
         ]);
 
-        return redirect()->route('partstock-sales.index')->with('success', 'Partstock Sale added successfully.');
+        return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale added successfully.');
     }
 
     public function edit(PartstockSale $partstockSale)
@@ -95,7 +95,7 @@ class PartstockSaleController extends Controller
         $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
-        return view('admin.partstock_sales.edit', compact('partstockSale', 'partStocks', 'customers'));
+        return view('admin.partstock-sales.edit', compact('partstockSale', 'partStocks', 'customers'));
     }
 
     public function update(Request $request, PartstockSale $partstockSale)
@@ -116,8 +116,10 @@ class PartstockSaleController extends Controller
 
         $partstockSale->update($validated);
 
-        return redirect()->route('partstock-sales.index')->with('success', 'Partstock Sale updated successfully.');
+        return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale updated successfully.');
     }
+
+    
 
     public function destroy(PartstockSale $partstockSale)
     {
@@ -129,6 +131,6 @@ class PartstockSaleController extends Controller
 
         $partstockSale->delete();
 
-        return redirect()->route('partstock-sales.index')->with('success', 'Partstock Sale deleted successfully.');
+        return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale deleted successfully.');
     }
 }

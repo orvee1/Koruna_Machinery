@@ -14,12 +14,19 @@ use App\Http\Controllers\{
     InvestorController,
     InvestmentHistoryController,
     BranchController,
+    ManagerController,
+    WorkerController,
     RegisterAdminController
 };
+use App\Models\Customer;
+use App\Models\Investor;
+use App\Models\PartstockSale;
+use App\Models\Product;
+use App\Models\ProductSale;
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes (Public)
+| Public Routes
 |--------------------------------------------------------------------------
 */
 
@@ -34,82 +41,103 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes (Must be logged in)
+| Authenticated Routes (Logged-in users only)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
 
-    // Branch Selection for Admins
+    // Admins: Branch Selection
     Route::get('/admin/select-branch', [BranchSelectorController::class, 'show'])->name('admin.select-branch');
     Route::post('/admin/select-branch', [BranchSelectorController::class, 'set'])->name('admin.select-branch.set');
 
-    // Common Dashboard
+    // Common Dashboard (after branch selection)
     Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+        $branchId = session('active_branch_id');
 
+        $totalCustomers = Customer::where('branch_id', $branchId)->count();
+        $totalProducts = Product::where('branch_id', $branchId)->count();
+        $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('paid_amount');
+        $totalPartStockSales = PartstockSale::where('branch_id', $branchId)->sum('paid_amount');
+        $totalSales = $totalProductSales + $totalPartStockSales;
+        $totalInvestors = Investor::where('branch_id', $branchId)->count();
+
+        return view('admin.dashboard', compact('totalCustomers', 'totalProducts', 'totalSales', 'totalInvestors'));
+    })->name('dashboard');
+    
     /*
     |--------------------------------------------------------------------------
-    | Admin Routes (Admin role only)
+    | Admin Routes
     |--------------------------------------------------------------------------
     */
     Route::middleware('checkRole:admin')->prefix('admin')->name('admin.')->group(function () {
 
-        // Admin Dashboard
         Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-        // Branches
         Route::resource('branches', BranchController::class);
-
-        // Users Management
-        Route::get('users', [AdminController::class, 'indexUsers'])->name('users.index');
-        Route::get('users/create', [AdminController::class, 'createUser'])->name('users.create');
-        Route::post('users', [AdminController::class, 'storeUser'])->name('users.store');
-        Route::get('users/{user}', [AdminController::class, 'showUser'])->name('users.show');
-        Route::get('users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
-        Route::put('users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
-
-        // Customers
+        Route::resource('users', AdminController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::resource('customers', CustomerController::class);
-
-        // Products
         Route::resource('products', ProductController::class);
         Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('products.updatePayment');
 
-        // Stocks
         Route::resource('stocks', StockController::class);
-
-        // Part Stocks
         Route::resource('partstocks', PartStockController::class);
         Route::post('partstocks/{partStock}/update-payment', [PartStockController::class, 'updatePayment'])->name('partstocks.updatePayment');
 
-        // Investors
         Route::resource('investors', InvestorController::class);
         Route::post('investors/{investor}/add-investment-history', [InvestorController::class, 'addInvestmentHistory'])->name('investors.addInvestmentHistory');
 
-        // Investment Histories
         Route::resource('investment-histories', InvestmentHistoryController::class);
+        Route::resource('product-sales', ProductSaleController::class);
+        Route::resource('partstock-sales', PartstockSaleController::class);
     });
 
     /*
     |--------------------------------------------------------------------------
-    | Common Routes (Admin + Manager + Worker)
+    | Manager Routes
     |--------------------------------------------------------------------------
     */
+    Route::middleware('checkRole:manager')->prefix('manager')->name('manager.')->group(function () {
+        Route::get('dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
+        Route::resource('customers', CustomerController::class);
+        Route::resource('products', ProductController::class);
+        Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('products.updatePayment');
+        Route::resource('stocks', StockController::class);
+        Route::resource('partstocks', PartStockController::class);
+        Route::post('partstocks/{partStock}/update-payment', [PartStockController::class, 'updatePayment'])->name('partstocks.updatePayment');
+        Route::resource('investors', InvestorController::class);
+        Route::post('investors/{investor}/add-investment-history', [InvestorController::class, 'addInvestmentHistory'])->name('investors.addInvestmentHistory');
+        Route::resource('product-sales', ProductSaleController::class);
+        Route::resource('partstock-sales', PartstockSaleController::class);
+    });
 
-    // Product Sales
-    Route::resource('product-sales', ProductSaleController::class)->except('show');
+    /*
+    |--------------------------------------------------------------------------
+    | Worker Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('checkRole:worker')->prefix('worker')->name('worker.')->group(function () {
+        Route::get('dashboard', [WorkerController::class, 'dashboard'])->name('dashboard');
+        Route::resource('customers', CustomerController::class);
+        Route::resource('products', ProductController::class);
+        Route::post('products/{product}/update-payment', [ProductController::class, 'updatePayment'])->name('products.updatePayment');
+        Route::resource('stocks', StockController::class);
+        Route::resource('partstocks', PartStockController::class);
+        Route::post('partstocks/{partStock}/update-payment', [PartStockController::class, 'updatePayment'])->name('partstocks.updatePayment');
+        Route::resource('product-sales', ProductSaleController::class);
+        Route::resource('partstock-sales', PartstockSaleController::class);
+    });
 
-    // Part Stock Sales
-    Route::resource('partstock-sales', PartstockSaleController::class)->except('show');
+    /*
+    |--------------------------------------------------------------------------
+    | Common for Admin, Manager, Worker
+    |--------------------------------------------------------------------------
+    */
 });
 
 /*
 |--------------------------------------------------------------------------
-| Temporary Admin Registration Routes (Commented)
+| Temporary Admin Registration (Optional)
 |--------------------------------------------------------------------------
-| Only enable during development if necessary!
 */
-
 // Route::get('/register-admin', [RegisterAdminController::class, 'showForm'])->name('register-admin');
 // Route::post('/register-admin', [RegisterAdminController::class, 'store'])->name('register-admin.store');

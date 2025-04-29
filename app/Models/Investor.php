@@ -11,22 +11,35 @@ class Investor extends Model
 
     protected $fillable = ['name', 'total_investment', 'balance', 'status'];
 
+    public function branches()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'investor_product', 'investor_id', 'product_id');
+    }
+
+    public function partstocks()
+    {
+        return $this->belongsToMany(PartStock::class, 'investor_partstock', 'investor_id', 'partstock_id');
+    }
+
+    public function productSales()
+    {
+        return $this->hasMany(ProductSale::class);
+    }
+
+    public function partstockSales()
+    {
+        return $this->hasMany(PartstockSale::class);
+    }
+    
     // Relationship with investment histories
     public function investmentHistories()
     {
         return $this->hasMany(InvestmentHistory::class);
-    }
-
-    // Relationship with sales
-    public function sale()
-    {
-        return $this->hasMany(Sale::class);
-    }
-
-    // Relationship with deposit histories
-    public function depositHistories()
-    {
-        return $this->hasMany(DepositHistory::class);
     }
 
     // Close the investor's panel when balance >= total investment

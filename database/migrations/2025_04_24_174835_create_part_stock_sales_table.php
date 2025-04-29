@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_amount', 10, 2);
             $table->decimal('paid_amount', 10, 2)->default(0);
-            $table->decimal('due_amount', 10, 2)->storedAs('total_amount - paid_amount');
+            $table->decimal('due_amount', 10, 2)->default(0);
             $table->enum('payment_status', ['paid', 'due'])->default('due');
             $table->foreignId('investor_id')->nullable()->constrained('investors')->onDelete('cascade');
             $table->timestamps();

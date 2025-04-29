@@ -18,6 +18,7 @@ class ProductSale extends Model
         'unit_price',
         'total_amount',
         'paid_amount',
+        'due_amount',
         'payment_status',
         'investor_id',
     ];

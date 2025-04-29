@@ -1,16 +1,57 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Koruna Machinery</title>
 
-@section('content')
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-    <div class="col-md-4">
-        <h4 class="mb-4 text-center">Login to Your Account</h4>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <style>
+        body {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+        }
+        .login-card h4 {
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #2575fc;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1a5ed8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h4>Login to Your Account</h4>
+
+        <!-- Success Message -->
         @if(session('status'))
             <div class="alert alert-success">
                 {{ session('status') }}
             </div>
         @endif
 
+        <!-- Error Messages -->
         @if($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -21,6 +62,7 @@
             </div>
         @endif
 
+        <!-- Login Form -->
         <form method="POST" action="{{ route('login.submit') }}">
             @csrf
 
@@ -50,6 +92,11 @@
 
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
+
     </div>
-</div>
-@endsection
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

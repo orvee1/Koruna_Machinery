@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Stock;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -25,8 +26,9 @@ class StockController extends Controller
 
     public function create()
     {
+        $branches = Branch::all();
         $products = Product::where('branch_id', session('active_branch_id'))->get();
-        return view('admin.stocks.create', compact('products'));
+        return view('admin.stocks.create', compact('products', 'branches'));
     }
 
     public function store(Request $request)
