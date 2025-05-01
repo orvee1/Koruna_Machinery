@@ -42,7 +42,7 @@ class Branch extends Model
     }
 
     // One-to-many relationship with products
-    public function product()
+    public function products()
     {
         return $this->hasMany(Product::class);
     }
@@ -64,7 +64,7 @@ class Branch extends Model
         return $this->hasMany(PartStockSale::class);
     }
     // One-to-many relationship with customers
-    public function customer()
+    public function customers()
     {
         return $this->hasMany(Customer::class);
     }

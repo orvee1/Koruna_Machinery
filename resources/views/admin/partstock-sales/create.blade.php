@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.partstock-sale.store') }}" method="POST">
+    <form action="{{ route('admin.partstock-sales.store') }}" method="POST">
         @csrf
         <div class="row mb-3">
             <div class="col-md-6">

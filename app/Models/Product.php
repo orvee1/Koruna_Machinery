@@ -35,11 +35,7 @@ class Product extends Model
         return $query->whereDate('created_at', $date);  // Use whereDate to filter by date only (ignores time)
     }
 
-    // Relationship with sales
-    public function sale()
-    {
-        return $this->hasMany(Sale::class);
-    }
+
 
     // Relationship with stocks
     public function stock()

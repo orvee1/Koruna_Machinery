@@ -47,8 +47,11 @@ class LoginController extends Controller
     
         session(['active_branch_id' => $user->branch_id]);
     
-        if ($user->role === 'manager' || $user->role === 'worker') {
-            return redirect()->route('dashboard');
+        if ($user->role === 'manager') {
+            return redirect()->route('manager.dashboard');
+        }
+        if ($user->role === 'worker') {
+            return redirect()->route('worker.dashboard');
         }
     
         return abort(403, 'Unauthorized Role');

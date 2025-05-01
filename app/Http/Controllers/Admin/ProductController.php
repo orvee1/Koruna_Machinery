@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -9,6 +10,14 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        // Only allow admin, manager, worker roles for certain methods
+        $this->middleware('checkRole:admin,manager,worker')->only(['index', 'create', 'store', 'edit', 'update', 'show']);
+        // Only allow admin role for destroy method
+        $this->middleware('checkRole:admin')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $query = Product::query();
@@ -24,8 +33,12 @@ class ProductController extends Controller
 
     public function create()
     {
-        $branches = Branch::all();
-        return view('admin.products.create', compact('branches'));
+        $branches = Branch::all(); // Get all branches (only for admin)
+        if (Auth::user()->role === 'manager') {
+            return view('manager.products.create', compact('branches'));
+        } else {
+            return view('admin.products.create', compact('branches'));
+        }
     }
 
     public function store(Request $request)
@@ -42,14 +55,20 @@ class ProductController extends Controller
             'buying_price'     => $request->buying_price,
             'selling_price'    => $request->selling_price,
             'stock_quantity'   => $request->stock_quantity,
-            'branch_id'        => session('active_branch_id'), // নিজে লগিন করা branch
+            'branch_id'        => session('active_branch_id'), // ব্রাঞ্চ নির্ধারণ
         ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
+        if(Auth::user()->role === 'manager') {
+            return redirect()->route('manager.products.index')->with('success', 'Product created successfully.');
+        }else {
+            return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
+        }
+        // return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
 
     public function edit(Product $product)
     {
+        // Only allow editing if the product belongs to the active branch
         if (Auth::user()->role !== 'admin' && $product->branch_id !== session('active_branch_id')) {
             abort(403);
         }

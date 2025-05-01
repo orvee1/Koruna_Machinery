@@ -45,10 +45,12 @@
         <!-- Sidebar -->
         <div class="sidebar p-2 d-flex flex-column justify-content-between">
             <div>
-                <h5><a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a></h5>
+                {{-- <h5><a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a></h5> --}}
                 <nav class="nav flex-column">
                     {{-- Admin Menu --}}
                     @if(auth()->user()->role === 'admin')
+                        <h5><a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a></h5>
+
                         <span class="fw-bold text-secondary">User & Branch</span>
                         <a href="{{ route('admin.branches.index') }}" class="nav-link">Branches</a>
                         <a href="{{ route('admin.users.index') }}" class="nav-link">Users</a>
@@ -70,6 +72,7 @@
 
                     {{-- Manager Menu --}}
                     @if(auth()->user()->role === 'manager')
+                        <h5><a href="{{ route('manager.dashboard') }}" class="nav-link">Dashboard</a></h5>
                         <span class="fw-bold text-secondary mt-3">Branch Inventory</span>
                         <a href="{{ route('manager.products.index') }}" class="nav-link">Products</a>
                         <a href="{{ route('manager.stocks.index') }}" class="nav-link">Stocks</a>
@@ -88,6 +91,7 @@
 
                     {{-- Worker Menu --}}
                     @if(auth()->user()->role === 'worker')
+                        <h5><a href="{{ route('worker.dashboard') }}" class="nav-link">Dashboard</a></h5>
                         <span class="fw-bold text-secondary mt-3">Work Access</span>
                         <a href="{{ route('worker.products.index') }}" class="nav-link">Products</a>
                         <a href="{{ route('worker.stocks.index') }}" class="nav-link">Stocks</a>
