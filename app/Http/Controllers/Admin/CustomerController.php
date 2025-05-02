@@ -11,15 +11,14 @@ class CustomerController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
-        // Worker, Manager, Admin - সবারই অ্যাক্সেস লাগবে
+        $this->middleware('checkRole:admin');
     }
 
     public function index()
     {
         $query = Customer::query();
 
-        if (auth()->user()->role !== 'admin') {
+        if (auth()->user()->role == 'admin') {
             $query->where('branch_id', session('active_branch_id'));
         }
 
@@ -77,7 +76,12 @@ class CustomerController extends Controller
     {
         $this->authorizeAccess($customer);
 
-        return view('admin.customers.show', compact('customer'));
+        $sales = $customer->productsales()
+        ->with(['product', 'seller']) // eager load
+        ->latest()
+        ->get();
+
+        return view('admin.customers.show', compact('customer','sales'));
     }
 
     public function destroy(Customer $customer)

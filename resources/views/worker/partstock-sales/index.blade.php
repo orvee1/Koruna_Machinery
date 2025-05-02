@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Part Stock Sales</h2>
-        <a href="{{ route('woker.partstock-sales.create') }}" class="btn btn-primary">Add Sale</a>
+        <a href="{{ route('worker.partstock-sales.create') }}" class="btn btn-primary">Add Sale</a>
     </div>
 
     @if(session('success'))
@@ -20,12 +20,12 @@
         <div class="col">
             <input type="date" name="date" class="form-control" value="{{ request('date') }}">
         </div>
-        <div class="col">
+        {{-- <div class="col">
             <input type="number" name="month" class="form-control" placeholder="Month" value="{{ request('month') }}">
-        </div>
-        <div class="col">
+        </div> --}}
+        {{-- <div class="col">
             <input type="number" name="year" class="form-control" placeholder="Year" value="{{ request('year') }}">
-        </div>
+        </div> --}}
         <div class="col">
             <button type="submit" class="btn btn-secondary">Filter</button>
         </div>
@@ -58,9 +58,9 @@
                     <td>{{ $sale->seller->name ?? 'N/A' }}</td>
                     <td>{{ $sale->created_at->format('Y-m-d') }}</td>
                     <td class="text-center">
-                        <a href="{{ route('woker.partstock-sales.edit', $sale->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{{ route('woker.partstock-sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
-                        <form action="{{ route('woker.partstock-sales.destroy', $sale->id) }}" method="POST" class="d-inline-block"
+                        <a href="{{ route('worker.partstock-sales.edit', $sale->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{{ route('worker.partstock-sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
+                        <form action="{{ route('worker.partstock-sales.destroy', $sale->id) }}" method="POST" class="d-inline-block"
                               onsubmit="return confirm('Are you sure you want to delete this sale?');">
                             @csrf
                             @method('DELETE')

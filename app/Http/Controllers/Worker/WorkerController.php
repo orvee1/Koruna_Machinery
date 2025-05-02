@@ -1,17 +1,17 @@
 <?php
-namespace App\Http\Controllers;
 
-use App\Models\Stock;
+namespace App\Http\Controllers\Worker;
+
+use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use App\Models\PartStock;
 use App\Models\PartstockSale;
 use App\Models\Product;
 use App\Models\ProductSale;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class WorkerController extends Controller
 {
-
 
     // Worker Dashboard (branch-specific)
     public function dashboard(Request $request)
@@ -30,7 +30,7 @@ class WorkerController extends Controller
         if ($request->filled('year')) {
             $salesQuery->whereYear('created_at', $request->input('year'));
         }
-
+        
         $partstockSalesQuery = PartstockSale::where('branch_id', $branchId);
 
         if ($request->filled('date')) {
@@ -86,4 +86,3 @@ class WorkerController extends Controller
     //     return view('worker.part_stocks.index', compact('partStocks'));
     // }
 }
-

@@ -9,12 +9,12 @@ class RegisterAdminController extends Controller
 {
     public function showForm()
     {
-        return view('auth.register-admin');
+        return view('register-admin');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $user = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:users,phone',
             'email' => 'required|string|unique:users,email',
@@ -29,6 +29,10 @@ class RegisterAdminController extends Controller
             'role' => 'admin',
         ]);
 
-        return redirect()->route('login')->with('success', 'Admin registered successfully! You can now log in.');
+        if ($user) {
+            return redirect()->route('auth.login')->with('success', 'Admin registered successfully!');
+        } else {
+            return back()->with('error', 'Failed to register admin.');
+        }
     }
 }

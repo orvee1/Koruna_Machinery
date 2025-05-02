@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductSaleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('checkRole:admin');
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -43,12 +48,8 @@ class ProductSaleController extends Controller
 
     public function create()
     {
+        
         $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager', 'worker'])) {
-            abort(403);
-        }
-
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -58,11 +59,6 @@ class ProductSaleController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager', 'worker'])) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_id' => 'required|exists:customers,id',
@@ -88,11 +84,6 @@ class ProductSaleController extends Controller
     public function edit(ProductSale $productSale)
     {
         $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager'])) {
-            abort(403);
-        }
-
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -102,11 +93,6 @@ class ProductSaleController extends Controller
     public function update(Request $request, ProductSale $productSale)
     {
         $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager'])) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_id' => 'required|exists:customers,id',
@@ -123,24 +109,13 @@ class ProductSaleController extends Controller
         public function show(ProductSale $productSale)
     {
         $user = Auth::user();
-
-        // Worker রা তাদের ব্রাঞ্চের ডেটা ছাড়া অন্য কিছু দেখতে পারবে না
-        if ($user->role !== 'admin' && $productSale->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized Access');
-        }
-
-        return view('admin.product-sales.show', compact('productSale'));
+        return view('admin.prodct-sales.show', compact('productSale'));
     }
 
 
     public function destroy(ProductSale $productSale)
     {
         $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager'])) {
-            abort(403);
-        }
-
         $productSale->delete();
 
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale deleted successfully.');

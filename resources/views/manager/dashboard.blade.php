@@ -4,6 +4,11 @@
 
 @section('content')
 <div class="container">
+    <div class="alert alert-primary d-flex justify-content-between align-items-center">
+        <div>
+            👋 স্বাগতম, <strong>{{ auth()->user()->name }}</strong>!
+        </div>
+    </div>
     <h1 class="mb-4">Manager Dashboard</h1>
 
     <div class="row g-4">

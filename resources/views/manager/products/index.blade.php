@@ -37,6 +37,28 @@
             </div>
         </div>
     </form>
+    <form action="{{ route('manager.products.index') }}" method="GET" class="mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <input type="text" 
+                       name="search" 
+                       class="form-control @if(request('search')) border-info @endif" 
+                       placeholder="Search by Product Name" 
+                       value="{{ old('search', request('search')) }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('manager.products.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+    
     
 
     <!-- Search Form -->

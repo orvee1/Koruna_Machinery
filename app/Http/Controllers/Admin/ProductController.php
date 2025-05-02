@@ -12,10 +12,7 @@ class ProductController extends Controller
 {
     public function __construct()
     {
-        // Only allow admin, manager, worker roles for certain methods
-        $this->middleware('checkRole:admin,manager,worker')->only(['index', 'create', 'store', 'edit', 'update', 'show']);
-        // Only allow admin role for destroy method
-        $this->middleware('checkRole:admin')->only(['destroy']);
+        $this->middleware('checkRole:admin');
     }
 
     public function index(Request $request)
@@ -23,7 +20,7 @@ class ProductController extends Controller
         $query = Product::query();
 
         // Worker বা Manager হলে নিজের ব্রাঞ্চ ফিল্টার
-        if (Auth::user()->role !== 'admin') {
+        if (Auth::user()->role == 'admin') {
             $query->where('branch_id', session('active_branch_id'));
         }
 

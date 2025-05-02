@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Add Part Stock Sale</h2>
-        <a href="{{ route('woker.partstock-sales.index') }}" class="btn btn-secondary">Back to List</a>
+        <a href="{{ route('worker.partstock-sales.index') }}" class="btn btn-secondary">Back to List</a>
     </div>
 
     @if($errors->any())
@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <form action="{{ route('woker.partstock-sales.store') }}" method="POST">
+    <form action="{{ route('worker.partstock-sales.store') }}" method="POST">
         @csrf
         <div class="row mb-3">
             <div class="col-md-6">

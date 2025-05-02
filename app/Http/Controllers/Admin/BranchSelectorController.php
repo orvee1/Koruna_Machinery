@@ -20,14 +20,27 @@ class BranchSelectorController extends Controller
         return view('admin.select_branch', compact('branches'));
     }
 
+    public function switchBranch()
+    {
+        $branches = Branch::all();
+        return view('admin.switch_branch', compact('branches'));
+    }
+    
     public function set(Request $request)
     {
         $request->validate([
             'branch_id' => 'required|exists:branches,id',
         ]);
 
-        session(['active_branch_id' => $request->branch_id]);
+        $branch = Branch::findOrFail($request->branch_id);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Branch selected successfully.');
+        session([
+            'selected_branch_id' => $branch->id,
+            'selected_branch_name' => $branch->name,
+        ]);
+
+        return redirect()->route('admin.dashboard');
     }
+    
+
 }

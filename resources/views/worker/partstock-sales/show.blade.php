@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>View Part Stock Sale</h2>
-        <a href="{{ route('woker.partstock-sales.index') }}" class="btn btn-secondary">Back to List</a>
+        <a href="{{ route('worker.partstock-sales.index') }}" class="btn btn-secondary">Back to List</a>
     </div>
 
     <div class="card shadow-sm">

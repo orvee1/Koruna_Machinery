@@ -13,30 +13,45 @@ class ProductController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('checkRole:manager');
+        $this->middleware('checkRole:admin,manager');
     }
 
     public function index(Request $request)
     {
-        $query = Product::query();
-
-        // Worker বা Manager হলে নিজের ব্রাঞ্চ ফিল্টার
-        if (Auth::user()->role == 'manager') {
+        // Get the selected date from the request or use today's date if not provided
+        $date = $request->get('date', null);  // Allow null for the first load, so we get all records initially
+        $search = $request->get('search', '');
+    
+        $query = Product::with('branch');
+    
+        // If the user is a manager, restrict results to the active branch
+        if (Auth::check() && Auth::user()->role == 'manager') {
             $query->where('branch_id', session('active_branch_id'));
         }
-
-        $products = $query->latest()->paginate(20);
-        return view('manager.products.index', compact('products'));
+    
+        // Apply the search query for product name and supplier name
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+    
+        // If a date is provided, filter by that date
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+    
+        // Fetch part stocks with the necessary relationships and pagination
+        $products = $query->paginate(10);
+    
+        // Return the view with the filtered part stocks
+        return view('manager.products.index', compact('products', 'date', 'search'));
     }
+    
 
     public function create()
     {
         $branches = Branch::all(); // Get all branches (only for manager)
-        // if (Auth::user()->role === 'manager') {
-        //     return view('manager.products.create', compact('branches'));
-        // } else {
-        //     return view('manager.products.create', compact('branches'));
-        // }
         return view('manager.products.create', compact('branches'));
     }
 
@@ -57,31 +72,16 @@ class ProductController extends Controller
             'branch_id'        => session('active_branch_id'), // ব্রাঞ্চ নির্ধারণ
         ]);
 
-        // if(Auth::user()->role === 'manager') {
-        //     return redirect()->route('manager.products.index')->with('success', 'Product created successfully.');
-        // }else {
-        //     return redirect()->route('manager.products.index')->with('success', 'Product created successfully.');
-        // }
         return redirect()->route('manager.products.index')->with('success', 'Product created successfully.');
     }
 
     public function edit(Product $product)
     {
-        // Only allow editing if the product belongs to the active branch
-        // if (Auth::user()->role == 'manager' && $product->branch_id == session('active_branch_id')) {
-        //     return view('manager.products.edit', compact('product'));
-        // }   
-        // else {
-        //     abort(403);
-        // }
-
         return view('manager.products.edit', compact('product'));
     }
 
     public function update(Request $request, Product $product)
     {
-        if (Auth::user()->role == 'manager' && $product->branch_id == session('active_branch_id')) {
-
         $request->validate([
             'name'            => 'required|string|max:255',
             'buying_price'    => 'required|numeric',
@@ -89,23 +89,14 @@ class ProductController extends Controller
             'stock_quantity'  => 'required|integer|min:0',
         ]);
 
-        $product->update($request->only('name', 'buying_price', 'selling_price', 'stock_quantity'));
+        $product->update($request->all());
 
         return redirect()->route('manager.products.index')->with('success', 'Product updated successfully.');
-    }
-        else {
-            abort(403);
-        }
+
     }
 
     public function show(Product $product)
-    {
-        // if (Auth::user()->role == 'manager' && $product->branch_id == session('active_branch_id')) {
-        // return view('manager.products.show', compact('product'));
-        //     } else {
-        //     abort(403);
-        // }   
-
+    {  
         return view('manager.products.show', compact('product'));
     }
 
