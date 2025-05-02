@@ -47,7 +47,7 @@ class CustomerController extends Controller
             'branch_id'  => session('active_branch_id'), 
         ]);
 
-        return redirect()->rote('worker.customers.index')->with('success', 'Customer created successfully.');
+        return redirect()->route('worker.customers.index')->with('success', 'Customer created successfully.');
     }
 
     public function edit(Customer $customer)
