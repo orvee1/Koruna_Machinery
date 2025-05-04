@@ -18,13 +18,7 @@ class ProductSaleController extends Controller
 
     public function index(Request $request)
     {
-        $user = Auth::user();
         $query = ProductSale::with(['product', 'customer', 'branch', 'seller', 'investor']);
-
-        if ($user->role === 'worker') {
-            // Worker: শুধু আজকের সেলস দেখতে পারবে
-            $query->forToday()->where('seller_id', $user->id);
-        } else {
             // Admin/Manager: তারিখ, মাস, বছর অনুযায়ী ফিল্টার করতে পারবে
             if ($request->filled('date')) {
                 $query->whereDate('created_at', $request->input('date'));
@@ -35,12 +29,6 @@ class ProductSaleController extends Controller
             if ($request->filled('year')) {
                 $query->forYear($request->input('year'));
             }
-        }
-
-        // Active Branch Filtering
-        if (session('active_branch_id')) {
-            $query->where('branch_id', session('active_branch_id'));
-        }
 
         $sales = $query->latest()->paginate(20);
         return view('admin.product-sales.index', compact('sales'));
@@ -48,8 +36,7 @@ class ProductSaleController extends Controller
 
     public function create()
     {
-        
-        $user = Auth::user();
+        $branchId = session('active_branch_id', Auth::user()->branch_id);
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -58,7 +45,7 @@ class ProductSaleController extends Controller
 
     public function store(Request $request)
     {
-        $user = Auth::user();
+       
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_id' => 'required|exists:customers,id',
@@ -66,6 +53,8 @@ class ProductSaleController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
         ]);
+
+        $user = Auth::user();
 
         ProductSale::create([
             'branch_id' => session('active_branch_id'),
@@ -83,7 +72,6 @@ class ProductSaleController extends Controller
 
     public function edit(ProductSale $productSale)
     {
-        $user = Auth::user();
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -92,7 +80,6 @@ class ProductSaleController extends Controller
 
     public function update(Request $request, ProductSale $productSale)
     {
-        $user = Auth::user();
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_id' => 'required|exists:customers,id',
@@ -115,7 +102,6 @@ class ProductSaleController extends Controller
 
     public function destroy(ProductSale $productSale)
     {
-        $user = Auth::user();
         $productSale->delete();
 
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale deleted successfully.');

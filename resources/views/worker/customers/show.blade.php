@@ -8,7 +8,7 @@
     <div class="text-center border-bottom pb-3 mb-3">
         <h2 class="fw-bold">KARUNA MACHINERY</h2>
         <p>২৫, জুবলি রোড, চট্টগ্রাম। ফোন: ০১৮৮১-০৮৭৭১৬</p>
-        <h5 class="mt-3 border-top pt-2">ক্রয়ের চালান</h5>
+        <h5 class="mt-3 border-top pt-2">ক্যাশ মেমো</h5>
     </div>
 
     {{-- 🔶 Customer Info --}}

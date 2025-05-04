@@ -82,8 +82,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Inventory: Products, Stocks, Part Stocks
         Route::resource('products', AdminProductController::class);
+        Route::post('products/{product}/update-payment', [ManagerProductController::class, 'updatePayment'])->name('products.updatePayment');
+
         Route::resource('stocks', AdminStockController::class);
         Route::resource('partstocks', AdminPartStockController::class);
+        Route::post('partstocks/{partstock}/update-payment', [ ManagerPartStockController::class, 'updatePayment'])->name('partstocks.updatePayment');
+
         
         // Sales Management
         Route::resource('product-sales', AdminProductSaleController::class);

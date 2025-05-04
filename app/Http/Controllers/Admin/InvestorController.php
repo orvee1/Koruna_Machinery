@@ -9,14 +9,15 @@ use Illuminate\Http\Request;
 
 class InvestorController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('checkRole:admin');
+    }
+    
     public function index()
     {
         $query = Investor::query();
-
-        if (session('active_branch_id')) {
-            $query->where('branch_id', session('active_branch_id'));
-        }
-
+        $query->with(['branch']);
         $investors = $query->latest()->paginate(20);
 
         return view('admin.investors.index', compact('investors'));

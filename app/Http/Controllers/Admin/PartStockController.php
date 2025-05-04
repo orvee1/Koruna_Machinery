@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 
 class PartStockController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('checkRole:admin');
+    }
     /**
      * Display a listing of the part stocks.
      */
@@ -73,7 +77,7 @@ class PartStockController extends Controller
         // $partStock->calculateAmountAndProfit();  // This will calculate the amount and profit
 
         // Redirect to the index with a success message
-        return redirect()->route('admin.partstocks.index')->with('success', 'Part stock added successfully.');
+        return redirect()->route('admin.partstocks.index', compact('partStock'))->with('success', 'Part stock added successfully.');
     }
 
     /**

@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class InvestmentHistoryController extends Controller
 {
+    public function __construct()
+    {
+        // Middleware to check if the user has the 'admin' role
+        $this->middleware('checkRole:admin');
+    }
     /**
      * Display a listing of the investment histories.
      */

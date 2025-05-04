@@ -11,16 +11,16 @@ use Illuminate\Support\Facades\Auth;
 
 class PartstockSaleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('checkRole:admin');
+    }
     public function index(Request $request)
     {
         $user = Auth::user();
         $query = PartstockSale::with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
-        // Worker: শুধু আজকের লিস্ট দেখবে
-        if ($user->role === 'worker') {
-            $query->forToday()->where('seller_id', $user->id);
-        } else {
-            // Admin/Manager: তারিখ/মাস/বছর অনুযায়ী ফিল্টার করতে পারবে
+           // Admin/: তারিখ/মাস/বছর অনুযায়ী ফিল্টার করতে পারবে
             if ($request->filled('date')) {
                 $query->whereDate('created_at', $request->input('date'));
             }
@@ -30,25 +30,13 @@ class PartstockSaleController extends Controller
             if ($request->filled('year')) {
                 $query->forYear($request->input('year'));
             }
-        }
-
-        // শুধু Active Branch-এর Data দেখাবে
-        if (session('active_branch_id')) {
-            $query->where('branch_id', session('active_branch_id'));
-        }
-
+            
         $sales = $query->latest()->paginate(20);
         return view('admin.partstock-sales.index', compact('sales'));
     }
 
     public function create()
     {
-        $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager', 'worker'])) {
-            abort(403);
-        }
-
         $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -58,11 +46,6 @@ class PartstockSaleController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager', 'worker'])) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'part_stock_id' => 'required|exists:part_stocks,id',
             'customer_id' => 'required|exists:customers,id',
@@ -86,12 +69,6 @@ class PartstockSaleController extends Controller
 
     public function edit(PartstockSale $partstockSale)
     {
-        $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager'])) {
-            abort(403);
-        }
-
         $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -100,12 +77,6 @@ class PartstockSaleController extends Controller
 
     public function update(Request $request, PartstockSale $partstockSale)
     {
-        $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager'])) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'part_stock_id' => 'required|exists:part_stocks,id',
             'customer_id' => 'required|exists:customers,id',
@@ -123,12 +94,6 @@ class PartstockSaleController extends Controller
 
     public function destroy(PartstockSale $partstockSale)
     {
-        $user = Auth::user();
-
-        if (!in_array($user->role, ['admin', 'manager'])) {
-            abort(403);
-        }
-
         $partstockSale->delete();
 
         return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale deleted successfully.');

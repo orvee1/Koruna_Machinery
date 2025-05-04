@@ -49,7 +49,7 @@ class ProductSaleController extends Controller
     {
         $user = Auth::user();
 
-        if (!in_array($user->role, ['manager', 'manager', 'worker'])) {
+        if (!in_array($user->role, ['manager', 'worker'])) {
             abort(403);
         }
 

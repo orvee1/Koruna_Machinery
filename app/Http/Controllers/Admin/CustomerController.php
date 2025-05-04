@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CustomerController extends Controller
 {
@@ -17,11 +18,6 @@ class CustomerController extends Controller
     public function index()
     {
         $query = Customer::query();
-
-        if (auth()->user()->role == 'admin') {
-            $query->where('branch_id', session('active_branch_id'));
-        }
-
         $customers = $query->latest()->paginate(20);
         return view('admin.customers.index', compact('customers'));
     }
@@ -52,19 +48,16 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer)
     {
-        $this->authorizeAccess($customer);
-
         return view('admin.customers.edit', compact('customer'));
     }
 
     public function update(Request $request, Customer $customer)
     {
-        $this->authorizeAccess($customer);
-
         $request->validate([
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
             'district'  => 'nullable|string|max:255',
+            'branch_id'  => session('active_branch_id'),
         ]);
 
         $customer->update($request->only('name', 'phone', 'district'));
@@ -74,31 +67,33 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        $this->authorizeAccess($customer);
+        try {
+            // ১) eager–load করে N+1 সমস্যা এড়ানো
+            $sales = $customer
+                ->productsales()
+                ->with(['product', 'seller'])
+                ->latest()
+                ->get();
 
-        $sales = $customer->productsales()
-        ->with(['product', 'seller']) // eager load
-        ->latest()
-        ->get();
+            // ২) যদি ইনভয়েস তৈরির বিশেষ লজিক থাকে, তখন service বা view helper এ পাঠিয়ে দিতে পারেন
+        } catch (\Exception $e) {
+            // ৩) ব্যর্থ হলে লগ লিখে redirect ও friendly error দেখানো
+            Log::error("CustomerController@show: বিক্রয় লোডিংয়ে সমস্যা (Customer ID: {$customer->id}): " . $e->getMessage());
 
-        return view('admin.customers.show', compact('customer','sales'));
+            return redirect()
+                ->route('admin.customers.index')
+                ->withErrors('দুঃখিত, এই মুহূর্তে কাস্টমার ইনভয়েস লোড করা যাচ্ছে না।');
+        }
+
+        // ৪) সফল হলে view–এ ডেটা পাঠানো
+        return view('admin.customers.show', compact('customer', 'sales'));
     }
 
     public function destroy(Customer $customer)
     {
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Unauthorized.');
-        }
-
         $customer->delete();
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer deleted successfully.');
     }
 
-    private function authorizeAccess(Customer $customer)
-    {
-        if (auth()->user()->role !== 'admin' && $customer->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized.');
-        }
-    }
 }

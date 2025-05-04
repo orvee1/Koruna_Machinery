@@ -14,12 +14,7 @@ class StockController extends Controller
     public function index(Request $request)
     {
         $query = Stock::query();
-
-        // Worker বা Manager হলে নিজের ব্রাঞ্চের স্টক
-        if (Auth::user()->role !== 'admin') {
-            $query->where('branch_id', session('active_branch_id'));
-        }
-
+        $query->with(['product', 'branch']);
         $stocks = $query->latest()->paginate(20);
 
         return view('admin.stocks.index', compact('stocks'));
@@ -58,20 +53,12 @@ class StockController extends Controller
 
     public function edit(Stock $stock)
     {
-        if (Auth::user()->role !== 'admin' && $stock->branch_id !== session('active_branch_id')) {
-            abort(403);
-        }
-
         $products = Product::where('branch_id', session('active_branch_id'))->get();
         return view('admin.stocks.edit', compact('stock', 'products'));
     }
 
     public function update(Request $request, Stock $stock)
     {
-        if (Auth::user()->role !== 'admin' && $stock->branch_id !== session('active_branch_id')) {
-            abort(403);
-        }
-
         $request->validate([
             'product_id'      => 'required|exists:products,id',
             'supplier_name'   => 'required|string|max:255',
@@ -81,26 +68,18 @@ class StockController extends Controller
             'purchase_date'   => 'required|date',
         ]);
 
-        $stock->update($request->only('product_id', 'supplier_name', 'buying_price', 'quantity', 'deposit_amount', 'purchase_date'));
+        $stock->update($request->all());
 
         return redirect()->route('admin.stocks.index')->with('success', 'Stock updated successfully.');
     }
 
     public function show(Stock $stock)
     {
-        if (Auth::user()->role !== 'admin' && $stock->branch_id !== session('active_branch_id')) {
-            abort(403);
-        }
-
         return view('admin.stocks.show', compact('stock'));
     }
 
     public function destroy(Stock $stock)
     {
-        if (Auth::user()->role !== 'admin') {
-            abort(403);
-        }
-
         $stock->delete();
 
         return redirect()->route('admin.stocks.index')->with('success', 'Stock deleted successfully.');

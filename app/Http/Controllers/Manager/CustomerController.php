@@ -48,7 +48,7 @@ class CustomerController extends Controller
             'branch_id'  => session('active_branch_id'), 
         ]);
 
-        return redirect()->rote('manager.customers.index')->with('success', 'Customer created successfully.');
+        return redirect()->route('manager.customers.index')->with('success', 'Customer created successfully.');
     }
 
     public function edit(Customer $customer)
@@ -64,11 +64,12 @@ class CustomerController extends Controller
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
             'district'  => 'nullable|string|max:255',
+            'branch_id'  => session('active_branch_id'), 
         ]);
 
         $customer->update($request->only('name', 'phone', 'district'));
 
-        return redirect()->rote('manager.customers.index')->with('success', 'Customer updated successfully.');
+        return redirect()->route('manager.customers.index')->with('success', 'Customer updated successfully.');
     }
 
     public function show(Customer $customer)
