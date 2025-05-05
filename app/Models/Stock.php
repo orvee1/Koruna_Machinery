@@ -1,44 +1,55 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Product;
 
 class Stock extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'supplier_name', 'buying_price', 'quantity', 'total_amount', 'deposit_amount', 'due_amount', 'purchase_date'];
+    protected $fillable = [
+        'branch_id',
+        'product_name',
+        'supplier_name',
+        'buying_price',
+        'selling_price',
+        'quantity',
+        'total_amount',
+        'deposit_amount',
+        'due_amount',
+        'purchase_date',
+    ];
 
-    // Relationship with product
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
-    // Relationship with branch
+    // Branch relation
     public function branch()
     {
         return $this->belongsTo(Branch::class);
     }
 
+    // Model event: stock এন্ট্রি তৈরি হলে product তৈরি/আপডেট
     protected static function booted()
     {
-        static::creating(function ($stock) {
-            // Calculate the total amount and total profit
-            $stock->total_amount = $stock->buying_price * $stock->quantity;
-            $stock->due_amount = ($stock->total_amount - $stock->deposit_amount) ?: 0;
+        static::created(function (Stock $stock) {
+            $product = Product::firstOrNew([
+                'name'      => $stock->product_name,
+                'branch_id' => $stock->branch_id,
+            ]);
 
-            // Automatically set the created_at date (ignore time)
-            if (!$stock->created_at) {
-                $stock->created_at = now()->toDateString();  // Only set the date part, not the time
-            }
+            $product->buying_price       = $stock->buying_price;
+            $product->selling_price      = $stock->selling_price;
+            $product->last_purchase_date = $stock->purchase_date;
+            $product->stock_quantity     = ($product->exists ? $product->stock_quantity : 0)
+                                           + $stock->quantity;
+
+            $product->save();
         });
     }
 
-    public function scopeFilterByDate($query, $date)
+        public function payments()
     {
-        return $query->whereDate('created_at', $date);  // Use whereDate to filter by date only (ignores time)
+        return $this->hasMany(ProductPayment::class);
     }
+
 }

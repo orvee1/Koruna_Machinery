@@ -4,106 +4,107 @@
 
 @section('content')
 <div class="container">
-    <h1>Stock List</h1>
+    <h1 class="mb-4">Stock List</h1>
 
-    <!-- Display success or error messages -->
     @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @elseif(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <form method="GET" action="{{ route('admin.stocks.index') }}" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input type="date" 
-                       name="date" 
-                       class="form-control @if(request('date')) border-success @endif"
-                       value="{{ old('date', request('date')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-filter-circle me-1"></i> Filter
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
+    {{-- Filter by Purchase Date --}}
+    <form method="GET" action="{{ route('admin.stocks.index') }}" class="mb-4 row g-2 align-items-center">
+        <div class="col-md-4">
+            <label for="date" class="form-label">Purchase Date</label>
+            <input 
+                type="date" 
+                name="date" 
+                id="date"
+                class="form-control @if(request('date')) border-success @endif"
+                value="{{ request('date') }}"
+            >
         </div>
-    </form>
-    
-
-    <!-- Search Form -->
-    <form action="{{ route('admin.stocks.index') }}" method="GET" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
-                <input type="text" 
-                       name="search" 
-                       class="form-control @if(request('search')) border-info @endif" 
-                       placeholder="Search by Product or Supplier" 
-                       value="{{ old('search', request('search')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i> Search
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary mt-4">
+                <i class="bi bi-filter-circle me-1"></i> Filter
+            </button>
+        </div>
+        <div class="col-auto">
+            <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary mt-4">
+                <i class="bi bi-x-circle me-1"></i> Clear
+            </a>
         </div>
     </form>
 
-    <!-- Button to create new stock -->
+    {{-- Search --}}
+    <form method="GET" action="{{ route('admin.stocks.index') }}" class="mb-4 row g-2 align-items-center">
+        <div class="col-md-6">
+            <label for="search" class="form-label">Search Product / Supplier</label>
+            <input 
+                type="text" 
+                name="search" 
+                id="search"
+                class="form-control @if(request('search')) border-info @endif"
+                placeholder="Type product or supplier"
+                value="{{ request('search') }}"
+            >
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary mt-4">
+                <i class="bi bi-search me-1"></i> Search
+            </button>
+        </div>
+        <div class="col-auto">
+            <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary mt-4">
+                <i class="bi bi-x-circle me-1"></i> Clear
+            </a>
+        </div>
+    </form>
+
     <a href="{{ route('admin.stocks.create') }}" class="btn btn-primary mb-3">Add New Stock</a>
 
-    <!-- Stocks Table -->
-    <table class="table table-bordered">
-        <thead>
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
             <tr>
-                <th>#</th>
-                <th>Product Name</th>
-                <th>Supplier Name</th>
-                <th>Quantity</th>
-                <th>Total Amount</th>
-                <th>Due Amount</th>
-                <th>Purchase Date</th>
-                <th>Actions</th>
+                <th style="width:5%;">SL</th>
+                <th style="width:25%;">Product</th>
+                <th style="width:20%;">Supplier</th>
+                <th style="width:10%;">Qty</th>
+                <th style="width:15%;">Total (৳)</th>
+                <th style="width:15%;">Due (৳)</th>
+                <th style="width:15%;">Date</th>
+                <th style="width:15%;">Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($stocks as $key => $stock)
+            @forelse($stocks as $i => $stock)
                 <tr>
-                    <td>{{ $key +1 }}</td>
-                    <td>{{ $stock->product->name }}</td>
+                    <td>{{ $stocks->firstItem() + $i }}</td>
+                    <td>{{ $stock->product_name }}</td>
                     <td>{{ $stock->supplier_name }}</td>
                     <td>{{ $stock->quantity }}</td>
-                    <td>{{ $stock->total_amount }}</td>
-                    <td>{{ $stock->due_amount }}</td>
-                    <td>{{ $stock->purchase_date }}</td>
-                    <td>
-                        <a href="{{ route('admin.stocks.show', $stock->id) }}" class="btn btn-info btn-sm">View</a>
-                        <a href="{{ route('admin.stocks.edit', $stock->id) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <form action="{{ route('admin.stocks.destroy', $stock->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    <td>{{ number_format($stock->total_amount, 2) }}</td>
+                    <td>{{ number_format($stock->due_amount, 2) }}</td>
+                    <td>{{ \Illuminate\Support\Carbon::parse($stock->purchase_date)->format('d M, Y') }}</td>
+                    <td class="d-flex flex-wrap gap-1">
+                        <a href="{{ route('admin.stocks.show', $stock) }}" class="btn btn-sm btn-info">View</a>
+                        <a href="{{ route('admin.stocks.edit', $stock) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('admin.stocks.destroy', $stock) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">Delete</button>
                         </form>
                     </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="8" class="text-center">No stock records found.</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 
-    <!-- Pagination -->
-    {{ $stocks->links() }}
+    <div class="d-flex justify-content-center">
+        {{ $stocks->withQueryString()->links() }}
+    </div>
 </div>
 @endsection

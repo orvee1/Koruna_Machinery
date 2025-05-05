@@ -35,10 +35,10 @@ class BranchSelectorController extends Controller
         $branch = Branch::findOrFail($request->branch_id);
 
         session([
-            'selected_branch_id' => $branch->id,
-            'selected_branch_name' => $branch->name,
+            'active_branch_id'   => $branch->id,
+            'active_branch_name' => $branch->name,
         ]);
-
+        // dd(session()->all());
         return redirect()->route('admin.dashboard');
     }
     

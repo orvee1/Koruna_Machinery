@@ -72,11 +72,11 @@
 <body>
     <!-- Topbar -->
     <div class="topbar fixed-top shadow-sm">
-        <div>Koruna Machinery — Empowering Industry</div>
+        <div>Koruna Machinery — Empowering Industry  <strong>({{ session('selected_branch_name') ?? 'None' }})</strong></div>
         <div class="d-flex align-items-center gap-2">
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#switchBranchModal">
-                    🔁 Switch Branch ({{ session('selected_branch_name') ?? 'None' }})
+                    🔁 Switch Branch
                 </button>
             @endif
             @if(auth()->check())
@@ -94,23 +94,61 @@
         <div class="sidebar p-3">
             <nav class="nav flex-column">
                 @if(auth()->user()->role === 'admin')
-                    <h5 class="text-secondary">Admin Panel</h5>
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
-                    <span class="fw-bold text-muted mt-3">User & Branch</span>
-                    <a href="{{ route('admin.branches.index') }}" class="nav-link">Branches</a>
-                    <a href="{{ route('admin.users.index') }}" class="nav-link">Users</a>
-                    <a href="{{ route('admin.customers.index') }}" class="nav-link">Customers</a>
-                    <span class="fw-bold text-muted mt-3">Inventory</span>
-                    <a href="{{ route('admin.products.index') }}" class="nav-link">Products</a>
-                    <a href="{{ route('admin.stocks.index') }}" class="nav-link">Stocks</a>
-                    <a href="{{ route('admin.partstocks.index') }}" class="nav-link">Part Stocks</a>
-                    <span class="fw-bold text-muted mt-3">Sales</span>
-                    <a href="{{ route('admin.product-sales.index') }}" class="nav-link">Product Sales</a>
-                    <a href="{{ route('admin.partstock-sales.index') }}" class="nav-link">Part Stock Sales</a>
-                    <span class="fw-bold text-muted mt-3">Investors</span>
-                    <a href="{{ route('admin.investors.index') }}" class="nav-link">Investor List</a>
-                    <a href="{{ route('admin.investment-histories.index') }}" class="nav-link">Investment Histories</a>
-                @endif
+                <h5 class="text-secondary">Admin Panel</h5>
+                <a href="{{ route('admin.dashboard') }}"
+                   class="nav-link {{ request()->routeIs('admin.dashboard') ? 'text-primary fw-bold' : '' }}">
+                   Dashboard
+                </a>
+            
+                <span class="fw-bold text-muted mt-3">User & Branch</span>
+                <a href="{{ route('admin.branches.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.branches.index') ? 'text-primary fw-bold' : '' }}">
+                   Branches
+                </a>
+                <a href="{{ route('admin.users.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.users.index') ? 'text-primary fw-bold' : '' }}">
+                   Users
+                </a>
+                <a href="{{ route('admin.customers.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.customers.index') ? 'text-primary fw-bold' : '' }}">
+                   Customers
+                </a>
+            
+                <span class="fw-bold text-muted mt-3">Inventory</span>
+                <a href="{{ route('admin.products.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.products.index') ? 'text-primary fw-bold' : '' }}">
+                   Products
+                </a>
+                <a href="{{ route('admin.stocks.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.stocks.index') ? 'text-primary fw-bold' : '' }}">
+                   Stocks
+                </a>
+                <a href="{{ route('admin.partstocks.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.partstocks.index') ? 'text-primary fw-bold' : '' }}">
+                   Part Stocks
+                </a>
+            
+                <span class="fw-bold text-muted mt-3">Sales</span>
+                <a href="{{ route('admin.product-sales.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.product-sales.index') ? 'text-primary fw-bold' : '' }}">
+                   Product Sales
+                </a>
+                <a href="{{ route('admin.partstock-sales.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.partstock-sales.index') ? 'text-primary fw-bold' : '' }}">
+                   Part Stock Sales
+                </a>
+            
+                <span class="fw-bold text-muted mt-3">Investors</span>
+                <a href="{{ route('admin.investors.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.investors.index') ? 'text-primary fw-bold' : '' }}">
+                   Investor List
+                </a>
+                <a href="{{ route('admin.investment-histories.index') }}"
+                   class="nav-link {{ request()->routeIs('admin.investment-histories.index') ? 'text-primary fw-bold' : '' }}">
+                   Investment Histories
+                </a>
+            @endif
+            
                 @if(auth()->user()->role === 'manager')
                     <h5 class="text-secondary">Manager Panel</h5>
                     <a href="{{ route('manager.dashboard') }}" class="nav-link">Dashboard</a>

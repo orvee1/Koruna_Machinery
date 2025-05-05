@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Investor;
+use App\Models\PartStock;
 use App\Models\PartstockSale;
 use App\Models\Product;
 use App\Models\ProductSale;
@@ -25,25 +26,22 @@ class AdminController extends Controller
         $branchId = session('active_branch_id');
     
         // Summary Data
-        $totalProducts = Product::where('branch_id', $branchId)->count();
         $totalStocks = Stock::where('branch_id', $branchId)->count();
-        $totalCustomers = Customer::where('branch_id', $branchId)->count();
-        $totalInvestors = Investor::where('branch_id', $branchId)->count();
-    
         // Sales
         $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('paid_amount');
         $totalPartstockSales = PartstockSale::where('branch_id', $branchId)->sum('paid_amount');
         $totalSales = $totalProductSales + $totalPartstockSales;
     
+        $totalProductValue = Product::where('branch_id', $branchId)->sum('buying_price');
+        $totalPartStockValue = PartStock::where('branch_id', $branchId)->sum('buy_value');
+        $totalValue = $totalProductValue + $totalPartStockValue;
+
         // Optional: all users of this branch
         $users = User::where('branch_id', $branchId)->with('branch')->get();
     
         return view('admin.dashboard', compact(
-            'totalProducts',
-            'totalStocks',
-            'totalCustomers',
-            'totalInvestors',
             'totalSales',
+            'totalValue',
             'users'
         ));
     }

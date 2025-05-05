@@ -9,12 +9,12 @@ class ProductPayment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'paid_amount', 'payment_date'];
+    protected $fillable = ['stock_id', 'paid_amount', 'payment_date'];
 
     // Relationship with product
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Stock::class);
     }
 
 }

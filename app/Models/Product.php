@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,59 +8,35 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'buying_price', 'selling_price', 'stock_quantity', 'branch_id','total_purchase_amount', 'paid_amount', 'payment_date'];
-   
-    // Relationship with branch
+    protected $fillable = [
+        'name',
+        'buying_price',
+        'selling_price',
+        'stock_quantity',
+        'branch_id',
+        'last_purchase_date',
+    ];
+
+    // Branch relation
     public function branch()
     {
         return $this->belongsTo(Branch::class);
     }
 
-    protected static function booted()
+    // Stock relation (optional, reverse via product_name)
+    public function stocks()
     {
-        static::creating(function ($product) {
-            // Calculate the total amount and total profit
-            $product->total_purchase_amount = $product->buying_price * $product->stock_quantity;
+        return $this->hasMany(Stock::class, 'product_name', 'name');
+    }
 
-            // Automatically set the created_at date (ignore time)
-            if (!$product->created_at) {
-                $product->created_at = now()->toDateString();  // Only set the date part, not the time
-            }
+    public function scopeSearch($query, $term)
+    {
+        $term = "%{$term}%";
+        $query->where(function($q) use($term) {
+            $q->where('name', 'like', $term)
+              ->orWhereHas('branch', function($q2) use($term) {
+                  $q2->where('name', 'like', $term);
+              });
         });
     }
-
-    public function scopeFilterByDate($query, $date)
-    {
-        return $query->whereDate('created_at', $date);  // Use whereDate to filter by date only (ignores time)
-    }
-
-
-
-    // Relationship with stocks
-    public function stock()
-    {
-        return $this->hasMany(Stock::class);
-    }
-
-    public function productSales()
-    {
-        return $this->hasMany(ProductSale::class);
-    }
-
-    public function payments()
-    {
-        return $this->hasMany(ProductPayment::class);
-    }
-    
-    public function paidAmount()
-    {
-        return $this->payments->sum('paid_amount');
-    }
-
-    public function remainingBalance()
-    {
-        $totalPaid = $this->payments->sum('paid_amount');
-        return $this->total_purchase_amount - $totalPaid;
-    }
-
 }
