@@ -12,7 +12,7 @@
 
             @if(auth()->user()->role === 'admin')
                 — আপনি এখন <strong>
-                    {{ session('selected_branch_name') ?? 'কোনো ব্রাঞ্চ সিলেক্ট করা হয়নি' }}
+                    {{ session('active_branch_name') ?? 'কোনো ব্রাঞ্চ সিলেক্ট করা হয়নি' }}
                 </strong> ব্রাঞ্চে আছেন।
             @endif
         </div>

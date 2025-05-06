@@ -31,9 +31,21 @@ class StockController extends Controller
      */
     public function create()
     {
-        $branches = Branch::all(); 
-        return view('admin.stocks.create', compact('branches'));
+        // সেশন থেকে ব্রাঞ্চ আইডি নিয়ে আসুন
+        $branchId = session('active_branch_id');
+    
+        // যদি ব্রাঞ্চ সিলেক্ট না থাকে, তখন ব্রাঞ্চ সিলেক্ট পেইজে রিডাইরেক্ট করুন
+        if (!$branchId) {
+            return redirect()->route('admin.select-branch')
+                             ->with('error', 'Please select a branch first.');
+        }
+    
+        // এক্সিকিউটেড ব্রাঞ্চের তথ্য পাঠানো হবে
+        $branch = Branch::find($branchId);
+        
+        return view('admin.stocks.create', compact('branch'));
     }
+    
     
 
     /**

@@ -19,13 +19,13 @@ class EnsureAdminBranchSelected
         // Admin রোল চেক করছি
         if (Auth::check() && Auth::user()->role === 'admin') {
             // সেশন চেক করি যে ব্রাঞ্চ সিলেক্ট করা হয়েছে কিনা
-            if (!session()->has('selected_branch_id')) {
+            if (! session()->has('active_branch_id')) {
                 // যদি না থাকে, সিলেক্ট ব্রাঞ্চ পেইজে রিডিরেক্ট করবো
-                return redirect()->route('admin.select-branch');
+                return redirect()->route('admin.select-branch')
+                                 ->with('error', 'Please select a branch first.');
             }
         }
     
-        // সেশন থাকলে ফলো আপ করি
         return $next($request);
     }
     
