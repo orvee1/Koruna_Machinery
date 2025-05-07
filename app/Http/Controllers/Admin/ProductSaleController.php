@@ -45,7 +45,6 @@ class ProductSaleController extends Controller
 
     public function store(Request $request)
     {
-       
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_id' => 'required|exists:customers,id',
@@ -53,9 +52,23 @@ class ProductSaleController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
         ]);
-
+    
+        // প্রোডাক্ট সেল করার আগে, স্টক থেকে প্রোডাক্টের কোয়ান্টিটি কমাতে হবে
+        $product = Product::findOrFail($validated['product_id']);
+    
+        // কোয়ান্টিটি পর্যাপ্ত কিনা তা চেক করুন
+        if ($product->stock_quantity < $validated['quantity']) {
+            return redirect()->route('admin.product-sales.create')
+                             ->with('error', 'Insufficient stock available for this product.');
+        }
+    
+        // স্টক থেকে কোয়ান্টিটি কমান
+        $product->stock_quantity -= $validated['quantity'];
+        $product->save();
+    
+        // সেল রেকর্ড তৈরি করুন
         $user = Auth::user();
-
+    
         ProductSale::create([
             'branch_id' => session('active_branch_id'),
             'product_id' => $validated['product_id'],
@@ -66,9 +79,10 @@ class ProductSaleController extends Controller
             'paid_amount' => $validated['paid_amount'],
             'due_amount' => ($validated['quantity'] * $validated['unit_price']) - $validated['paid_amount'],
         ]);
-
+    
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale added successfully.');
     }
+    
 
     public function edit(ProductSale $productSale)
     {
@@ -87,11 +101,32 @@ class ProductSaleController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
         ]);
-
+    
+        // সেল আপডেট করার আগে, স্টক থেকে প্রোডাক্টের কোয়ান্টিটি কমাতে হবে
+        $product = Product::findOrFail($validated['product_id']);
+    
+        // পূর্বের সেল এন্ট্রির কোয়ান্টিটি বের করুন
+        $previousQuantity = $productSale->quantity;
+    
+        // যদি আপডেটের পর কোয়ান্টিটি বেড়ে যায়, তাহলে স্টক থেকে নতুন পরিমাণ যোগ করতে হবে
+        if ($validated['quantity'] > $previousQuantity) {
+            // স্টক থেকে অতিরিক্ত কোয়ান্টিটি কমান
+            $product->stock_quantity -= ($validated['quantity'] - $previousQuantity);
+            // কোয়ান্টিটি বাড়ানো হয়েছে, তাহলে স্টক আপডেট করুন
+            $product->save();
+        } elseif ($validated['quantity'] < $previousQuantity) {
+            // কোয়ান্টিটি কমানো হলে, স্টকে অতিরিক্ত কোয়ান্টিটি যোগ করুন
+            $product->stock_quantity += ($previousQuantity - $validated['quantity']);
+            // স্টক আপডেট করুন
+            $product->save();
+        }
+    
+        // সেল আপডেট করুন
         $productSale->update($validated);
-
+    
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale updated successfully.');
     }
+    
 
         public function show(ProductSale $productSale)
     {
