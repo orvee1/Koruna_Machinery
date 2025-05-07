@@ -23,10 +23,13 @@ class AdminController extends Controller
 
     public function dashboard()
     {
+        
         $branchId = session('active_branch_id');
-    
-        // Summary Data
-        $totalStocks = Stock::where('branch_id', $branchId)->count();
+        // Check if branchId is set in the session
+        if (!$branchId) {
+            return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
+        }
+        $branch = Branch::find($branchId);
         // Sales
         $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('paid_amount');
         $totalPartstockSales = PartstockSale::where('branch_id', $branchId)->sum('paid_amount');
@@ -36,13 +39,28 @@ class AdminController extends Controller
         $totalPartStockValue = PartStock::where('branch_id', $branchId)->sum('buy_value');
         $totalValue = $totalProductValue + $totalPartStockValue;
 
+        $productProfit = Stock::where('branch_id', $branchId)->sum('total_profit');
+        $partStockProfit = PartStock::where('branch_id', $branchId)->sum('total_profit');
+        $totalProfit = $productProfit + $partStockProfit;
+
+        $productDue = Stock::where('branch_id', $branchId)->sum('due_amount');
+        $partStockDue = PartStock::where('branch_id', $branchId)->sum('due_amount');
+        $totalDue = $productDue + $partStockDue;
+
+        $productDueToHave = ProductSale::where('branch_id', $branchId)->sum('due_amount');
+        $partStockDueToHave = PartstockSale::where('branch_id', $branchId)->sum('due_amount');
+        $totalDueToHave = $productDueToHave + $partStockDueToHave;
+
         // Optional: all users of this branch
         $users = User::where('branch_id', $branchId)->with('branch')->get();
     
         return view('admin.dashboard', compact(
             'totalSales',
             'totalValue',
-            'users'
+            'users',
+            'totalProfit',
+            'totalDue',
+            'totalDueToHave',
         ));
     }
     

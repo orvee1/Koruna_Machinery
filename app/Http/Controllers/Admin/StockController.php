@@ -105,6 +105,11 @@ class StockController extends Controller
         return redirect()->route('admin.stocks.index')->with('success', 'Stock entry updated successfully.');
     }
 
+    public function show(Stock $stock)
+    {
+        return view('admin.stocks.show', compact('stock'));
+    }
+
     // স্টক ডিলিট
     public function destroy(Stock $stock)
     {
