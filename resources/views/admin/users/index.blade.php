@@ -36,7 +36,7 @@
         <tbody>
             @foreach($users as $user)
                 <tr>
-                    <td>{{ $user->id }}</td>
+                    <td>{{ $loop->iteration }}</td>
                     <td>{{ $user->name }}</td>
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->phone }}</td>
@@ -44,6 +44,7 @@
                     <td>{{ $user->branch->name ?? 'No Branch' }}</td>
                     <td>
                         <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-info btn-sm">View</a>
                     </td>
                 </tr>
             @endforeach
@@ -51,6 +52,6 @@
     </table>
 
     <!-- Pagination Links -->
-    {{-- {{ $users->links() }}  <!-- This will show pagination links --> --}}
+    {{ $users->links() }}  <!-- This will show pagination links -->
 </div>
 @endsection

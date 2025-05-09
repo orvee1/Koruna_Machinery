@@ -31,18 +31,37 @@ class ProductSale extends Model
     ];
 
     // Automatically calculate total and due
-    protected static function booted()
-    {
-        static::creating(function ($sale) {
-            $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = $sale->total_amount - $sale->paid_amount;
-        });
+   protected static function booted()
+{
+    static::created(function (ProductSale $sale) {
+        // প্রোডাক্ট খুঁজে বের করা
+        $product = Product::find($sale->product_id);
 
-        static::updating(function ($sale) {
-            $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = $sale->total_amount - $sale->paid_amount;
-        });
-    }
+        if ($product) {
+            // 🔽 স্টক থেকে কোয়ান্টিটি কমানো
+            $product->stock_quantity -= $sale->quantity;
+            $product->save();
+        }
+
+        // 🔎 স্টক খুঁজে বের করা
+        $stock = Stock::where('product_name', $product->name)
+                      ->where('branch_id', $sale->branch_id)
+                      ->first();
+
+        if ($stock) {
+            // 🔽 স্টক থেকে কোয়ান্টিটি কমানো
+            $stock->quantity -= $sale->quantity;
+
+            // 🔄 প্রফিট হিসাব করে যোগ করা
+            $profitPerUnit = $sale->unit_price - $stock->buying_price;
+            $totalProfit = $profitPerUnit * $sale->quantity;
+            $stock->total_profit += $totalProfit;
+
+            $stock->save();
+        }
+    });
+}
+
 
     // Scopes for filtering
     public function scopeForToday($query)

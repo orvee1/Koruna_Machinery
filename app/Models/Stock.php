@@ -28,6 +28,11 @@ class Stock extends Model
         return $this->belongsTo(Branch::class);
     }
 
+      public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     // Model event: stock এন্ট্রি তৈরি হলে product তৈরি/আপডেট
     protected static function booted()
     {

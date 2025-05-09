@@ -67,12 +67,15 @@
         <thead class="table-light">
             <tr>
                 <th style="width:5%;">SL</th>
-                <th style="width:25%;">Product</th>
-                <th style="width:20%;">Supplier</th>
-                <th style="width:10%;">Qty</th>
-                <th style="width:15%;">Total (৳)</th>
-                <th style="width:15%;">Due (৳)</th>
-                <th style="width:15%;">Date</th>
+                <th style="width:10%;">Product</th>
+                <th style="width:10%;">Supplier</th>
+                <th style="width:5%;">Qty</th>
+                <th style="width:10%;">Unit Price</th>
+                <th style="width:10%;">Per Unit Sell Price</th>
+                <th style="width:10%;">Total (৳)</th>
+                <th style="width:10%;">Profit (৳)</th>
+                <th style="width:10%;">Due (৳)</th>
+                <th style="width:10%;">Date</th>
                 <th style="width:15%;">Actions</th>
             </tr>
         </thead>
@@ -83,7 +86,10 @@
                     <td>{{ $stock->product_name }}</td>
                     <td>{{ $stock->supplier_name }}</td>
                     <td>{{ $stock->quantity }}</td>
+                    <td>{{ number_format($stock->buying_price, 2) }}</td>
+                    <td>{{ number_format($stock->selling_price, 2) }}</td>
                     <td>{{ number_format($stock->total_amount, 2) }}</td>
+                    <td>{{ number_format($stock->total_profit, 2) }}</td>
                     <td>{{ number_format($stock->due_amount, 2) }}</td>
                     <td>{{ \Illuminate\Support\Carbon::parse($stock->purchase_date)->format('d M, Y') }}</td>
                     <td class="d-flex flex-wrap gap-1">

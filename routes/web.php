@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
             Route::resource('branches', AdminBranchController::class);
             // Assuming a dedicated UserController exists; adjust if needed.
             Route::resource('users', AdminAdminController::class);
+            Route::get('admin/users/{user}', [AdminAdminController::class, 'show'])->name('admin.users.show');
+
 
             // Customer Management
             Route::resource('customers', AdminCustomerController::class);

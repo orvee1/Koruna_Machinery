@@ -29,8 +29,20 @@
                     <td>{{ $stock->quantity }}</td>
                 </tr>
                 <tr>
+                    <th>Unit Price (৳)</th>
+                    <td>{{ number_format($stock->buying_price, 2) }}</td>
+                </tr>
+                <tr>
+                    <th>Per Unit Sell Price (৳)</th>
+                    <td>{{ number_format($stock->selling_price, 2) }}</td>
+                </tr>
+                <tr>
                     <th>Total Amount (৳)</th>
                     <td>{{ number_format($stock->total_amount, 2) }}</td>
+                </tr>
+                <tr>
+                    <th>Profit (৳)</th>
+                    <td>{{ number_format($stock->total_profit, 2) }}</td>
                 </tr>
                 <tr>
                     <th>Due Amount (৳)</th>
