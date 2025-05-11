@@ -14,45 +14,57 @@ class PartStockController extends Controller
     {
         $this->middleware('checkRole:admin');
     }
+
     /**
      * Display a listing of the part stocks.
      */
     public function index(Request $request)
     {
-        // Get the selected date from the request or use today's date if not provided
-        $date = $request->get('date', null);  // Allow null for the first load, so we get all records initially
+        $date = $request->get('date', null); 
         $search = $request->get('search', '');
-    
-        $query = PartStock::with('branch');
-    
-        // Apply the search query for product name and supplier name
+        $branchId = session('active_branch_id');
+
+        if (!$branchId) {
+            return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
+        }
+
+        // Query with branch filter
+        $query = PartStock::where('branch_id', $branchId)
+            ->with('branch')
+            ->latest();
+
+        // Apply search filter
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('product_name', 'like', '%' . $search . '%')
                   ->orWhere('supplier_name', 'like', '%' . $search . '%');
             });
         }
-    
-        // If a date is provided, filter by that date
+
+        // Apply date filter
         if ($date) {
             $query->whereDate('created_at', $date);
         }
-    
-        // Fetch part stocks with the necessary relationships and pagination
-        $partStocks = $query->paginate(10);
-    
-        // Return the view with the filtered part stocks
-        return view('admin.partstocks.index', compact('partStocks', 'date', 'search'));
+
+        // Pagination
+        $partstocks = $query->paginate(20);
+
+        return view('admin.partstocks.index', compact('partstocks', 'date', 'search'));
     }
-    
 
     /**
      * Show the form for creating a new part stock entry.
      */
     public function create()
     {
-        $branches = Branch::all();
-        return view('admin.partstocks.create', compact('branches'));
+        $branchId = session('active_branch_id');
+
+        if (!$branchId) {
+            return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
+        }
+
+        $branch = Branch::findOrFail($branchId);
+        return view('admin.partstocks.create', compact('branch'));
     }
 
     /**
@@ -60,24 +72,27 @@ class PartStockController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request data
         $request->validate([
             'product_name' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
-            'buy_value' => 'required|decimal:0,2',
+            'buy_value' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
-            'sell_value' => 'required|decimal:0,2',
-            'branch_id' => 'required|exists:branches,id',
+            'sell_value' => 'required|numeric|min:0',
         ]);
 
-        // Create the part stock using the validated data
-        $partStock = PartStock::create($request->all());
+        // Ensure the PartStock is only created for the active branch
+        $branchId = session('active_branch_id');
 
-        // Automatically calculate the amount and total profit
-        // $partStock->calculateAmountAndProfit();  // This will calculate the amount and profit
+        PartStock::create([
+            'product_name' => $request->product_name,
+            'supplier_name' => $request->supplier_name,
+            'buy_value' => $request->buy_value,
+            'quantity' => $request->quantity,
+            'sell_value' => $request->sell_value,
+            'branch_id' => $branchId,  // Only active branch
+        ]);
 
-        // Redirect to the index with a success message
-        return redirect()->route('admin.partstocks.index', compact('partStock'))->with('success', 'Part stock added successfully.');
+        return redirect()->route('admin.partstocks.index')->with('success', 'Part stock added successfully.');
     }
 
     /**
@@ -85,8 +100,13 @@ class PartStockController extends Controller
      */
     public function edit(PartStock $partStock)
     {
-        $branches = Branch::all();
-        return view('admin.partstocks.edit', compact('partStock', 'branches'));
+        // Check if the PartStock belongs to the active branch
+        if ($partStock->branch_id !== session('active_branch_id')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $branch = Branch::find(session('active_branch_id'));
+        return view('admin.partstocks.edit', compact('partStock', 'branch'));
     }
 
     /**
@@ -94,57 +114,56 @@ class PartStockController extends Controller
      */
     public function update(Request $request, PartStock $partStock)
     {
-        // Validate the incoming request data
+        if ($partStock->branch_id !== session('active_branch_id')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'product_name' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
-            'buy_value' => 'required|decimal:0,2',
+            'buy_value' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
-            'sell_value' => 'required|decimal:0,2',
-            'branch_id' => 'required|exists:branches,id',
+            'sell_value' => 'required|numeric|min:0',
         ]);
 
-        // Update the part stock with the validated data
-        $partStock->update($request->all());
+        $partStock->update([
+            'product_name' => $request->product_name,
+            'supplier_name' => $request->supplier_name,
+            'buy_value' => $request->buy_value,
+            'quantity' => $request->quantity,
+            'sell_value' => $request->sell_value,
+            'branch_id' => session('active_branch_id'), // Only active branch
+        ]);
 
-        // Recalculate the amount and total profit
-        // $partStock->calculateAmountAndProfit();  // This will calculate the amount and profit
-
-        // Redirect to the index with a success message
         return redirect()->route('admin.partstocks.index')->with('success', 'Part stock updated successfully.');
     }
 
     public function updatePayment(Request $request, PartStock $partStock)
     {
         $request->validate([
-            'paid_amount' => 'required|decimal:0,2',
+            'paid_amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
         ]);
-    
-        // Create new payment record for the part stock
-        $payment = new PartStockPayment([
+
+        PartStockPayment::create([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
             'part_stock_id' => $partStock->id,
         ]);
-    
-        // Save payment related to the part stock
-        $payment->save();
-    
+
         return back()->with('success', 'Payment updated successfully.');
     }
-    
 
     /**
      * Show the details of a specific part stock entry.
      */
     public function show(PartStock $partStock)
     {
-        // Load the related product and branch data
-        $partStock->load('branch');
+        if ($partStock->branch_id !== session('active_branch_id')) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        // Return the view for showing the part stock details
+        $partStock->load('branch');
         return view('admin.partstocks.show', compact('partStock'));
     }
 }
-

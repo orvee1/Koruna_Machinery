@@ -19,6 +19,7 @@
 
     <form action="{{ route('admin.partstocks.store') }}" method="POST">
         @csrf
+
         <div class="form-group">
             <label for="product_name">Product Name</label>
             <input type="text" id="product_name" name="product_name" class="form-control @error('product_name') is-invalid @enderror" value="{{ old('product_name') }}" required>
@@ -59,20 +60,14 @@
             @enderror
         </div>
 
+        <!-- সরাসরি Active Branch দেখানো হচ্ছে, Dropdown বাদ -->
         <div class="form-group">
-            <label for="branch_id">Branch</label>
-            <select name="branch_id" id="branch_id" class="form-select @error('branch_id') is-invalid @enderror">
-                @foreach($branches as $branch)
-                    <option value="{{ $branch->id }}" @if(old('branch_id') == $branch->id) selected @endif>{{ $branch->name }}</option>
-                @endforeach
-            </select>
-            @error('branch_id')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <label for="branch_name">Branch</label>
+            <input type="text" class="form-control" value="{{ $branch->name }}" disabled>
+            <input type="hidden" name="branch_id" value="{{ $branch->id }}">
         </div>
 
         <button type="submit" class="btn btn-success mt-3">Save Part Stock</button>
     </form>
 </div>
 @endsection
-@section('scripts')

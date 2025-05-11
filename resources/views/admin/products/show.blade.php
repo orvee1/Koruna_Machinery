@@ -22,40 +22,55 @@
         <table class="table table-bordered table-striped">
             <tbody>
                 <tr>
-                    <th>Name</th>
-                    <td>{{ $product->name }}</td>
+                    <th style="width: 25%;">Product Name</th>
+                    <td>{{ $stock->product_name }}</td>
                 </tr>
                 <tr>
-                    <th>Buying Price</th>
-                    <td>{{ $product->buying_price }}</td>
+                    <th>Supplier Name</th>
+                    <td>{{ $stock->supplier_name }}</td>
                 </tr>
                 <tr>
-                    <th>Selling Price</th>
-                    <td>{{ $product->selling_price }}</td>
+                    <th>Buying Price (৳)</th>
+                    <td>{{ number_format($stock->buying_price, 2) }}</td>
+                </tr>
+                <tr>
+                    <th>Unit Price (৳)</th>
+                    <td>{{ number_format($stock->unit_price, 2) }}</td>
                 </tr>
                 <tr>
                     <th>Stock Quantity</th>
-                    <td>{{ $product->stock_quantity }}</td>
+                    <td>{{ $stock->quantity }}</td>
                 </tr>
                 <tr>
-                    <th>Total Purchase Amount</th>
-                    <td>{{ $product->total_purchase_amount }}</td>
+                    <th>Branch</th>
+                    <td>{{ $stock->branch->name ?? '—' }}</td>
                 </tr>
                 <tr>
-                    <th>Paid Amount</th>
-                    <td>{{ $product->paidAmount() }}</td>
+                    <th>Last Purchase Date</th>
+                    <td>{{ $stock->purchase_date ? \Illuminate\Support\Carbon::parse($stock->purchase_date)->format('d M, Y') : '—' }}</td>
                 </tr>
                 <tr>
-                    <th>Remaining Balance</th>
-                    <td>{{ $product->remainingBalance() }}</td>
+                    <th>Total Amount (৳)</th>
+                    <td>{{ number_format($stock->total_amount, 2) }}</td>
+                </tr>
+                <tr>
+                    <th>Due Amount (৳)</th>
+                    <td>{{ number_format($stock->due_amount, 2) }}</td>
+                </tr>
+                <tr>
+                    <th>Total Profit (৳)</th>
+                    <td>{{ number_format($stock->total_profit, 2) }}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-
-    <!-- Back Button -->
-    <a href="{{ route('admin.products.index') }}" class="btn btn-primary">Back to Products</a>
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-between">
+        <a href="{{ route('admin.products.index') }}" class="btn btn-primary">← Back to Products</a>
+        <div>
+            <a href="{{ route('admin.products.edit', $stock->id) }}" class="btn btn-warning me-2">✏️ Edit Product</a>
+        </div>
+    </div>
 </div>
-
 @endsection

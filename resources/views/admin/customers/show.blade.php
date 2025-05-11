@@ -25,73 +25,83 @@
     </div>
 
     @php
-        // mergedSales তৈরি: পণ্য ও পার্টসেলস উভয়েই seller সহ
+        // সকল সেলস ডাটা একত্রে
         $mergedSales = collect();
 
-        foreach ($customer->productSales()->with(['product','seller'])->get() as $sale) {
+        foreach ($customer->productSales()->with(['product', 'seller'])->get() as $sale) {
             $mergedSales->push([
                 'name'       => $sale->product->name ?? 'N/A',
                 'quantity'   => $sale->quantity,
                 'unit_price' => $sale->unit_price,
-                'total'      => $sale->total_amount,
+                'total'      => $sale->unit_price * $sale->quantity,
+                'paid'       => $sale->paid_amount,
+                'due'        => $sale->due_amount,
                 'seller'     => $sale->seller->name ?? 'N/A',
             ]);
         }
 
-        foreach ($customer->partsStockSales()->with(['partStock','seller'])->get() as $sale) {
+        foreach ($customer->partsStockSales()->with(['partStock', 'seller'])->get() as $sale) {
             $mergedSales->push([
                 'name'       => $sale->partStock->name ?? 'N/A',
                 'quantity'   => $sale->quantity,
                 'unit_price' => $sale->unit_price,
-                'total'      => $sale->total_amount,
+                'total'      => $sale->unit_price * $sale->quantity,
+                'paid'       => $sale->paid_amount,
+                'due'        => $sale->due_amount,
                 'seller'     => $sale->seller->name ?? 'N/A',
             ]);
         }
 
-        $discount      = session('invoice_discount', 0);
-        $subtotal      = $mergedSales->sum('total');
-        $afterDiscount = $subtotal - $discount;
-
-        // শেষ বিক্রেতার নাম
-        $lastSeller = $mergedSales->isEmpty() ? 'N/A' : $mergedSales->last()['seller'];
+        $grandTotal = $mergedSales->sum('total');
+        $grandPaid = $mergedSales->sum('paid');
+        $grandDue = $mergedSales->sum('due');
+        $lastSeller = $mergedSales->isNotEmpty() ? $mergedSales->last()['seller'] : 'N/A';
     @endphp
 
+    @if($mergedSales->isNotEmpty())
     <table class="table table-bordered text-center align-middle">
         <thead class="table-light">
             <tr>
-                <th style="width:5%;">ক্রম</th>
-                <th style="width:45%;">বিবরণ</th>
-                <th style="width:15%;">পরিমাণ</th>
-                <th style="width:15%;">দর (৳)</th>
-                <th style="width:20%;">টাকা (৳)</th>
+                <th>ক্রম</th>
+                <th>পণ্যের নাম</th>
+                <th>পরিমাণ</th>
+                <th>দর (৳)</th>
+                <th>মোট (৳)</th>
+                <th>পেইড (৳)</th>
+                <th>বাকি (৳)</th>
             </tr>
         </thead>
         <tbody>
             @foreach($mergedSales as $i => $item)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td class="text-start">{{ $item['name'] }}</td>
+                    <td>{{ $item['name'] }}</td>
                     <td>{{ $item['quantity'] }}</td>
                     <td>{{ number_format($item['unit_price'], 2) }}</td>
                     <td>{{ number_format($item['total'], 2) }}</td>
+                    <td>{{ number_format($item['paid'], 2) }}</td>
+                    <td class="{{ $item['due'] > 0 ? 'text-danger' : 'text-success' }}">
+                        {{ $item['due'] > 0 ? number_format($item['due'], 2) . ' (Due)' : 'Paid' }}
+                    </td>
                 </tr>
             @endforeach
-
-            {{-- ডিসকাউন্ট রো --}}
-            <tr>
-                <td colspan="4" class="text-end"><strong>Discount</strong></td>
-                <td>{{ number_format($discount, 2) }}</td>
-            </tr>
         </tbody>
         <tfoot>
-            <tr class="fw-bold table-light">
-                <td colspan="4" class="text-end">মোট</td>
-                <td>{{ number_format($afterDiscount, 2) }}</td>
+            <tr class="table-light">
+                <td colspan="4" class="text-end fw-bold">মোট</td>
+                <td>{{ number_format($grandTotal, 2) }}</td>
+                <td>{{ number_format($grandPaid, 2) }}</td>
+                <td class="{{ $grandDue > 0 ? 'text-danger' : 'text-success' }}">
+                    {{ $grandDue > 0 ? number_format($grandDue, 2) . ' (Due)' : 'Paid' }}
+                </td>
             </tr>
         </tfoot>
     </table>
+    @else
+        <p class="text-center text-muted">কোন বিক্রয় রেকর্ড পাওয়া যায়নি।</p>
+    @endif
 
-    {{-- Signature with dynamic seller --}}
+    {{-- 🔷 Signature Part --}}
     <div class="text-end mt-5">
         <p><strong>পক্ষে - {{ $lastSeller }}</strong></p>
     </div>
@@ -105,10 +115,15 @@
     </div>
 </div>
 
-{{-- Improved Print Styles --}}
+{{-- Print Logic --}}
+<script>
+function printInvoice() {
+    window.print();
+}
+</script>
+
 <style>
 @media print {
-    /* পুরো বডির অন্যান্য এলিমেন্ট হাইড করে শুধু invoice-section দেখাবে */
     body * {
         visibility: hidden;
     }
@@ -120,25 +135,16 @@
         top: 0;
         left: 0;
         width: 100%;
-        /* পেজ ব্রেক অবয়েড করে */
-        page-break-after: auto;
     }
     .no-print {
         display: none !important;
     }
-    table {
-        page-break-inside: auto;
+    .text-danger {
+        color: red !important;
     }
-    tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
+    .text-success {
+        color: green !important;
     }
 }
 </style>
-
-<script>
-function printInvoice() {
-    window.print();
-}
-</script>
 @endsection

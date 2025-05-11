@@ -82,7 +82,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($partStocks as $key => $partStock)
+            @foreach($partstocks as $key => $partstock)
                 <tr>
                     <td>{{ $key + 1 }}</td>
                     <td>{{ $partStock->product_name }}</td>
@@ -100,6 +100,6 @@
         </tbody>
     </table>
 
-    {{ $partStocks->links() }}
+    {{ $partstocks->links() }}
 </div>
 @endsection

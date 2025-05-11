@@ -17,8 +17,11 @@ class PartstockSaleController extends Controller
     }
     public function index(Request $request)
     {
+        
+        $branchId = session('active_branch_id'); 
         $user = Auth::user();
-        $query = PartstockSale::with(['partStock', 'customer', 'branch', 'seller', 'investor']);
+        $query = PartstockSale::where('branch_id', $branchId)
+        ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
            // Admin/: তারিখ/মাস/বছর অনুযায়ী ফিল্টার করতে পারবে
             if ($request->filled('date')) {
@@ -37,6 +40,7 @@ class PartstockSaleController extends Controller
 
     public function create()
     {
+        $branchId = session('active_branch_id', Auth::user()->branch_id);
         $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
@@ -85,10 +89,31 @@ class PartstockSaleController extends Controller
             'paid_amount' => 'required|numeric|min:0',
         ]);
 
-        $partstockSale->update($validated);
+        // Calculate Total Amount
+        $totalAmount = $validated['quantity'] * $validated['unit_price'];
+
+        // ✅ আগের পেইড অ্যামাউন্ট + নতুন পেইড অ্যামাউন্ট
+        $newPaidAmount = $partstockSale->paid_amount + $validated['paid_amount'];
+
+        // ✅ ডিউ অ্যামাউন্ট ক্যালকুলেশন
+        $dueAmount = $totalAmount - $newPaidAmount;
+
+        // যদি ডিউ 0 বা কম হয়, তাহলে 0 সেট করবে
+        if ($dueAmount <= 0) {
+            $dueAmount = 0;
+        }
+
+        // Update PartstockSale with new values
+        $partstockSale->update(array_merge($validated, [
+            'total_amount' => $totalAmount,
+            'paid_amount' => $newPaidAmount,
+            'due_amount' => $dueAmount,
+        ]));
 
         return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale updated successfully.');
     }
+
+
 
     
 

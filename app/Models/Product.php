@@ -29,6 +29,15 @@ class Product extends Model
         return $this->hasMany(Stock::class, 'product_name', 'name');
     }
 
+    protected static function booted()
+    {
+        static::updated(function (Product $product) {
+            if ($product->stock_quantity <= 0) {
+                $product->delete(); // প্রোডাক্টের স্টক শেষ হলে মুছে যাবে
+            }
+        });
+    }
+
     public function scopeSearch($query, $term)
     {
         $term = "%{$term}%";

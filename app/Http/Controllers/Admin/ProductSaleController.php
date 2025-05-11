@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use App\Models\Product;
 use App\Models\ProductSale;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,127 +18,105 @@ class ProductSaleController extends Controller
 
     public function index(Request $request)
     {
-        $query = ProductSale::with(['product', 'customer', 'branch', 'seller', 'investor']);
-            // Admin/Manager: তারিখ, মাস, বছর অনুযায়ী ফিল্টার করতে পারবে
-            if ($request->filled('date')) {
-                $query->whereDate('created_at', $request->input('date'));
-            }
-            if ($request->filled('month')) {
-                $query->forMonth($request->input('month'));
-            }
-            if ($request->filled('year')) {
-                $query->forYear($request->input('year'));
-            }
+        $branchId = session('active_branch_id');
 
-        $sales = $query->latest()->paginate(20);
+        $query = ProductSale::where('branch_id', $branchId)
+            ->with(['stock.product', 'customer', 'branch', 'seller', 'investor'])
+            ->latest();
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->input('date'));
+        }
+        if ($request->filled('month')) {
+            $query->forMonth($request->input('month'));
+        }
+        if ($request->filled('year')) {
+            $query->forYear($request->input('year'));
+        }
+
+        $sales = $query->paginate(20);
         return view('admin.product-sales.index', compact('sales'));
     }
 
     public function create()
     {
         $branchId = session('active_branch_id', Auth::user()->branch_id);
-        $products = Product::where('branch_id', session('active_branch_id'))->get();
-        $customers = Customer::where('branch_id', session('active_branch_id'))->get();
+        $stocks = Stock::where('branch_id', $branchId)->get();
+        $customers = Customer::where('branch_id', $branchId)->get();
 
-        return view('admin.product-sales.create', compact('products', 'customers'));
+        return view('admin.product-sales.create', compact('stocks', 'customers'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'stock_id' => 'required|exists:stocks,id',
             'customer_id' => 'required|exists:customers,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
         ]);
-    
-        // প্রোডাক্ট সেল করার আগে, স্টক থেকে প্রোডাক্টের কোয়ান্টিটি কমাতে হবে
-        $product = Product::findOrFail($validated['product_id']);
-    
-        // কোয়ান্টিটি পর্যাপ্ত কিনা তা চেক করুন
-        if ($product->stock_quantity < $validated['quantity']) {
+
+        // ✅ **স্টক খুঁজে বের করুন**
+        $stock = Stock::findOrFail($validated['stock_id']);
+
+        // ✅ **পর্যাপ্ত পরিমাণ স্টকে আছে কিনা চেক করুন**
+        if ($stock->quantity < $validated['quantity']) {
             return redirect()->route('admin.product-sales.create')
-                             ->with('error', 'Insufficient stock available for this product.');
+                ->with('error', 'Insufficient stock available for this product.');
         }
-    
-        // স্টক থেকে কোয়ান্টিটি কমান
-        $product->stock_quantity -= $validated['quantity'];
-        $product->save();
-    
-        // সেল রেকর্ড তৈরি করুন
+
+        // ✅ **স্টক থেকে কোয়ান্টিটি কমানো হচ্ছে**
+        $stock->quantity -= $validated['quantity'];
+
+        // ✅ **প্রফিট হিসাব করে যোগ করা হচ্ছে**
+        $profitPerUnit = $validated['unit_price'] - $stock->buying_price;
+        $totalProfit = $profitPerUnit * $validated['quantity'];
+        $stock->total_profit += $totalProfit;
+
+        // ✅ **স্টক সেভ করা হচ্ছে**
+        $stock->save();
+
+        // ✅ **সেল রেকর্ড তৈরি করা হচ্ছে**
         $user = Auth::user();
-    
         ProductSale::create([
             'branch_id' => session('active_branch_id'),
-            'product_id' => $validated['product_id'],
+            'stock_id' => $validated['stock_id'],
             'customer_id' => $validated['customer_id'],
             'seller_id' => $user->id,
             'quantity' => $validated['quantity'],
             'unit_price' => $validated['unit_price'],
             'paid_amount' => $validated['paid_amount'],
             'due_amount' => ($validated['quantity'] * $validated['unit_price']) - $validated['paid_amount'],
+            'profit' => $totalProfit,
         ]);
-    
+
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale added successfully.');
     }
-    
 
-    public function edit(ProductSale $productSale)
-    {
-        $products = Product::where('branch_id', session('active_branch_id'))->get();
-        $customers = Customer::where('branch_id', session('active_branch_id'))->get();
-
-        return view('admin.product-sales.edit', compact('productSale', 'products', 'customers'));
-    }
-
-    public function update(Request $request, ProductSale $productSale)
-    {
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'customer_id' => 'required|exists:customers,id',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'paid_amount' => 'required|numeric|min:0',
-        ]);
-    
-        // সেল আপডেট করার আগে, স্টক থেকে প্রোডাক্টের কোয়ান্টিটি কমাতে হবে
-        $product = Product::findOrFail($validated['product_id']);
-    
-        // পূর্বের সেল এন্ট্রির কোয়ান্টিটি বের করুন
-        $previousQuantity = $productSale->quantity;
-    
-        // যদি আপডেটের পর কোয়ান্টিটি বেড়ে যায়, তাহলে স্টক থেকে নতুন পরিমাণ যোগ করতে হবে
-        if ($validated['quantity'] > $previousQuantity) {
-            // স্টক থেকে অতিরিক্ত কোয়ান্টিটি কমান
-            $product->stock_quantity -= ($validated['quantity'] - $previousQuantity);
-            // কোয়ান্টিটি বাড়ানো হয়েছে, তাহলে স্টক আপডেট করুন
-            $product->save();
-        } elseif ($validated['quantity'] < $previousQuantity) {
-            // কোয়ান্টিটি কমানো হলে, স্টকে অতিরিক্ত কোয়ান্টিটি যোগ করুন
-            $product->stock_quantity += ($previousQuantity - $validated['quantity']);
-            // স্টক আপডেট করুন
-            $product->save();
-        }
-    
-        // সেল আপডেট করুন
-        $productSale->update($validated);
-    
-        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale updated successfully.');
-    }
-    
-
-        public function show(ProductSale $productSale)
+    public function show(ProductSale $productSale)
     {
         $user = Auth::user();
-        return view('admin.prodct-sales.show', compact('productSale'));
+        return view('admin.product-sales.show', compact('productSale'));
     }
-
 
     public function destroy(ProductSale $productSale)
     {
-        $productSale->delete();
+        // ✅ **স্টক ফেরত আসবে**
+        $stock = Stock::find($productSale->stock_id);
 
-        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale deleted successfully.');
+        if ($stock) {
+            $stock->quantity += $productSale->quantity;
+
+            // ✅ **প্রফিট অ্যাডজাস্ট হচ্ছে**
+            $profitPerUnit = $productSale->unit_price - $stock->buying_price;
+            $totalProfit = $profitPerUnit * $productSale->quantity;
+
+            $stock->total_profit -= $totalProfit;
+            $stock->save();
+        }
+
+        $productSale->delete();
+        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale deleted successfully and Stock restored.');
     }
 }

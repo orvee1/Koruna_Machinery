@@ -25,15 +25,10 @@
                 value="{{ request('date') }}"
             >
         </div>
-        <div class="col-auto align-self-end">
-            <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-x-circle me-1"></i> Clear
-            </a>
-        </div>
+
         <!-- Search Input -->
-        <div class="row-md-4">
-            <div class="col-md-4">
-                <input
+        <div class="col-md-4">
+            <input
                 type="text"
                 name="search"
                 id="search"
@@ -41,7 +36,6 @@
                 placeholder="Type product or branch name"
                 value="{{ request('search') }}"
             >
-            </div>
         </div>
 
         <!-- Buttons -->
@@ -62,33 +56,31 @@
         <thead class="table-light">
             <tr>
                 <th style="width:5%; text-align: center">SL No</th>
-                <th style="width:20%; text-align: center" >Name</th>
-                <th style="width:15%; text-align: center">Buying Price (৳)</th>
-                <th style="width:15%; text-align: center">Selling Price (৳)</th>
-                <th style="width:10%; text-align: center">Stock Qty</th>
+                <th style="width:20%; text-align: center">Product Name</th>
+                <th style="width:15%; text-align: center">Supplier Name</th>
+                <th style="width:10%; text-align: center">Stock Quantity</th>
+                <th style="width:15%; text-align: center">Unit Price (৳)</th>
                 <th style="width:15%; text-align: center">Branch</th>
-                <th style="width:15%; text-align: center">Last Purchase</th>
                 <th style="width:10%; text-align: center">Actions</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($products as $i => $product)
+            @forelse($stocks as $i => $stock)
                 <tr>
-                    <td>{{ $products->firstItem() + $i }}</td>
-                    <td>{{ $product->name }}</td>
-                    <td>{{ number_format($product->buying_price, 2) }}</td>
-                    <td>{{ $product->selling_price !== null ? number_format($product->selling_price, 2) : '—' }}</td>
-                    <td>{{ $product->stock_quantity }}</td>
-                    <td>{{ $product->branch->name ?? '—' }}</td>
-                    <td>{{ optional($product->last_purchase_date)->format('d M, Y') ?? '—' }}</td>
-                    <td>
-                        <a href="{{ route('admin.products.show', $product->id) }}"
-                           class="btn btn-sm btn-info">View</a>
+                    <td style="text-align: center">{{ $stocks->firstItem() + $i }}</td>
+                    <td style="text-align: center">{{ $stock->product_name }}</td>
+                    <td style="text-align: center">{{ $stock->supplier_name }}</td>
+                    <td style="text-align: center">{{ $stock->quantity }}</td>
+                    <td style="text-align: center">{{ number_format($stock->buying_price, 2) }}</td>
+                    <td style="text-align: center">{{ $stock->branch->name ?? '—' }}</td>
+                    <td style="text-align: center">
+                        <a href="{{ route('admin.products.show', $stock->id) }}"
+                           class="btn btn-sm btn-info">🔎 View</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center">কোনো পণ্য পাওয়া যায়নি।</td>
+                    <td colspan="7" class="text-center">কোনো পণ্য পাওয়া যায়নি।</td>
                 </tr>
             @endforelse
         </tbody>
@@ -96,7 +88,7 @@
 
     <!-- Pagination -->
     <div class="d-flex justify-content-center">
-        {{ $products->links() }}
+        {{ $stocks->links() }}
     </div>
 </div>
 @endsection
