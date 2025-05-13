@@ -16,7 +16,7 @@
     <!-- Filter & Search Form -->
     <form method="GET" action="{{ route('admin.products.index') }}" class="mb-4 row g-2">
         <!-- Date Filter -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <input
                 type="date"
                 name="date"
@@ -26,15 +26,27 @@
             >
         </div>
 
-        <!-- Search Input -->
-        <div class="col-md-4">
+        <!-- Product Name Filter -->
+        <div class="col-md-3">
             <input
                 type="text"
-                name="search"
-                id="search"
-                class="form-control @if(request('search')) border-info @endif"
-                placeholder="Type product or branch name"
-                value="{{ request('search') }}"
+                name="product_name"
+                id="product_name"
+                class="form-control @if(request('product_name')) border-info @endif"
+                placeholder="Product Name"
+                value="{{ request('product_name') }}"
+            >
+        </div>
+
+        <!-- Supplier Name Filter -->
+        <div class="col-md-3">
+            <input
+                type="text"
+                name="supplier_name"
+                id="supplier_name"
+                class="form-control @if(request('supplier_name')) border-warning @endif"
+                placeholder="Supplier Name"
+                value="{{ request('supplier_name') }}"
             >
         </div>
 
@@ -60,23 +72,29 @@
                 <th style="width:15%; text-align: center">Supplier Name</th>
                 <th style="width:10%; text-align: center">Stock Quantity</th>
                 <th style="width:15%; text-align: center">Unit Price (৳)</th>
+                <th style="width:15%; text-align: center">Total Amount (৳)</th>
                 <th style="width:15%; text-align: center">Branch</th>
-                <th style="width:10%; text-align: center">Actions</th>
+                <th style="width:15%; text-align: center">Purchase Date</th>
+                {{-- <th style="width:10%; text-align: center">Actions</th> --}}
             </tr>
         </thead>
         <tbody>
-            @forelse($stocks as $i => $stock)
+             @forelse($products as $i => $product)
                 <tr>
-                    <td style="text-align: center">{{ $stocks->firstItem() + $i }}</td>
-                    <td style="text-align: center">{{ $stock->product_name }}</td>
-                    <td style="text-align: center">{{ $stock->supplier_name }}</td>
-                    <td style="text-align: center">{{ $stock->quantity }}</td>
-                    <td style="text-align: center">{{ number_format($stock->buying_price, 2) }}</td>
-                    <td style="text-align: center">{{ $stock->branch->name ?? '—' }}</td>
-                    <td style="text-align: center">
-                        <a href="{{ route('admin.products.show', $stock->id) }}"
-                           class="btn btn-sm btn-info">🔎 View</a>
-                    </td>
+                    <td style="text-align: center">{{ $products->firstItem() + $i }}</td>
+                    <td style="text-align: center">{{ $product->product_name }}</td>
+                    <td style="text-align: center">{{ $product->supplier_name }}</td>
+                    <td style="text-align: center">{{ $product->quantity }}</td>
+                    <td style="text-align: center">{{ number_format($product->buying_price, 2) }}</td>
+                    <td style="text-align: center">{{ number_format($product->total_amount, 2) }}</td>
+                    <td style="text-align: center">{{ $product->branch->name ?? '—' }}</td>
+                    <td style="text-align: center">{{ $product->purchase_date }}</td>
+                    {{-- <td style="text-align: center">
+                        <a href="{{ route('admin.products.show', $product->id) }}"
+                           class="btn btn-sm btn-info">
+                            🔎 View
+                        </a>
+                    </td> --}}
                 </tr>
             @empty
                 <tr>
@@ -88,7 +106,7 @@
 
     <!-- Pagination -->
     <div class="d-flex justify-content-center">
-        {{ $stocks->links() }}
+        {{ $products->links() }}
     </div>
 </div>
 @endsection

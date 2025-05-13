@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Product;
 
 class Stock extends Model
 {
@@ -15,6 +14,7 @@ class Stock extends Model
         'product_name',
         'supplier_name',
         'buying_price',
+        'selling_price',
         'quantity',
         'total_amount',
         'deposit_amount',
@@ -23,6 +23,7 @@ class Stock extends Model
         'total_profit',
     ];
 
+    // 📌 **Relationship Definition**
     public function branch()
     {
         return $this->belongsTo(Branch::class);
@@ -30,70 +31,48 @@ class Stock extends Model
 
     public function productSales()
     {
-        return $this->hasMany(ProductSale::class);
+        return $this->hasMany(ProductSale::class, 'stock_id', 'id');
     }
 
+    /**
+     * ✅ **booted Method**
+     * Stock তৈরি বা আপডেট হলে অটোমেটিক্যালি Total Amount এবং Due Amount ক্যালকুলেট হবে।
+     * ProductSale তৈরি বা ডিলিট হলে কোয়ান্টিটি ও প্রফিট হিসাব হবে।
+     */
     protected static function booted()
     {
         /**
-         * ✅ **স্টক তৈরি হলে প্রোডাক্ট সিঙ্ক হবে**
+         * ✅ **Creating Stock** — Total Amount এবং Due Amount অটোমেটিক্যালি হিসাব হবে
          */
-        static::created(function (Stock $stock) {
-            $product = Product::firstOrNew([
-                'name' => $stock->product_name,
-                'branch_id' => $stock->branch_id,
-            ]);
-
-            $product->buying_price = $stock->buying_price;
-            $product->last_purchase_date = $stock->purchase_date;
-
-            // ✅ **স্টক থেকে প্রোডাক্টের কোয়ান্টিটি বাড়ানো হচ্ছে**
-            $product->stock_quantity += $stock->quantity;
-            $product->save();
-        });
-
+        static::creating(function (Stock $stock) {
+        // ✅ টোটাল এমাউন্ট হিসাব
+        $stock->total_amount = $stock->buying_price * $stock->quantity;
+        $depositAmount = $stock->deposit_amount ?? 0;
+        $stock->due_amount = max($stock->total_amount - $depositAmount, 0);
+    });
         /**
-         * ✅ **স্টক আপডেট হলে প্রোডাক্টেও আপডেট হবে**
+         * ✅ **Updating Stock** — Total Amount এবং Due Amount অটোমেটিক্যালি হিসাব হবে
          */
-        static::updated(function (Stock $stock) {
-            $product = Product::firstOrNew([
-                'name' => $stock->product_name,
+        static::updating(function (Stock $stock) {
+        $stock->total_amount = $stock->buying_price * $stock->quantity;
+        $depositAmount = $stock->deposit_amount ?? 0;
+        $stock->due_amount = max($stock->total_amount - $depositAmount, 0);
+    });
+
+
+          static::created(function (Stock $stock) {
+            // ✅ ProductList এ ডেটা কপি হচ্ছে
+            \App\Models\ProductList::create([
                 'branch_id' => $stock->branch_id,
+                'product_name' => $stock->product_name,
+                'supplier_name' => $stock->supplier_name,
+                'buying_price' => $stock->buying_price,
+                'quantity' => $stock->quantity,
+                'total_amount' => $stock->total_amount,
+                'purchase_date' => $stock->purchase_date,
+                'branch_name' => $stock->branch->name ?? '—',
             ]);
-
-            // ✅ **প্রথমে পুরনো কোয়ান্টিটি বাদ দেওয়া হচ্ছে**
-            $originalQuantity = $product->stock_quantity - $stock->getOriginal('quantity');
-            $product->stock_quantity = $originalQuantity + $stock->quantity;
-
-            // ✅ **প্রাইস এবং তারিখ আপডেট হচ্ছে**
-            $product->buying_price = $stock->buying_price;
-            $product->last_purchase_date = $stock->purchase_date;
-
-            // ✅ **স্টক 0 হলে প্রোডাক্ট মুছে ফেলা হবে**
-            if ($product->stock_quantity <= 0) {
-                $product->delete();
-            } else {
-                $product->save();
-            }
         });
-
-        /**
-         * ✅ **স্টক ডিলিট হলে প্রোডাক্ট আপডেট হবে**
-         */
-        static::deleted(function (Stock $stock) {
-            $product = Product::firstOrNew([
-                'name' => $stock->product_name,
-                'branch_id' => $stock->branch_id,
-            ]);
-
-            // ✅ **প্রোডাক্টের স্টক থেকে বাদ দেওয়া হচ্ছে**
-            $product->stock_quantity -= $stock->quantity;
-
-            if ($product->stock_quantity <= 0) {
-                $product->delete();
-            } else {
-                $product->save();
-            }
-        });
+        
     }
 }

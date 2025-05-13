@@ -23,6 +23,7 @@
                 <th>Quantity</th>
                 <th>Unit Price (৳)</th>
                 <th>Total Amount (৳)</th>
+                <th>Profit (৳)</th>
                 <th>Due (৳)</th>
                 <th>Purchase Date</th>
                 <th>Actions</th>
@@ -36,21 +37,21 @@
                     <td>{{ $stock->supplier_name }}</td>
                     <td>{{ $stock->quantity }}</td>
                     <td>{{ number_format($stock->buying_price, 2) }}</td>
-                    <td>{{ number_format($stock->total_amount, 2) }}</td>
-                    <td>{{ number_format($stock->due_amount, 2) }}</td>
+                    <td>{{ number_format($stock->total_amount, 2) }}</td> <!-- ✅ Total Amount -->
+                    <td>{{ number_format($stock->total_profit, 2) }}</td> <!-- ✅ Profit -->
+                     <td class="{{ $stock->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+    {{ number_format($stock->due_amount, 2) }}
+</td>
+> <!-- ✅ Due Amount -->
                     <td>{{ \Illuminate\Support\Carbon::parse($stock->purchase_date)->format('d M, Y') }}</td>
                     <td class="d-flex flex-wrap gap-1">
                         <a href="{{ route('admin.stocks.show', $stock) }}" class="btn btn-sm btn-info">🔎 View</a>
                         <a href="{{ route('admin.stocks.edit', $stock) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
-                        <form action="{{ route('admin.stocks.destroy', $stock) }}" method="POST" onsubmit="return confirm('Are you sure?');">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-danger">🗑️ Delete</button>
-                        </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">No stock records found.</td>
+                    <td colspan="10" class="text-center">No stock records found.</td>
                 </tr>
             @endforelse
         </tbody>

@@ -11,12 +11,12 @@ use App\Http\Controllers\Admin\BranchSelectorController as AdminBranchSelectorCo
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\InvestorController as AdminInvestorController;
 use App\Http\Controllers\Admin\InvestmentHistoryController as AdminInvestmentHistoryController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductSaleController as AdminProductSaleController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\PartStockController as AdminPartStockController;
 use App\Http\Controllers\Admin\PartstockSaleController as AdminPartstockSaleController;
-
+use App\Http\Controllers\Admin\ProductListController as AdminProductListController;
+// use App\Http\Controllers\Admin\ProductListController;
 // Manager Controllers
 use App\Http\Controllers\Manager\ManagerController as ManagerManagerController;
 use App\Http\Controllers\Manager\CustomerController as ManagerCustomerController;
@@ -85,11 +85,9 @@ Route::middleware('auth')->group(function () {
 
             // Customer Management
             Route::resource('customers', AdminCustomerController::class);
-
-            // Inventory: Products
-            Route::resource('products', AdminProductController::class);
-            Route::post('products/{product}/update-payment', [AdminProductController::class, 'updatePayment'])
-                ->name('products.updatePayment');
+          
+            Route::get('products', [AdminProductListController::class, 'index'])->name('products.index');
+            // Route::get('products', [AdminProductListController::class, 'show'])->name('products.show');
 
             // Inventory: Stocks
             Route::resource('stocks', AdminStockController::class);

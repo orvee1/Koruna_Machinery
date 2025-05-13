@@ -35,32 +35,53 @@ class ProductSale extends Model
     /**
      * ✅ **স্টক এন্ট্রি অ্যাড হওয়া মাত্রই এর কোয়ান্টিটি ও প্রফিট আপডেট হবে**
      */
-    protected static function booted()
+   protected static function booted()
     {
+        // ✅ সেল ক্রিয়েটের সময় total_amount এবং due_amount হিসাব
+        static::creating(function (ProductSale $sale) {
+            $sale->total_amount = $sale->quantity * $sale->unit_price;
+            $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
+        });
+
+        // ✅ সেল আপডেটের সময়ও same হিসাব
+        static::updating(function (ProductSale $sale) {
+            $sale->total_amount = $sale->quantity * $sale->unit_price;
+            $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
+        });
+
+        // ✅ সেল হওয়ার পর স্টকের প্রফিট ও কোয়ান্টিটি কমানো
         static::created(function (ProductSale $sale) {
-            // ✅ **প্রথমেই স্টক খুঁজে বের করা হচ্ছে**
+        $stock = Stock::find($sale->stock_id);
+        if (!$stock) return;
+
+        $stock->quantity -= $sale->quantity;
+
+        $profitPerUnit = $sale->unit_price - $stock->buying_price;
+        $totalProfit = $profitPerUnit * $sale->quantity;
+        $stock->total_profit += $totalProfit;
+
+        // 👉 save() না করে নিচের line ব্যবহার করুন
+        $stock->updateQuietly([
+            'quantity' => max($stock->quantity, 0),
+            'total_profit' => $stock->total_profit,
+        ]);
+    });
+
+
+        // ✅ সেল ডিলিট হলে স্টক quantity ও profit ফেরত
+        static::deleted(function (ProductSale $sale) {
             $stock = Stock::find($sale->stock_id);
+            if (!$stock) return;
 
-            if (!$stock) {
-                // ✅ **স্টক খুঁজে না পেলে লগিং করা হচ্ছে**
-                Log::error("Stock not found for Stock ID: {$sale->stock_id} in Branch ID: {$sale->branch_id}");
-                return;
-            }
+            $stock->quantity += $sale->quantity;
 
-            // ✅ **স্টকের পরিমাণ কমানো হচ্ছে**
-            $stock->quantity -= $sale->quantity;
-
-            // ✅ **প্রফিট হিসাব করে যোগ করা হচ্ছে**
             $profitPerUnit = $sale->unit_price - $stock->buying_price;
             $totalProfit = $profitPerUnit * $sale->quantity;
-            $stock->total_profit += $totalProfit;
+            $stock->total_profit -= $totalProfit;
 
-            // ✅ **স্টক 0 বা তার কম হলে ডিলিট হবে, অন্যথায় সেভ হবে**
-            if ($stock->quantity <= 0) {
-                $stock->delete();
-            } else {
-                $stock->save();
-            }
+            if ($stock->total_profit < 0) $stock->total_profit = 0;
+
+            $stock->save();
         });
     }
 

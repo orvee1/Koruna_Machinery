@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('product_sales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
-            $table->foreignId('stock_id')->nullable()->constrained('products')->onDelete('cascade');
+            $table->foreignId('stock_id')->nullable()->constrained('stocks')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('seller_id')->constrained('users')->onDelete('cascade');
             $table->integer('quantity');

@@ -21,7 +21,7 @@ class ProductSaleController extends Controller
         $branchId = session('active_branch_id');
 
         $query = ProductSale::where('branch_id', $branchId)
-            ->with(['stock.product', 'customer', 'branch', 'seller', 'investor'])
+            ->with(['stock', 'customer', 'branch', 'seller', 'investor'])
             ->latest();
 
         if ($request->filled('date')) {
@@ -57,7 +57,7 @@ class ProductSaleController extends Controller
             'paid_amount' => 'required|numeric|min:0',
         ]);
 
-        // ✅ **স্টক খুঁজে বের করুন**
+        // ✅ **স্টক খুঁজে বের করা**
         $stock = Stock::findOrFail($validated['stock_id']);
 
         // ✅ **পর্যাপ্ত পরিমাণ স্টকে আছে কিনা চেক করুন**
@@ -66,33 +66,20 @@ class ProductSaleController extends Controller
                 ->with('error', 'Insufficient stock available for this product.');
         }
 
-        // ✅ **স্টক থেকে কোয়ান্টিটি কমানো হচ্ছে**
-        $stock->quantity -= $validated['quantity'];
-
-        // ✅ **প্রফিট হিসাব করে যোগ করা হচ্ছে**
-        $profitPerUnit = $validated['unit_price'] - $stock->buying_price;
-        $totalProfit = $profitPerUnit * $validated['quantity'];
-        $stock->total_profit += $totalProfit;
-
-        // ✅ **স্টক সেভ করা হচ্ছে**
-        $stock->save();
-
         // ✅ **সেল রেকর্ড তৈরি করা হচ্ছে**
-        $user = Auth::user();
-        ProductSale::create([
+        $productSale = ProductSale::create([
             'branch_id' => session('active_branch_id'),
             'stock_id' => $validated['stock_id'],
             'customer_id' => $validated['customer_id'],
-            'seller_id' => $user->id,
+            'seller_id' => Auth::id(),
             'quantity' => $validated['quantity'],
             'unit_price' => $validated['unit_price'],
             'paid_amount' => $validated['paid_amount'],
-            'due_amount' => ($validated['quantity'] * $validated['unit_price']) - $validated['paid_amount'],
-            'profit' => $totalProfit,
         ]);
 
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale added successfully.');
     }
+
 
     public function show(ProductSale $productSale)
     {
@@ -102,21 +89,11 @@ class ProductSaleController extends Controller
 
     public function destroy(ProductSale $productSale)
     {
-        // ✅ **স্টক ফেরত আসবে**
-        $stock = Stock::find($productSale->stock_id);
-
-        if ($stock) {
-            $stock->quantity += $productSale->quantity;
-
-            // ✅ **প্রফিট অ্যাডজাস্ট হচ্ছে**
-            $profitPerUnit = $productSale->unit_price - $stock->buying_price;
-            $totalProfit = $profitPerUnit * $productSale->quantity;
-
-            $stock->total_profit -= $totalProfit;
-            $stock->save();
-        }
 
         $productSale->delete();
-        return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale deleted successfully and Stock restored.');
+
+        return redirect()->route('admin.product-sales.index')
+            ->with('success', 'Product Sale deleted successfully and Stock restored.');
     }
+
 }

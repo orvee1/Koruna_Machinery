@@ -36,6 +36,11 @@
         </div>
 
         <div class="mb-3">
+            <label for="deposit_amount" class="form-label">Deposit Amount</label>
+            <input type="number" id="deposit_amount" name="deposit_amount" class="form-control" min="1" required>
+        </div>
+
+        <div class="mb-3">
             <label for="purchase_date" class="form-label">Purchase Date</label>
             <input type="date" id="purchase_date" name="purchase_date" class="form-control" value="{{ now()->toDateString() }}" required>
         </div>

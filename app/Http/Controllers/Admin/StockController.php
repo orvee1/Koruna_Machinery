@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Stock;
-use App\Models\Product;
 use App\Models\ProductPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,14 +58,13 @@ class StockController extends Controller
         }
 
         $data['branch_id'] = $branchId;
-        $data['total_amount'] = $data['buying_price'] * $data['quantity'];
-        $data['due_amount'] = $data['total_amount'] - ($data['deposit_amount'] ?? 0);
 
         // ✅ **স্টক তৈরি হচ্ছে** (Model Event Listener কাজ করবে এখানে)
         Stock::create($data);
 
-        return redirect()->route('admin.stocks.index')->with('success', 'স্টক সফলভাবে তৈরি হয়েছে এবং পণ্য সিঙ্ক করা হয়েছে।');
+        return redirect()->route('admin.stocks.index')->with('success', 'Stock entry created successfully.');
     }
+
 
 
     // স্টক এডিট ফর্ম
@@ -88,8 +86,6 @@ class StockController extends Controller
         ]);
 
         $branchId = session('active_branch_id');
-        $data['total_amount'] = $data['buying_price'] * $data['quantity'];
-        $data['due_amount'] = $data['total_amount'] - ($data['deposit_amount'] ?? 0);
 
         $previousQuantity = $stock->quantity;
 
@@ -128,12 +124,10 @@ class StockController extends Controller
         // Save payment related to the part stock
         $payment->save();
 
-        if ($stock->due_amount >= $request->paid_amount) {
             $stock->due_amount -= $request->paid_amount;
-        } else {
+        if ($stock->due_amount < 0) {
             $stock->due_amount = 0;
         }
-        
         $stock->save();
     
         return back()->with('success', 'Payment updated successfully.');
@@ -150,19 +144,4 @@ class StockController extends Controller
         return view('admin.stocks.show', compact('stock'));
     }
 
-    // ✅ **স্টক ডিলিট**
-    public function destroy(Stock $stock)
-    {
-        $stock->delete();
-
-        // ✅ **প্রোডাক্টের স্টক কমিয়ে দিন**
-        $product = Product::where('name', $stock->product_name)
-            ->where('branch_id', $stock->branch_id)
-            ->first();
-
-        $product->stock_quantity -= $stock->quantity; // স্টক কমানোর পরিমাণ
-        $product->save();
-
-        return redirect()->route('admin.stocks.index')->with('success', 'Stock entry deleted successfully.');
-    }
 }

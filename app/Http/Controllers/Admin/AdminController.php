@@ -9,6 +9,7 @@ use App\Models\Investor;
 use App\Models\PartStock;
 use App\Models\PartStockSale;
 use App\Models\Product;
+use App\Models\ProductList;
 use App\Models\ProductSale;
 use App\Models\Stock;
 use App\Models\User;
@@ -32,12 +33,13 @@ class AdminController extends Controller
         }
         $branch = Branch::find($branchId);
         // Sales
-        $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('paid_amount');
-        $totalPartstockSales = PartStockSale::where('branch_id', $branchId)->sum('paid_amount');
+        $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('total_amount');
+        $totalPartstockSales = PartStockSale::where('branch_id', $branchId)->sum('total_amount');
         $totalSales = $totalProductSales + $totalPartstockSales;
     
-        $totalProductValue = Product::where('branch_id', $branchId)->sum('buying_price');
-        $totalPartStockValue = PartStock::where('branch_id', $branchId)->sum('buy_value');
+        // $totalProductValue = Product::where('branch_id', $branchId)->sum('buying_price');
+        $totalProductValue = ProductList::where('branch_id', $branchId)->sum('total_amount');
+        $totalPartStockValue = PartStock::where('branch_id', $branchId)->sum('amount');
         $totalValue = $totalProductValue + $totalPartStockValue;
 
         $productProfit = Stock::where('branch_id', $branchId)->sum('total_profit');

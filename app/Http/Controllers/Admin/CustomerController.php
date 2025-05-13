@@ -72,77 +72,57 @@ class CustomerController extends Controller
     }
 
 
-    public function update(Request $request, Customer $customer)
-    {
-    
-        if ($customer->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized action.');
+        public function update(Request $request, Customer $customer)
+        {
+        
+            if ($customer->branch_id !== session('active_branch_id')) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            $request->validate([
+                'name'      => 'required|string|max:255',
+                'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
+                'district'  => 'nullable|string|max:255',
+            ]);
+
+            $customer->update($request->only('name', 'phone', 'district'));
+
+            return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully.');
         }
-
-        $request->validate([
-            'name'      => 'required|string|max:255',
-            'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
-            'district'  => 'nullable|string|max:255',
-        ]);
-
-        $customer->update($request->only('name', 'phone', 'district'));
-
-        return redirect()->route('admin.customers.index')->with('success', 'Customer updated successfully.');
-    }
 
 
     public function show(Customer $customer)
-    {
-        try {
-            // Product Sales Data
-            $productSales = $customer->productSales()
-                ->with(['product', 'seller'])
-                ->latest()
-                ->get();
+        {
+            try {
+                $productSales = $customer->productSales()
+                    ->with(['stock.product', 'seller'])
+                    ->latest()
+                    ->get();
 
-            // Part Stock Sales Data
-            $partStockSales = $customer->partsStockSales()
-                ->with(['partStock', 'seller'])
-                ->latest()
-                ->get();
+                $grandTotal = $productSales->sum(function ($sale) {
+                    return $sale->unit_price * $sale->quantity;
+                });
 
-            // Calculate Total, Paid and Due
-            $totalProductAmount = $productSales->sum(function ($sale) {
-                return $sale->unit_price * $sale->quantity;
-            });
+                $grandPaid = $productSales->sum('paid_amount');
+                $grandDue = $grandTotal - $grandPaid;
 
-            $totalPartStockAmount = $partStockSales->sum(function ($sale) {
-                return $sale->unit_price * $sale->quantity;
-            });
+            } catch (\Exception $e) {
+                Log::error("CustomerController@show: Invoice loading failed (Customer ID: {$customer->id}): " . $e->getMessage());
 
-            $totalProductPaid = $productSales->sum('paid_amount');
-            $totalPartStockPaid = $partStockSales->sum('paid_amount');
+                return redirect()
+                    ->route('admin.customers.index')
+                    ->withErrors('দুঃখিত, এই মুহূর্তে কাস্টমার ইনভয়েস লোড করা যাচ্ছে না।');
+            }
 
-            $totalProductDue = $totalProductAmount - $totalProductPaid;
-            $totalPartStockDue = $totalPartStockAmount - $totalPartStockPaid;
-
-            $grandTotal = $totalProductAmount + $totalPartStockAmount;
-            $grandPaid = $totalProductPaid + $totalPartStockPaid;
-            $grandDue = $totalProductDue + $totalPartStockDue;
-
-        } catch (\Exception $e) {
-            Log::error("CustomerController@show: Invoice loading failed (Customer ID: {$customer->id}): " . $e->getMessage());
-
-            return redirect()
-                ->route('admin.customers.index')
-                ->withErrors('দুঃখিত, এই মুহূর্তে কাস্টমার ইনভয়েস লোড করা যাচ্ছে না।');
+            return view('admin.customers.show', compact(
+                'customer',
+                'productSales',
+                'grandTotal',
+                'grandPaid',
+                'grandDue'
+            ));
         }
-
-        return view('admin.customers.show', compact(
-            'customer',
-            'productSales',
-            'partStockSales',
-            'grandTotal',
-            'grandPaid',
-            'grandDue'
-        ));
-    }
-
+    
 
     public function destroy(Customer $customer)
     {
