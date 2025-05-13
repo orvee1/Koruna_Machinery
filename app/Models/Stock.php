@@ -34,6 +34,11 @@ class Stock extends Model
         return $this->hasMany(ProductSale::class, 'stock_id', 'id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(ProductPayment::class, 'stock_id', 'id');
+    }
+
     /**
      * ✅ **booted Method**
      * Stock তৈরি বা আপডেট হলে অটোমেটিক্যালি Total Amount এবং Due Amount ক্যালকুলেট হবে।

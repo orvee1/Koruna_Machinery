@@ -107,31 +107,30 @@ class StockController extends Controller
     }
 
 
-    public function updatePayment(Request $request, Stock $stock)
+        public function updatePayment(Request $request, Stock $stock)
     {
         $request->validate([
-            'paid_amount' => 'required|decimal:0,2',
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
             'payment_date' => 'required|date',
         ]);
-    
-        // Create new payment record for the part stock
+
+        // ✅ নতুন পেমেন্ট রেকর্ড তৈরি
         $payment = new ProductPayment([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
             'stock_id' => $stock->id,
         ]);
-    
-        // Save payment related to the part stock
         $payment->save();
 
-            $stock->due_amount -= $request->paid_amount;
-        if ($stock->due_amount < 0) {
-            $stock->due_amount = 0;
-        }
+        // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
+        $stock->deposit_amount += $request->paid_amount;
+        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
+
         $stock->save();
-    
+
         return back()->with('success', 'Payment updated successfully.');
     }
+
 
     public function show($id)
     {

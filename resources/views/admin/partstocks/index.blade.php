@@ -4,102 +4,77 @@
 
 @section('content')
 <div class="container mt-4">
-    <h1 class="mb-4">Part Stocks</h1>
+    <h1 class="mb-4">📦 Part Stock List</h1>
 
-    <!-- Display success or error messages -->
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @elseif(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
+    @include('components.alert')
 
-    <!-- Date filter form -->
-    <form method="GET" action="{{ route('admin.partstocks.index') }}" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input type="date" 
-                       name="date" 
-                       class="form-control @if(request('date')) border-success @endif"
-                       value="{{ old('date', request('date')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-filter-circle me-1"></i> Filter
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('admin.partstocks.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
+    <!-- Filter/Search -->
+    <form method="GET" action="{{ route('admin.partstocks.index') }}" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search by product/supplier" value="{{ request('search') }}">
+        </div>
+        <div class="col-md-auto">
+            <button class="btn btn-primary"><i class="bi bi-search"></i> Filter</button>
+        </div>
+        <div class="col-md-auto">
+            <a href="{{ route('admin.partstocks.index') }}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Clear</a>
+        </div>
+        <div class="col-md-auto ms-auto">
+            <a href="{{ route('admin.partstocks.create') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add New
+            </a>
         </div>
     </form>
-    
 
-    <!-- Search Form -->
-    <form action="{{ route('admin.partstocks.index') }}" method="GET" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
-                <input type="text" 
-                       name="search" 
-                       class="form-control @if(request('search')) border-info @endif" 
-                       placeholder="Search by Product or Supplier" 
-                       value="{{ old('search', request('search')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i> Search
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('admin.partstocks.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
-        </div>
-    </form>
-    
-
-    <!-- Add New Part Stock Button -->
-    <a href="{{ route('admin.partstocks.create') }}" class="btn btn-success mb-3">Add New Part Stock</a>
-
-    <!-- Part Stocks Table -->
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>SL No</th>
-                <th>Product Name</th>
-                <th>Supplier Name</th>
-                <th>Buy Value</th>
-                <th>Sell Value</th>
-                <th>Quantity</th>
-                <th>Total Profit</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($partstocks as $key => $partstock)
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark">
                 <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ $partStock->product_name }}</td>
-                    <td>{{ $partStock->supplier_name }}</td>
-                    <td>{{ number_format($partStock->buy_value, 2) }}</td>
-                    <td>{{ number_format($partStock->sell_value, 2) }}</td>
-                    <td>{{ $partStock->quantity }}</td>
-                    <td>{{ number_format($partStock->total_profit, 2) }}</td>
-                    <td>
-                        <a href="{{ route('admin.partstocks.edit', $partStock->id) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <a href="{{ route('admin.partstocks.show', $partStock->id) }}" class="btn btn-info btn-sm">View</a>
-                    </td>
+                    <th>SL</th>
+                    <th>Product</th>
+                    <th>Supplier</th>
+                    <th>Buying Price</th>
+                    <th>Selling Price</th>
+                    <th>Qty</th>
+                    <th>Total Amount</th>
+                    <th>Due Amount</th>
+                    <th>Total Profit</th>
+                    <th>Actions</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse($partstocks as $key => $partstock)
+                    <tr>
+                        <td>{{ $partstocks->firstItem() + $key }}</td>
+                        <td>{{ $partstock->product_name }}</td>
+                        <td>{{ $partstock->supplier_name }}</td>
+                        <td>৳{{ number_format($partstock->buy_value, 2) }}</td>
+                        <td>৳{{ number_format($partstock->sell_value, 2) }}</td>
+                        <td>{{ $partstock->quantity }}</td>
+                        <td>৳{{ number_format($partstock->amount, 2) }}</td>
+                        <td>৳{{ number_format($partstock->sell_value, 2) }}</td>
+                        <td>৳{{ number_format($partstock->total_profit, 2) }}</td>
+                        <td>
+                            <a href="{{ route('admin.partstocks.edit', $partstock->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{{ route('admin.partstocks.show', $partstock->id) }}" class="btn btn-sm btn-info">View</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center">No data found.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-    {{ $partstocks->links() }}
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-3">
+        {{ $partstocks->links() }}
+    </div>
 </div>
 @endsection

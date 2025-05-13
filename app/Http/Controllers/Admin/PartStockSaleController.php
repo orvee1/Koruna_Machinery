@@ -15,112 +15,114 @@ class PartstockSaleController extends Controller
     {
         $this->middleware('checkRole:admin');
     }
+
+    /**
+     * Display all partstock sales with optional filters
+     */
     public function index(Request $request)
     {
-        
-        $branchId = session('active_branch_id'); 
-        $user = Auth::user();
+        $branchId = session('active_branch_id');
         $query = PartstockSale::where('branch_id', $branchId)
-        ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
+            ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
-           // Admin/: তারিখ/মাস/বছর অনুযায়ী ফিল্টার করতে পারবে
-            if ($request->filled('date')) {
-                $query->whereDate('created_at', $request->input('date'));
-            }
-            if ($request->filled('month')) {
-                $query->forMonth($request->input('month'));
-            }
-            if ($request->filled('year')) {
-                $query->forYear($request->input('year'));
-            }
-            
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->input('date'));
+        }
+        if ($request->filled('month')) {
+            $query->forMonth($request->input('month'));
+        }
+        if ($request->filled('year')) {
+            $query->forYear($request->input('year'));
+        }
+
         $sales = $query->latest()->paginate(20);
         return view('admin.partstock-sales.index', compact('sales'));
     }
 
+    /**
+     * Show form to create a new partstock sale
+     */
     public function create()
     {
-        $branchId = session('active_branch_id', Auth::user()->branch_id);
-        $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
-        $customers = Customer::where('branch_id', session('active_branch_id'))->get();
+        $branchId = session('active_branch_id');
+        $partStocks = PartStock::where('branch_id', $branchId)->get();
+        $customers = Customer::where('branch_id', $branchId)->get();
 
         return view('admin.partstock-sales.create', compact('partStocks', 'customers'));
     }
 
+    /**
+     * Store a newly created partstock sale
+     */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $validated = $request->validate([
+        $request->validate([
             'part_stock_id' => 'required|exists:part_stocks,id',
-            'customer_id' => 'required|exists:customers,id',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'paid_amount' => 'required|numeric|min:0',
+            'customer_id'   => 'required|exists:customers,id',
+            'quantity'      => 'required|integer|min:1',
+            'unit_price'    => 'required|numeric|min:0',
+            'paid_amount'   => 'required|numeric|min:0',
         ]);
 
         PartstockSale::create([
-            'branch_id' => session('active_branch_id'),
-            'part_stock_id' => $validated['part_stock_id'],
-            'customer_id' => $validated['customer_id'],
-            'seller_id' => $user->id,
-            'quantity' => $validated['quantity'],
-            'unit_price' => $validated['unit_price'],
-            'paid_amount' => $validated['paid_amount'],
+            'branch_id'      => session('active_branch_id'),
+            'part_stock_id'  => $request->part_stock_id,
+            'customer_id'    => $request->customer_id,
+            'seller_id'      => Auth::id(),
+            'quantity'       => $request->quantity,
+            'unit_price'     => $request->unit_price,
+            'paid_amount'    => $request->paid_amount,
         ]);
 
-        return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale added successfully.');
+        return redirect()->route('admin.partstock-sales.index')
+            ->with('success', 'Partstock sale added successfully.');
     }
 
+    /**
+     * Show form to edit an existing sale
+     */
     public function edit(PartstockSale $partstockSale)
     {
-        $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
-        $customers = Customer::where('branch_id', session('active_branch_id'))->get();
+        $branchId = session('active_branch_id');
+        $partStocks = PartStock::where('branch_id', $branchId)->get();
+        $customers = Customer::where('branch_id', $branchId)->get();
 
         return view('admin.partstock-sales.edit', compact('partstockSale', 'partStocks', 'customers'));
     }
 
+    /**
+     * Update an existing sale
+     */
     public function update(Request $request, PartstockSale $partstockSale)
     {
-        $validated = $request->validate([
+        $request->validate([
             'part_stock_id' => 'required|exists:part_stocks,id',
-            'customer_id' => 'required|exists:customers,id',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'paid_amount' => 'required|numeric|min:0',
+            'customer_id'   => 'required|exists:customers,id',
+            'quantity'      => 'required|integer|min:1',
+            'unit_price'    => 'required|numeric|min:0',
+            'paid_amount'   => 'required|numeric|min:0',
         ]);
 
-        // Calculate Total Amount
-        $totalAmount = $validated['quantity'] * $validated['unit_price'];
+        $partstockSale->update([
+            'part_stock_id' => $request->part_stock_id,
+            'customer_id'   => $request->customer_id,
+            'quantity'      => $request->quantity,
+            'unit_price'    => $request->unit_price,
+            'paid_amount'   => $request->paid_amount,
+        ]);
 
-        // ✅ আগের পেইড অ্যামাউন্ট + নতুন পেইড অ্যামাউন্ট
-        $newPaidAmount = $partstockSale->paid_amount + $validated['paid_amount'];
-
-        // ✅ ডিউ অ্যামাউন্ট ক্যালকুলেশন
-        $dueAmount = $totalAmount - $newPaidAmount;
-
-        // যদি ডিউ 0 বা কম হয়, তাহলে 0 সেট করবে
-        if ($dueAmount <= 0) {
-            $dueAmount = 0;
-        }
-
-        // Update PartstockSale with new values
-        $partstockSale->update(array_merge($validated, [
-            'total_amount' => $totalAmount,
-            'paid_amount' => $newPaidAmount,
-            'due_amount' => $dueAmount,
-        ]));
-
-        return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale updated successfully.');
+        return redirect()->route('admin.partstock-sales.index')
+            ->with('success', 'Partstock sale updated successfully.');
     }
 
-
-
-    
-
+    /**
+     * Delete a partstock sale
+     */
     public function destroy(PartstockSale $partstockSale)
     {
         $partstockSale->delete();
 
-        return redirect()->route('admin.partstock-sales.index')->with('success', 'Partstock Sale deleted successfully.');
+        return redirect()->route('admin.partstock-sales.index')
+            ->with('success', 'Partstock sale deleted successfully.');
     }
 }

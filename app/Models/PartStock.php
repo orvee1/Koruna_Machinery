@@ -10,42 +10,26 @@ class PartStock extends Model
     use HasFactory;
 
     protected $fillable = [
-        'branch_id', 'product_name', 'supplier_name', 'buy_value', 'quantity', 'amount', 'sell_value', 'total_profit'
+        'branch_id',
+        'product_name',
+        'supplier_name',
+        'buy_value',
+        'quantity',
+        'amount',
+        'deposit_amount',
+        'due_amount',
+        'sell_value',
+        'total_profit'
     ];
 
-    /**
-     * Define relationship with Branch model.
-     */
     public function branch()
     {
         return $this->belongsTo(Branch::class);
     }
 
-    /**
-     * Automatically calculate amount and total profit on creation.
-     * This method is triggered during model creation to handle calculations.
-     */
-    protected static function booted()
+    public function partSales()
     {
-        static::creating(function ($partStock) {
-            // Calculate the total amount and total profit
-            $partStock->amount = $partStock->buy_value * $partStock->quantity;
-            $partStock->total_profit = ($partStock->sell_value - $partStock->buy_value) * $partStock->quantity;
-
-            // Automatically set the created_at date (ignore time)
-            if (!$partStock->created_at) {
-                $partStock->created_at = now()->toDateString();  // Only set the date part, not the time
-            }
-        });
-    }
-
-    /**
-     * Scope a query to filter PartStock by date.
-     * This will return the part stocks created on a specific date.
-     */
-    public function scopeFilterByDate($query, $date)
-    {
-        return $query->whereDate('created_at', $date);  // Use whereDate to filter by date only (ignores time)
+        return $this->hasMany(PartstockSale::class, 'part_stock_id', 'id');
     }
 
     public function payments()
@@ -53,15 +37,26 @@ class PartStock extends Model
         return $this->hasMany(PartStockPayment::class);
     }
 
-    // Calculate remaining balance
     public function paidAmount()
     {
         return $this->payments->sum('paid_amount');
     }
-    // Calculate remaining balance
+
     public function remainingBalance()
     {
-        $totalPaid = $this->payments->sum('paid_amount');
-        return $this->amount - $totalPaid;
+        return $this->amount - $this->paidAmount();
+    }
+
+    protected static function booted()
+    {
+        static::creating(function (PartStock $stock) {
+            $stock->amount = $stock->buy_value * $stock->quantity;
+            $stock->total_profit = 0;
+        });
+
+        static::updating(function (PartStock $stock) {
+            $stock->amount = $stock->buy_value * $stock->quantity;
+            $stock->total_profit = $stock->total_profit ?? 0;
+        });
     }
 }
