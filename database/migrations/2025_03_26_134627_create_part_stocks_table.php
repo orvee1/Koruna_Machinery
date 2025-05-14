@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('deposit_amount', 10, 2);
             $table->decimal('due_amount', 10, 2);
             $table->decimal('sell_value', 10, 2);
-            $table->decimal('total_profit', 10, 2);
+            $table->decimal('total_profit', 10, 2)->default(0);
             $table->date('purchase_date')->nullable();
             $table->timestamps();
         });

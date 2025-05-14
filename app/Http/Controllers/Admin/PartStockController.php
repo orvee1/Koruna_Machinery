@@ -22,20 +22,24 @@ class PartStockController extends Controller
         $branchId = session('active_branch_id');
 
         if (!$branchId) {
-            return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
+            return redirect()
+                ->route('admin.select-branch')
+                ->with('error', 'Please select a branch first.');
         }
 
-        $query = PartStock::where('branch_id', $branchId)->with('branch')->latest();
+        $query = PartStock::where('branch_id', $branchId)
+            ->with('branch')
+            ->latest();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('product_name', 'like', '%' . $search . '%')
-                  ->orWhere('supplier_name', 'like', '%' . $search . '%');
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('supplier_name', 'like', "%{$search}%");
             });
         }
 
         if ($date) {
-            $query->whereDate('created_at', $date);
+            $query->whereDate('purchase_date', $date);
         }
 
         $partstocks = $query->paginate(20);
@@ -48,7 +52,9 @@ class PartStockController extends Controller
         $branchId = session('active_branch_id');
 
         if (!$branchId) {
-            return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
+            return redirect()
+                ->route('admin.select-branch')
+                ->with('error', 'Please select a branch first.');
         }
 
         $branch = Branch::findOrFail($branchId);
@@ -58,25 +64,31 @@ class PartStockController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_name' => 'required|string|max:255',
-            'supplier_name' => 'required|string|max:255',
-            'buy_value' => 'required|numeric|min:0',
-            'quantity' => 'required|integer|min:1',
-            'sell_value' => 'required|numeric|min:0',
+            'product_name'    => 'required|string|max:255',
+            'supplier_name'   => 'required|string|max:255',
+            'buy_value'       => 'required|numeric|min:0',
+            'quantity'        => 'required|integer|min:1',
+            'sell_value'      => 'required|numeric|min:0',
+            'deposit_amount'  => 'nullable|numeric|min:0',
+            'purchase_date'   => 'nullable|date',
         ]);
 
         $branchId = session('active_branch_id');
 
         PartStock::create([
-            'product_name'   => $request->product_name,
-            'supplier_name'  => $request->supplier_name,
-            'buy_value'      => $request->buy_value,
-            'quantity'       => $request->quantity,
-            'sell_value'     => $request->sell_value,
-            'branch_id'      => $branchId,
+            'branch_id'       => $branchId,
+            'product_name'    => $request->product_name,
+            'supplier_name'   => $request->supplier_name,
+            'buy_value'       => $request->buy_value,
+            'quantity'        => $request->quantity,
+            'sell_value'      => $request->sell_value,
+            'deposit_amount'  => $request->deposit_amount ?? 0,
+            'purchase_date'   => $request->purchase_date,
         ]);
 
-        return redirect()->route('admin.partstocks.index')->with('success', 'Part stock added successfully.');
+        return redirect()
+            ->route('admin.partstocks.index')
+            ->with('success', 'Part stock added successfully.');
     }
 
     public function edit(PartStock $partStock)
@@ -96,39 +108,44 @@ class PartStockController extends Controller
         }
 
         $request->validate([
-            'product_name' => 'required|string|max:255',
-            'supplier_name' => 'required|string|max:255',
-            'buy_value' => 'required|numeric|min:0',
-            'quantity' => 'required|integer|min:1',
-            'sell_value' => 'required|numeric|min:0',
+            'product_name'    => 'required|string|max:255',
+            'supplier_name'   => 'required|string|max:255',
+            'buy_value'       => 'required|numeric|min:0',
+            'quantity'        => 'required|integer|min:1',
+            'sell_value'      => 'required|numeric|min:0',
+            'deposit_amount'  => 'nullable|numeric|min:0',
+            'purchase_date'   => 'nullable|date',
         ]);
 
         $partStock->update([
-            'product_name'   => $request->product_name,
-            'supplier_name'  => $request->supplier_name,
-            'buy_value'      => $request->buy_value,
-            'quantity'       => $request->quantity,
-            'sell_value'     => $request->sell_value,
+            'product_name'    => $request->product_name,
+            'supplier_name'   => $request->supplier_name,
+            'buy_value'       => $request->buy_value,
+            'quantity'        => $request->quantity,
+            'sell_value'      => $request->sell_value,
+            'deposit_amount'  => $request->deposit_amount ?? 0,
+            'purchase_date'   => $request->purchase_date,
         ]);
 
-        return redirect()->route('admin.partstocks.index')->with('success', 'Part stock updated successfully.');
+        return redirect()
+            ->route('admin.partstocks.index')
+            ->with('success', 'Part stock updated successfully.');
     }
 
     public function updatePayment(Request $request, PartStock $partStock)
     {
         $request->validate([
-            'paid_amount' => 'required|numeric|min:0.01|max:' . $partStock->remainingBalance(),
+            'paid_amount'  => 'required|numeric|min:0.01|max:' . $partStock->remainingBalance(),
             'payment_date' => 'required|date',
         ]);
 
-        // ✅ Create new payment
         PartStockPayment::create([
-            'paid_amount' => $request->paid_amount,
-            'payment_date' => $request->payment_date,
             'part_stock_id' => $partStock->id,
+            'paid_amount'   => $request->paid_amount,
+            'payment_date'  => $request->payment_date,
         ]);
 
-        return back()->with('success', 'Payment updated successfully.');
+        return back()->with('success', 'Payment added successfully.');
     }
 
     public function show(PartStock $partStock)
@@ -137,7 +154,8 @@ class PartStockController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $partStock->load(['branch', 'payments']);
+        $partStock->load(['branch', 'payments', 'partSales']);
+
         return view('admin.partstocks.show', compact('partStock'));
     }
 }

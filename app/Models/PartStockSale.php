@@ -44,35 +44,35 @@ class PartstockSale extends Model
 
         // Sale Created → Quantity কমে যাবে, Profit বাড়বে
         static::created(function (PartstockSale $sale) {
-            $stock = PartStock::find($sale->part_stock_id);
-            if (!$stock) return;
+            $partStock = PartStock::find($sale->part_stock_id);
+            if (!$partStock) return;
 
-            $stock->quantity -= $sale->quantity;
+            $partStock->quantity -= $sale->quantity;
 
-            $profitPerUnit = $sale->unit_price - $stock->buy_value;
+            $profitPerUnit = $sale->unit_price - $partStock->buy_value;
             $totalProfit = $profitPerUnit * $sale->quantity;
-            $stock->total_profit += $totalProfit;
+            $partStock->total_profit += $totalProfit;
 
-            $stock->updateQuietly([
-                'quantity' => max($stock->quantity, 0),
-                'total_profit' => $stock->total_profit,
+            $partStock->updateQuietly([
+                'quantity' => max($partStock->quantity, 0),
+                'total_profit' => $partStock->total_profit,
             ]);
         });
 
         // Sale Deleted → Quantity ফেরত, Profit কমবে
         static::deleted(function (PartstockSale $sale) {
-            $stock = PartStock::find($sale->part_stock_id);
-            if (!$stock) return;
+            $partStock = PartStock::find($sale->part_stock_id);
+            if (!$partStock) return;
 
-            $stock->quantity += $sale->quantity;
+            $partStock->quantity += $sale->quantity;
 
-            $profitPerUnit = $sale->unit_price - $stock->buy_value;
+            $profitPerUnit = $sale->unit_price - $partStock->buy_value;
             $totalProfit = $profitPerUnit * $sale->quantity;
-            $stock->total_profit -= $totalProfit;
+            $partStock->total_profit -= $totalProfit;
 
-            $stock->updateQuietly([
-                'quantity' => $stock->quantity,
-                'total_profit' => max($stock->total_profit, 0),
+            $partStock->updateQuietly([
+                'quantity' => $partStock->quantity,
+                'total_profit' => max($partStock->total_profit, 0),
             ]);
         });
     }
@@ -94,9 +94,28 @@ class PartstockSale extends Model
     }
 
     // Relationships
-    public function branch() { return $this->belongsTo(Branch::class); }
-    public function partStock() { return $this->belongsTo(PartStock::class); }
-    public function customer() { return $this->belongsTo(Customer::class); }
-    public function seller() { return $this->belongsTo(User::class, 'seller_id'); }
-    public function investor() { return $this->belongsTo(Investor::class); }
+    public function branch()
+     { 
+        return $this->belongsTo(Branch::class);
+     }
+
+    public function partStock()
+     { 
+        return $this->belongsTo(PartStock::class);
+     }
+     
+    public function customer()
+     { 
+        return $this->belongsTo(Customer::class);
+     }
+
+    public function seller()
+     { 
+        return $this->belongsTo(User::class, 'seller_id');
+     }
+
+    public function investor()
+     { 
+        return $this->belongsTo(Investor::class); 
+    }
 }

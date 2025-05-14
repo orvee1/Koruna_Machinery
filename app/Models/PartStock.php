@@ -34,29 +34,35 @@ class PartStock extends Model
 
     public function payments()
     {
-        return $this->hasMany(PartStockPayment::class);
-    }
-
-    public function paidAmount()
-    {
-        return $this->payments->sum('paid_amount');
-    }
-
-    public function remainingBalance()
-    {
-        return $this->amount - $this->paidAmount();
+        return $this->hasMany(PartStockPayment::class, 'part_stock_id', 'id');
     }
 
     protected static function booted()
     {
-        static::creating(function (PartStock $stock) {
-            $stock->amount = $stock->buy_value * $stock->quantity;
-            $stock->total_profit = 0;
+            static::creating(function (PartStock $partStock) {
+           
+            $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+            $depositAmount = $partStock->deposit_amount ?? 0;
+            $partStock->due_amount = max($partStock->amount - $depositAmount, 0);
+        });
+            static::updating(function (PartStock $partStock) {
+            $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+            $depositAmount = $partStock->deposit_amount ?? 0;
+            $partStock->due_amount = max($partStock->amount - $depositAmount, 0);
         });
 
-        static::updating(function (PartStock $stock) {
-            $stock->amount = $stock->buy_value * $stock->quantity;
-            $stock->total_profit = $stock->total_profit ?? 0;
+          static::created(function (PartStock $partStock) {
+            // ✅ ProductList এ ডেটা কপি হচ্ছে
+            \App\Models\ProductList::create([
+                'branch_id' => $partStock->branch_id,
+                'product_name' => $partStock->product_name,
+                'supplier_name' => $partStock->supplier_name,
+                'buy_value' => $partStock->buy_value,
+                'quantity' => $partStock->quantity,
+                'amount' => $partStock->amount,
+                'purchase_date' => $partStock->purchase_date,
+                'branch_name' => $partStock->branch->name ?? '—',
+            ]);
         });
     }
 }
