@@ -6,7 +6,19 @@
 <div class="container mt-4">
     <h1 class="mb-4">📦 Part Stock List</h1>
 
-    @include('components.alert')
+    {{-- Inline Bootstrap Alerts --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     <!-- Filter/Search -->
     <form method="GET" action="{{ route('admin.partstocks.index') }}" class="row g-2 mb-3">
@@ -56,7 +68,7 @@
                         <td>৳{{ number_format($partstock->sell_value, 2) }}</td>
                         <td>{{ $partstock->quantity }}</td>
                         <td>৳{{ number_format($partstock->amount, 2) }}</td>
-                        <td>৳{{ number_format($partstock->sell_value, 2) }}</td>
+                        <td>৳{{ number_format($partstock->due_amount, 2) }}</td>
                         <td>৳{{ number_format($partstock->total_profit, 2) }}</td>
                         <td>
                             <a href="{{ route('admin.partstocks.edit', $partstock->id) }}" class="btn btn-sm btn-warning">Edit</a>
@@ -65,7 +77,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center">No data found.</td>
+                        <td colspan="10" class="text-center">No data found.</td>
                     </tr>
                 @endforelse
             </tbody>

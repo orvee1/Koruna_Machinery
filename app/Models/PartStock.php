@@ -41,12 +41,12 @@ class PartStock extends Model
     {
             static::creating(function (PartStock $partStock) {
            
-            $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+            $partStock->amount = $partStock->buying_price * $partStock->quantity;
             $depositAmount = $partStock->deposit_amount ?? 0;
             $partStock->due_amount = max($partStock->amount - $depositAmount, 0);
         });
             static::updating(function (PartStock $partStock) {
-            $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+            $partStock->amount = $partStock->buying_price * $partStock->quantity;
             $depositAmount = $partStock->deposit_amount ?? 0;
             $partStock->due_amount = max($partStock->amount - $depositAmount, 0);
         });

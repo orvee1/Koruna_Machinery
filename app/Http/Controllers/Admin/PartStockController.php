@@ -70,7 +70,8 @@ class PartStockController extends Controller
             'quantity'        => 'required|integer|min:1',
             'sell_value'      => 'required|numeric|min:0',
             'deposit_amount'  => 'nullable|numeric|min:0',
-            'purchase_date'   => 'nullable|date',
+            'purchase_date'   => 'required|date',
+
         ]);
 
         $branchId = session('active_branch_id');
@@ -114,7 +115,7 @@ class PartStockController extends Controller
             'quantity'        => 'required|integer|min:1',
             'sell_value'      => 'required|numeric|min:0',
             'deposit_amount'  => 'nullable|numeric|min:0',
-            'purchase_date'   => 'nullable|date',
+            'purchase_date'   => 'required|date',
         ]);
 
         $partStock->update([

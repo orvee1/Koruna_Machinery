@@ -52,6 +52,14 @@
             @enderror
         </div>
 
+         <div class="form-group">
+            <label for="buy_value">Deposit Amount</label>
+            <input type="number" step="0.01" id="deposit_amount" name="deposit_amount" class="form-control @error('deposit_amount') is-invalid @enderror" value="{{ old('deposit_amount') }}" required>
+            @error('deposit_amount')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
         <div class="form-group">
             <label for="sell_value">Sell Value</label>
             <input type="number" step="0.01" id="sell_value" name="sell_value" class="form-control @error('sell_value') is-invalid @enderror" value="{{ old('sell_value') }}" required>
