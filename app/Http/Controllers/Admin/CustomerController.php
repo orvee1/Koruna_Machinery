@@ -91,37 +91,15 @@ class CustomerController extends Controller
         }
 
 
-    public function show(Customer $customer)
-        {
-            try {
-                $productSales = $customer->productSales()
-                    ->with(['stock.product', 'seller'])
-                    ->latest()
-                    ->get();
-
-                $grandTotal = $productSales->sum(function ($sale) {
-                    return $sale->unit_price * $sale->quantity;
-                });
-
-                $grandPaid = $productSales->sum('paid_amount');
-                $grandDue = $grandTotal - $grandPaid;
-
-            } catch (\Exception $e) {
-                Log::error("CustomerController@show: Invoice loading failed (Customer ID: {$customer->id}): " . $e->getMessage());
-
-                return redirect()
-                    ->route('admin.customers.index')
-                    ->withErrors('দুঃখিত, এই মুহূর্তে কাস্টমার ইনভয়েস লোড করা যাচ্ছে না।');
-            }
-
-            return view('admin.customers.show', compact(
-                'customer',
-                'productSales',
-                'grandTotal',
-                'grandPaid',
-                'grandDue'
-            ));
+        public function show(Customer $customer)
+    {
+        if ($customer->branch_id !== session('active_branch_id')) {
+            abort(403, 'Unauthorized action.');
         }
+
+        return view('admin.customers.show', compact('customer'));
+    }
+
     
 
     public function destroy(Customer $customer)

@@ -53,8 +53,8 @@ class ProductSaleController extends Controller
             'stock_id' => 'required|exists:stocks,id',
             'customer_id' => 'required|exists:customers,id',
             'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'paid_amount' => 'required|numeric|min:0',
+            'unit_price' => 'required|numeric|min:0|max:99999999.99',
+            'paid_amount' => 'nullable|numeric|min:0|max:99999999.99',
         ]);
 
         // ✅ **স্টক খুঁজে বের করা**

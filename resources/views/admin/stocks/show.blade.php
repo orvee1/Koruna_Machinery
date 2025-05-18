@@ -18,10 +18,10 @@
                 <th>Supplier Name</th>
                 <td>{{ $stock->supplier_name }}</td>
             </tr>
-            <tr>
+            {{-- <tr>
                 <th>Branch</th>
                 <td>{{ $stock->branch->name ?? '—' }}</td>
-            </tr>
+            </tr> --}}
             <tr>
                 <th>Quantity</th>
                 <td>{{ $stock->quantity }}</td>

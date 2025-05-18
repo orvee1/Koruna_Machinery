@@ -58,7 +58,6 @@
                     <td>{{ $sale->seller->name ?? 'N/A' }}</td>
                     <td>{{ $sale->created_at->format('Y-m-d') }}</td>
                     <td class="text-center">
-                        <a href="{{ route('admin.partstock-sales.edit', $sale->id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <a href="{{ route('admin.partstock-sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
                         <form action="{{ route('admin.partstock-sales.destroy', $sale->id) }}" method="POST" class="d-inline-block"
                               onsubmit="return confirm('Are you sure you want to delete this sale?');">

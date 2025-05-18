@@ -25,12 +25,12 @@
     </div>
 
     @php
-        // সকল সেলস ডাটা একত্রে
         $mergedSales = collect();
 
-        foreach ($customer->productSales()->with(['product', 'seller'])->get() as $sale) {
+        // product sales
+        foreach ($customer->productSales()->with(['stock', 'seller'])->get() as $sale) {
             $mergedSales->push([
-                'name'       => $sale->product->name ?? 'N/A',
+                'name'       => $sale->stock->product_name ?? 'N/A',
                 'quantity'   => $sale->quantity,
                 'unit_price' => $sale->unit_price,
                 'total'      => $sale->unit_price * $sale->quantity,
@@ -40,9 +40,10 @@
             ]);
         }
 
+        // part stock sales
         foreach ($customer->partsStockSales()->with(['partStock', 'seller'])->get() as $sale) {
             $mergedSales->push([
-                'name'       => $sale->partStock->name ?? 'N/A',
+                'name'       => $sale->partStock->product_name ?? 'N/A',
                 'quantity'   => $sale->quantity,
                 'unit_price' => $sale->unit_price,
                 'total'      => $sale->unit_price * $sale->quantity,
@@ -101,21 +102,19 @@
         <p class="text-center text-muted">কোন বিক্রয় রেকর্ড পাওয়া যায়নি।</p>
     @endif
 
-    {{-- 🔷 Signature Part --}}
+    {{-- 🔷 Signature --}}
     <div class="text-end mt-5">
         <p><strong>পক্ষে - {{ $lastSeller }}</strong></p>
     </div>
 
-    {{-- Print & Back --}}
     <div class="text-center no-print mt-4">
         <button class="btn btn-outline-primary" onclick="printInvoice()">🖨️ প্রিন্ট করুন</button>
     </div>
     <div class="mt-3 no-print">
-        <a href="{{ route('worker.customers.index') }}" class="btn btn-secondary">← ফিরে যান</a>
+        <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary">← ফিরে যান</a>
     </div>
 </div>
 
-{{-- Print Logic --}}
 <script>
 function printInvoice() {
     window.print();
@@ -139,12 +138,8 @@ function printInvoice() {
     .no-print {
         display: none !important;
     }
-    .text-danger {
-        color: red !important;
-    }
-    .text-success {
-        color: green !important;
-    }
+    .text-danger { color: red !important; }
+    .text-success { color: green !important; }
 }
 </style>
 @endsection

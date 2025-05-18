@@ -30,7 +30,7 @@ class PartstockSale extends Model
         'due_amount' => 'decimal:2',
     ];
 
-    protected static function booted()
+        protected static function booted()
     {
         static::creating(function (PartstockSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
@@ -42,40 +42,39 @@ class PartstockSale extends Model
             $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
         });
 
-        // Sale Created → Quantity কমে যাবে, Profit বাড়বে
+        // Sale Created → Reduce stock quantity & increase profit
         static::created(function (PartstockSale $sale) {
             $partStock = PartStock::find($sale->part_stock_id);
             if (!$partStock) return;
 
             $partStock->quantity -= $sale->quantity;
 
-            $profitPerUnit = $sale->unit_price - $partStock->buy_value;
+            $profitPerUnit = $sale->unit_price - $partStock->buying_price;
             $totalProfit = $profitPerUnit * $sale->quantity;
-            $partStock->total_profit += $totalProfit;
 
             $partStock->updateQuietly([
                 'quantity' => max($partStock->quantity, 0),
-                'total_profit' => $partStock->total_profit,
+                'total_profit' => $partStock->total_profit + $totalProfit,
             ]);
         });
 
-        // Sale Deleted → Quantity ফেরত, Profit কমবে
+        // Sale Deleted → Restore stock & reduce profit
         static::deleted(function (PartstockSale $sale) {
             $partStock = PartStock::find($sale->part_stock_id);
             if (!$partStock) return;
 
             $partStock->quantity += $sale->quantity;
 
-            $profitPerUnit = $sale->unit_price - $partStock->buy_value;
+            $profitPerUnit = $sale->unit_price - $partStock->buying_price;
             $totalProfit = $profitPerUnit * $sale->quantity;
-            $partStock->total_profit -= $totalProfit;
 
             $partStock->updateQuietly([
                 'quantity' => $partStock->quantity,
-                'total_profit' => max($partStock->total_profit, 0),
+                'total_profit' => max($partStock->total_profit - $totalProfit, 0),
             ]);
         });
     }
+
 
     // Scope Filters
     public function scopeForToday($query)

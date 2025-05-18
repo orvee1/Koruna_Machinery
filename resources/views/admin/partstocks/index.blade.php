@@ -64,10 +64,10 @@
                         <td>{{ $partstocks->firstItem() + $key }}</td>
                         <td>{{ $partstock->product_name }}</td>
                         <td>{{ $partstock->supplier_name }}</td>
-                        <td>৳{{ number_format($partstock->buy_value, 2) }}</td>
+                        <td>৳{{ number_format($partstock->buying_price, 2) }}</td>
                         <td>৳{{ number_format($partstock->sell_value, 2) }}</td>
                         <td>{{ $partstock->quantity }}</td>
-                        <td>৳{{ number_format($partstock->amount, 2) }}</td>
+                        <td>৳{{ number_format($partstock->total_amount, 2) }}</td>
                         <td>৳{{ number_format($partstock->due_amount, 2) }}</td>
                         <td>৳{{ number_format($partstock->total_profit, 2) }}</td>
                         <td>

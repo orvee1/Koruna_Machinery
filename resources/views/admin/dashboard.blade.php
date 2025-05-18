@@ -32,7 +32,7 @@
             <div class="card shadow-sm rounded-lg p-4 text-center h-100">
                 <div class="card-body">
                     <h5 class="card-title text-primary">Total Value</h5>
-                    <p class="card-text fs-4 text-info">{{ number_format($totalValue, 2) }} ৳</p>
+                    <p class="card-text fs-4 text-info">{{ number_format($totalProductValue, 2) }} ৳</p>
                     <div class="card-footer text-muted">Total product value</div>
                 </div>
             </div>

@@ -16,9 +16,9 @@ return new class extends Migration
             $table->id();
             $table->string('product_name');
             $table->string('supplier_name');
-            $table->decimal('buy_value', 10, 2);
+            $table->decimal('buying_price', 10, 2);
             $table->integer('quantity')->default(0);
-            $table->decimal('amount', 10, 2);
+            $table->decimal('total_amount', 10, 2);
             $table->decimal('deposit_amount', 10, 2);
             $table->decimal('due_amount', 10, 2);
             $table->decimal('sell_value', 10, 2);

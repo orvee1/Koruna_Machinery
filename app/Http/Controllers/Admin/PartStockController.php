@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\PartStock;
 use App\Models\PartStockPayment;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PartStockController extends Controller
 {
@@ -63,34 +64,26 @@ class PartStockController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'product_name'    => 'required|string|max:255',
             'supplier_name'   => 'required|string|max:255',
-            'buy_value'       => 'required|numeric|min:0',
+            'buying_price'    => 'required|numeric|min:0|max:99999999.99',
             'quantity'        => 'required|integer|min:1',
-            'sell_value'      => 'required|numeric|min:0',
-            'deposit_amount'  => 'nullable|numeric|min:0',
+            'sell_value'      => 'required|numeric|min:0|max:99999999.99',
+            'deposit_amount'  => 'nullable|numeric|min:0|max:99999999.99',
             'purchase_date'   => 'required|date',
-
         ]);
 
-        $branchId = session('active_branch_id');
+        $validated['branch_id'] = session('active_branch_id');
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
 
-        PartStock::create([
-            'branch_id'       => $branchId,
-            'product_name'    => $request->product_name,
-            'supplier_name'   => $request->supplier_name,
-            'buy_value'       => $request->buy_value,
-            'quantity'        => $request->quantity,
-            'sell_value'      => $request->sell_value,
-            'deposit_amount'  => $request->deposit_amount ?? 0,
-            'purchase_date'   => $request->purchase_date,
-        ]);
+        PartStock::create($validated);
 
         return redirect()
             ->route('admin.partstocks.index')
             ->with('success', 'Part stock added successfully.');
     }
+
 
     public function edit(PartStock $partStock)
     {
@@ -111,7 +104,7 @@ class PartStockController extends Controller
         $request->validate([
             'product_name'    => 'required|string|max:255',
             'supplier_name'   => 'required|string|max:255',
-            'buy_value'       => 'required|numeric|min:0',
+            'buying_price'       => 'required|numeric|min:0',
             'quantity'        => 'required|integer|min:1',
             'sell_value'      => 'required|numeric|min:0',
             'deposit_amount'  => 'nullable|numeric|min:0',
@@ -121,7 +114,7 @@ class PartStockController extends Controller
         $partStock->update([
             'product_name'    => $request->product_name,
             'supplier_name'   => $request->supplier_name,
-            'buy_value'       => $request->buy_value,
+            'buying_price'       => $request->buying_price,
             'quantity'        => $request->quantity,
             'sell_value'      => $request->sell_value,
             'deposit_amount'  => $request->deposit_amount ?? 0,
@@ -133,30 +126,47 @@ class PartStockController extends Controller
             ->with('success', 'Part stock updated successfully.');
     }
 
-    public function updatePayment(Request $request, PartStock $partStock)
+
+        public function updatePayment(Request $request, PartStock $partStock)
     {
-        $request->validate([
-            'paid_amount'  => 'required|numeric|min:0.01|max:' . $partStock->remainingBalance(),
-            'payment_date' => 'required|date',
-        ]);
+     
+        $rules = [
+            'paid_amount' => ['required', 'decimal:0,2', 'min:0.01'],
+            'payment_date' => ['required', 'date'],
+        ];
 
-        PartStockPayment::create([
-            'part_stock_id' => $partStock->id,
-            'paid_amount'   => $request->paid_amount,
-            'payment_date'  => $request->payment_date,
-        ]);
-
-        return back()->with('success', 'Payment added successfully.');
-    }
-
-    public function show(PartStock $partStock)
-    {
-        if ($partStock->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized action.');
+        if (!is_null($partStock->due_amount)) {
+            $rules['paid_amount'][] = 'max:' . $partStock->due_amount;
         }
 
-        $partStock->load(['branch', 'payments', 'partSales']);
+        $request->validate($rules);
+
+        $payment = new PartStockPayment([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'part_stock_id' => $partStock->id,
+        ]);
+        $payment->save();
+
+        $partStock->deposit_amount += $request->paid_amount;
+        $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
+        $partStock->save();
+
+        return back()->with('success', 'Payment updated successfully.');
+    }
+
+
+
+    public function show($id)
+    {
+        $partStock = PartStock::with('payments')->find($id);
+
+        if (!$partStock) {
+            return redirect()->route('admin.partstocks.index')->with('error', 'Part Stock not found.');
+        }
 
         return view('admin.partstocks.show', compact('partStock'));
     }
+
+
 }

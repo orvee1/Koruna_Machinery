@@ -39,9 +39,7 @@ class AdminController extends Controller
     
         // $totalProductValue = Product::where('branch_id', $branchId)->sum('buying_price');
         $totalProductValue = ProductList::where('branch_id', $branchId)->sum('total_amount');
-        $totalPartStockValue = PartStock::where('branch_id', $branchId)->sum('amount');
-        $totalValue = $totalProductValue + $totalPartStockValue;
-
+        
         $productProfit = Stock::where('branch_id', $branchId)->sum('total_profit');
         $partStockProfit = PartStock::where('branch_id', $branchId)->sum('total_profit');
         $totalProfit = $productProfit + $partStockProfit;
@@ -59,7 +57,7 @@ class AdminController extends Controller
     
         return view('admin.dashboard', compact(
             'totalSales',
-            'totalValue',
+            'totalProductValue',
             'users',
             'totalProfit',
             'totalDue',

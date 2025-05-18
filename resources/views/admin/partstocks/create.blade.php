@@ -37,9 +37,9 @@
         </div>
 
         <div class="form-group">
-            <label for="buy_value">Buy Value</label>
-            <input type="number" step="0.01" id="buy_value" name="buy_value" class="form-control @error('buy_value') is-invalid @enderror" value="{{ old('buy_value') }}" required>
-            @error('buy_value')
+            <label for="buying_price">Buying Price</label>
+            <input type="number" step="0.01" id="buying_price" name="buying_price" class="form-control @error('buying_price') is-invalid @enderror" value="{{ old('buying_price') }}" required>
+            @error('buying_price')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -53,7 +53,7 @@
         </div>
 
          <div class="form-group">
-            <label for="buy_value">Deposit Amount</label>
+            <label for="deposit_amount">Deposit Amount</label>
             <input type="number" step="0.01" id="deposit_amount" name="deposit_amount" class="form-control @error('deposit_amount') is-invalid @enderror" value="{{ old('deposit_amount') }}" required>
             @error('deposit_amount')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -68,12 +68,20 @@
             @enderror
         </div>
 
+         <div class="form-group">
+        <label for="purchase_date">Purchase Date</label>
+        <input type="date" id="purchase_date" name="purchase_date" class="form-control @error('purchase_date') is-invalid @enderror" value="{{ old('purchase_date') }}" required>
+        @error('purchase_date')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+       </div>
+
         <!-- সরাসরি Active Branch দেখানো হচ্ছে, Dropdown বাদ -->
-        <div class="form-group">
+        {{-- <div class="form-group">
             <label for="branch_name">Branch</label>
             <input type="text" class="form-control" value="{{ $branch->name }}" disabled>
             <input type="hidden" name="branch_id" value="{{ $branch->id }}">
-        </div>
+        </div> --}}
 
         <button type="submit" class="btn btn-success mt-3">Save Part Stock</button>
     </form>
