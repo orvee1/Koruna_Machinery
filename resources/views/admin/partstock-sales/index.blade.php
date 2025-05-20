@@ -40,7 +40,9 @@
                     <th>Part Stock</th>
                     <th>Quantity</th>
                     <th>Unit Price</th>
+                    <th>Total Amount (৳)</th>
                     <th>Paid</th>
+                    <th>Due (৳)</th>
                     <th>Seller</th>
                     <th>Date</th>
                     <th class="text-center">Actions</th>
@@ -54,7 +56,11 @@
                     <td>{{ $sale->partStock->product_name ?? 'N/A' }}</td>
                     <td>{{ $sale->quantity }}</td>
                     <td>{{ number_format($sale->unit_price, 2) }}</td>
+                    <td>{{ number_format($sale->total_amount, 2) }}</td>
                     <td>{{ number_format($sale->paid_amount, 2) }}</td>
+                    <td class="{{ $sale->due_amount > 0 ? 'text-danger' : 'text-success' }}">
+                            {{ number_format($sale->due_amount, 2) }}
+                    </td>
                     <td>{{ $sale->seller->name ?? 'N/A' }}</td>
                     <td>{{ $sale->created_at->format('Y-m-d') }}</td>
                     <td class="text-center">

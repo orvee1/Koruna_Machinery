@@ -34,7 +34,7 @@
                     <option value="">-- Choose a Part --</option>
                     @foreach($partStocks as $partStock)
                         <option value="{{ $partStock->id }}" {{ old('part_stock_id') == $partStock->id ? 'selected' : '' }}>
-                            {{ $partStock->product_name }}
+                            {{ $partStock->product_name }} — [Stock: {{ $partStock->quantity }} pcs]
                         </option>
                     @endforeach
                 </select>
@@ -47,7 +47,7 @@
                     <option value="">-- Choose a Customer --</option>
                     @foreach($customers as $customer)
                         <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                            {{ $customer->name }} — {{ $customer->phone }}
+                            {{ $customer->name }}
                         </option>
                     @endforeach
                 </select>

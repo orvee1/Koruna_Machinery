@@ -39,7 +39,7 @@
         <table class="table table-bordered align-middle table-hover">
             <thead class="table-dark">
                 <tr>
-                    <th>#</th>
+                    <th>SL No</th>
                     <th>Customer</th>
                     <th>Product</th>
                     <th>Quantity</th>
@@ -58,12 +58,12 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $sale->customer->name ?? 'N/A' }}</td>
                         <td>
-    @if($sale->stock)
-        {{ $sale->stock->product_name }}
-    @else
-        <span class="text-danger">No Stock Found</span>
-    @endif
-</td>
+                        @if($sale->stock)
+                            {{ $sale->stock->product_name }}
+                        @else
+                            <span class="text-danger">No Stock Found</span>
+                        @endif
+                        </td>
                         <td>{{ $sale->quantity }}</td>
                         <td>{{ number_format($sale->unit_price, 2) }}</td>
                         <td>{{ number_format($sale->total_amount, 2) }}</td>
