@@ -116,5 +116,10 @@ class PartstockSale extends Model
     public function investor()
      { 
         return $this->belongsTo(Investor::class); 
-    }
+     }
+
+    public function payments()
+     { 
+        return $this->hasMany(PartStockSalePayment::class);
+     }
 }

@@ -126,4 +126,9 @@ class ProductSale extends Model
     {
         return $this->belongsTo(Investor::class);
     }
+
+    public function payments()
+    {
+        return $this->hasMany(ProductSalePayment::class);
+    }
 }
