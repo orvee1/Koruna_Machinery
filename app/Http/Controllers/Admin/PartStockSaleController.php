@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\PartStock;
 use App\Models\PartstockSale;
+use App\Models\PartStockSalePayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -76,6 +77,30 @@ class PartstockSaleController extends Controller
 
         return redirect()->route('admin.partstock-sales.index')
             ->with('success', 'Partstock sale added successfully.');
+    }
+
+      public function updatePayment(Request $request, PartstockSale $partstockSale)
+    {
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partstockSale->due_amount,
+            'payment_date' => 'required|date',
+        ]);
+
+        // ✅ নতুন পেমেন্ট রেকর্ড তৈরি
+        $payment = new PartStockSalePayment([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'product_sale_id' => $partstockSale->id,
+        ]);
+        $payment->save();
+
+        // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
+        $partstockSale->paid_amount += $request->paid_amount;
+        $partstockSale->due_amount = max($partstockSale->total_amount - $partstockSale->paid_amount, 0);
+
+        $partstockSale->save();
+
+        return back()->with('success', 'Payment updated successfully.');
     }
 
    

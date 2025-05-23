@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\ProductSale;
+use App\Models\ProductSalePayment;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,6 +79,30 @@ class ProductSaleController extends Controller
         ]);
 
         return redirect()->route('admin.product-sales.index')->with('success', 'Product Sale added successfully.');
+    }
+
+        public function updatePayment(Request $request, ProductSale $productSale)
+    {
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $productSale->due_amount,
+            'payment_date' => 'required|date',
+        ]);
+
+        // ✅ নতুন পেমেন্ট রেকর্ড তৈরি
+        $payment = new ProductSalePayment([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'product_sale_id' => $productSale->id,
+        ]);
+        $payment->save();
+
+        // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
+        $productSale->paid_amount += $request->paid_amount;
+        $productSale->due_amount = max($productSale->total_amount - $productSale->paid_amount, 0);
+
+        $productSale->save();
+
+        return back()->with('success', 'Payment updated successfully.');
     }
 
 
