@@ -8,53 +8,108 @@ use App\Models\Customer;
 use App\Models\Investor;
 use App\Models\PartStock;
 use App\Models\PartStockSale;
-use App\Models\Product;
 use App\Models\ProductList;
 use App\Models\ProductSale;
 use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    public function __construct()
+     public function __construct()
     {
-        $this->middleware('checkRole:admin'); // ✅ Now using checkRole middleware cleanly
+        $this->middleware('checkRole:admin'); 
     }
 
-    public function dashboard()
+     public function dashboard(Request $request)
     {
-        
         $branchId = session('active_branch_id');
-        // Check if branchId is set in the session
+
         if (!$branchId) {
             return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
         }
-        $branch = Branch::find($branchId);
-        // Sales
-        $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('total_amount');
-        $totalPartstockSales = PartStockSale::where('branch_id', $branchId)->sum('total_amount');
-        $totalSales = $totalProductSales + $totalPartstockSales;
-    
-        // $totalProductValue = Product::where('branch_id', $branchId)->sum('buying_price');
-        $totalProductValue = ProductList::where('branch_id', $branchId)->sum('total_amount');
-        
-        $productProfit = Stock::where('branch_id', $branchId)->sum('total_profit');
-        $partStockProfit = PartStock::where('branch_id', $branchId)->sum('total_profit');
-        $totalProfit = $productProfit + $partStockProfit;
 
-        $productDue = Stock::where('branch_id', $branchId)->sum('due_amount');
-        $partStockDue = PartStock::where('branch_id', $branchId)->sum('due_amount');
+        $branch = Branch::find($branchId);
+
+        $from = $request->filled('from_date') ? Carbon::parse($request->from_date)->startOfDay() : null;
+        $to = $request->filled('to_date') ? Carbon::parse($request->to_date)->endOfDay() : null;
+        $month = $request->month;
+        $year = $request->year;
+
+        $productSaleQuery = ProductSale::where('branch_id', $branchId);
+        $partSaleQuery = PartStockSale::where('branch_id', $branchId);
+        $productListQuery = ProductList::where('branch_id', $branchId);
+        $stockQuery = Stock::where('branch_id', $branchId);
+        $partStockQuery = PartStock::where('branch_id', $branchId);
+
+        $productProfitQuery = ProductSale::with('stock')->where('branch_id', $branchId);
+        $partProfitQuery = PartStockSale::with('partStock')->where('branch_id', $branchId);
+
+        if ($from && $to) {
+            $productSaleQuery->whereBetween('created_at', [$from, $to]);
+            $partSaleQuery->whereBetween('created_at', [$from, $to]);
+            $productListQuery->whereBetween('created_at', [$from, $to]);
+            $stockQuery->whereBetween('created_at', [$from, $to]);
+            $partStockQuery->whereBetween('created_at', [$from, $to]);
+
+            $productProfitQuery->whereBetween('created_at', [$from, $to]);
+            $partProfitQuery->whereBetween('created_at', [$from, $to]);
+        } elseif ($month) {
+            $productSaleQuery->whereMonth('created_at', $month);
+            $partSaleQuery->whereMonth('created_at', $month);
+            $productListQuery->whereMonth('created_at', $month);
+            $stockQuery->whereMonth('created_at', $month);
+            $partStockQuery->whereMonth('created_at', $month);
+
+            $productProfitQuery->whereMonth('created_at', $month);
+            $partProfitQuery->whereMonth('created_at', $month);
+        } elseif ($year) {
+            $productSaleQuery->whereYear('created_at', $year);
+            $partSaleQuery->whereYear('created_at', $year);
+            $productListQuery->whereYear('created_at', $year);
+            $stockQuery->whereYear('created_at', $year);
+            $partStockQuery->whereYear('created_at', $year);
+
+            $productProfitQuery->whereYear('created_at', $year);
+            $partProfitQuery->whereYear('created_at', $year);
+        } else {
+          
+            $today = Carbon::today();
+            $tomorrow = Carbon::tomorrow();
+
+            $productProfitQuery->whereBetween('created_at', [$today, $tomorrow]);
+            $partProfitQuery->whereBetween('created_at', [$today, $tomorrow]);
+        }
+
+        $totalProductSales = $productSaleQuery->sum('total_amount');
+        $totalPartstockSales = $partSaleQuery->sum('total_amount');
+        $totalSales = $totalProductSales + $totalPartstockSales;
+
+        $totalProductValue = $productListQuery->sum('total_amount');
+        
+        $productDue = $stockQuery->sum('due_amount');
+        $partStockDue = $partStockQuery->sum('due_amount');
         $totalDue = $productDue + $partStockDue;
 
-        $productDueToHave = ProductSale::where('branch_id', $branchId)->sum('due_amount');
-        $partStockDueToHave = PartStockSale::where('branch_id', $branchId)->sum('due_amount');
+        $productDueToHave = $productSaleQuery->sum('due_amount');
+        $partStockDueToHave = $partSaleQuery->sum('due_amount');
         $totalDueToHave = $productDueToHave + $partStockDueToHave;
 
-        // Optional: all users of this branch
+        $productProfit = $productProfitQuery->get()->sum(function ($s) {
+            return ($s->unit_price - optional($s->stock)->buying_price) * $s->quantity;
+        });
+
+        $partStockProfit = $partProfitQuery->get()->sum(function ($s) {
+            return ($s->unit_price - optional($s->partStock)->buying_price) * $s->quantity;
+        });
+
+        $totalProfit = $productProfit + $partStockProfit;
+
         $users = User::where('branch_id', $branchId)->with('branch')->get();
-    
+
         return view('admin.dashboard', compact(
             'totalSales',
             'totalProductValue',
@@ -62,10 +117,14 @@ class AdminController extends Controller
             'totalProfit',
             'totalDue',
             'totalDueToHave',
+            'from',
+            'to',
+            'month',
+            'year'
         ));
     }
-    
 
+    
     public function index()
     {
         $users = User::with('branch')->latest()->paginate(20);
@@ -78,7 +137,7 @@ class AdminController extends Controller
         return view('admin.users.create', compact('branches'));
     }
 
-    public function store(Request $request)
+     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -98,13 +157,13 @@ class AdminController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User created successfully!');
     }
 
-    public function edit(User $user)
+     public function edit(User $user)
     {
         $branches = Branch::all();
         return view('admin.users.edit', compact('user', 'branches'));
     }
 
-    public function update(Request $request, User $user)
+     public function update(Request $request, User $user)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -130,86 +189,65 @@ class AdminController extends Controller
     }
 
 
-public function show(User $user, Request $request)
-{
-    // ✅ ProductSales ফিল্টারিং
-    $productSales = ProductSale::with(['product', 'customer'])
-        ->where('seller_id', $user->id);
+     public function show(User $user, Request $request)
+    {
+        $productQuery = ProductSale::with(['stock', 'customer'])->where('seller_id', $user->id);
+        $partQuery = PartStockSale::with(['partStock', 'customer'])->where('seller_id', $user->id);
 
-    if ($request->has('from_date') && $request->has('to_date')) {
-        $productSales = $productSales->whereBetween('created_at', [$request->from_date, $request->to_date]);
-    }
-
-    if ($request->has('month')) {
-        $productSales = $productSales->whereMonth('created_at', $request->month);
-    }
-
-    if ($request->has('year')) {
-        $productSales = $productSales->whereYear('created_at', $request->year);
-    }
-
-    $productSales = $productSales->get()->map(function ($sale) {
-        $sale->sale_type = 'ProductSale'; // সেল টাইপ নির্ধারণ
-        $sale->total_amount = $sale->unit_price * $sale->quantity; // ✅ টোটাল অ্যামাউন্ট সেট
-        return $sale;
-    });
-
-    // ✅ PartStockSales ফিল্টারিং
-    $partStockSales = PartstockSale::with(['partStock', 'customer'])
-        ->where('seller_id', $user->id);
-
-    if ($request->has('from_date') && $request->has('to_date')) {
-        $partStockSales = $partStockSales->whereBetween('created_at', [$request->from_date, $request->to_date]);
-    }
-
-    if ($request->has('month')) {
-        $partStockSales = $partStockSales->whereMonth('created_at', $request->month);
-    }
-
-    if ($request->has('year')) {
-        $partStockSales = $partStockSales->whereYear('created_at', $request->year);
-    }
-
-    $partStockSales = $partStockSales->get()->map(function ($sale) {
-        $sale->sale_type = 'PartStockSale'; // সেল টাইপ নির্ধারণ
-        $sale->total_amount = $sale->unit_price * $sale->quantity; // ✅ টোটাল অ্যামাউন্ট সেট
-        return $sale;
-    });
-
-    // ✅ ডেটা সংগ্রহ এবং মার্জ করা
-    $allSales = $productSales->merge($partStockSales);
-
-    // ✅ সেলেকশন অনুযায়ী সাজানো এবং Pagination তৈরি
-    $sales = $allSales->sortByDesc('created_at')->values();
-    $currentPage = LengthAwarePaginator::resolveCurrentPage();
-    $perPage = 20;
-    $currentItems = $sales->slice(($currentPage - 1) * $perPage, $perPage)->all();
-    $paginatedSales = new LengthAwarePaginator($currentItems, $sales->count(), $perPage);
-
-    // ✅ টোটাল রেভিনিউ এবং প্রফিট
-    $totalRevenue = $allSales->sum(function ($sale) {
-        return $sale->total_amount;
-    });
-
-    $totalProfit = $allSales->sum(function ($sale) {
-        if ($sale->sale_type === 'ProductSale') {
-            return ($sale->unit_price - $sale->product->buying_price) * $sale->quantity;
-        } elseif ($sale->sale_type === 'PartStockSale') {
-            return ($sale->unit_price - $sale->partStock->buying_price) * $sale->quantity;
+        // Filter by date
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $productQuery->whereBetween('created_at', [$request->from_date, $request->to_date]);
+            $partQuery->whereBetween('created_at', [$request->from_date, $request->to_date]);
+        } elseif ($request->filled('month')) {
+            $productQuery->whereMonth('created_at', $request->month);
+            $partQuery->whereMonth('created_at', $request->month);
+        } elseif ($request->filled('year')) {
+            $productQuery->whereYear('created_at', $request->year);
+            $partQuery->whereYear('created_at', $request->year);
         }
-        return 0;
-    });
 
-    return view('admin.users.show', [
-        'user' => $user,
-        'sales' => $paginatedSales,
-        'totalRevenue' => $totalRevenue,
-        'totalProfit' => $totalProfit
-    ]);
-}
+        $productSales = (clone $productQuery)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20, ['*'], 'product_page')
+            ->appends($request->except('partstock_page'));
 
+        $partStockSales = (clone $partQuery)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20, ['*'], 'partstock_page')
+            ->appends($request->except('product_page'));
+    
+        $profitProductQuery = clone $productQuery;
+        $profitPartQuery = clone $partQuery;
 
+        if (!$request->filled('from_date') && !$request->filled('month') && !$request->filled('year')) {
+            $today = Carbon::today();
+            $tomorrow = Carbon::tomorrow();
+            $profitProductQuery->whereBetween('created_at', [$today, $tomorrow]);
+            $profitPartQuery->whereBetween('created_at', [$today, $tomorrow]);
+        }
 
+        $totalRevenue = (
+            $productQuery->sum(DB::raw('quantity * unit_price')) +
+            $partQuery->sum(DB::raw('quantity * unit_price'))
+        );
+
+        $totalProfit = (
+            $profitProductQuery->get()->sum(function ($s) {
+                return ($s->unit_price - $s->stock->buying_price) * $s->quantity;
+            }) +
+            $profitPartQuery->get()->sum(function ($s) {
+                return ($s->unit_price - $s->partStock->buying_price) * $s->quantity;
+            })
+        );
+
+        return view('admin.users.show', [
+            'user'           => $user,
+            'productSales'   => $productSales,
+            'partStockSales' => $partStockSales,
+            'totalRevenue'   => $totalRevenue,
+            'totalProfit'    => $totalProfit,
+        ]);
+    }
 
 
 }

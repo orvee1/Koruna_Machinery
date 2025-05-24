@@ -24,7 +24,7 @@ class ProductSaleController extends Controller
         $query = ProductSale::where('branch_id', $branchId)
             ->with(['stock', 'customer', 'branch', 'seller', 'investor'])
             ->latest();
-
+        
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->input('date'));
         }
@@ -34,10 +34,27 @@ class ProductSaleController extends Controller
         if ($request->filled('year')) {
             $query->forYear($request->input('year'));
         }
+      
+          if ($request->filled('status')) {
+          if ($request->status === 'due') {
+            
+            $query->where('due_amount', '>', 0)
+                  ->orderBy('created_at', 'asc');  
+        } elseif ($request->status === 'paid') {
+            
+            $query->where('due_amount', 0)
+                  ->orderBy('created_at', 'asc');  
+            }
+        } else {
+            
+            $query->orderBy('created_at', 'desc');
+        }
 
-        $sales = $query->paginate(20);
+        $sales = $query->paginate(20)->appends($request->all());
+
         return view('admin.product-sales.index', compact('sales'));
     }
+
 
     public function create()
     {
@@ -106,15 +123,14 @@ class ProductSaleController extends Controller
     }
 
 
-    public function show(ProductSale $productSale)
+     public function show($id)
     {
-        $user = Auth::user();
+        $productSale = ProductSale::with('payments')->findOrFail($id);
         return view('admin.product-sales.show', compact('productSale'));
     }
 
     public function destroy(ProductSale $productSale)
     {
-
         $productSale->delete();
 
         return redirect()->route('admin.product-sales.index')

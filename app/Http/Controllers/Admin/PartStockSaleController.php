@@ -23,9 +23,11 @@ class PartstockSaleController extends Controller
     public function index(Request $request)
     {
         $branchId = session('active_branch_id');
+
         $query = PartstockSale::where('branch_id', $branchId)
             ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
+        
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->input('date'));
         }
@@ -36,9 +38,27 @@ class PartstockSaleController extends Controller
             $query->forYear($request->input('year'));
         }
 
-        $sales = $query->latest()->paginate(20);
+        
+        if ($request->filled('status')) {
+          if ($request->status === 'due') {
+            
+            $query->where('due_amount', '>', 0)
+                  ->orderBy('created_at', 'asc');  
+        } elseif ($request->status === 'paid') {
+            
+            $query->where('due_amount', 0)
+                  ->orderBy('created_at', 'asc');  
+            }
+        } else {
+            
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $sales = $query->latest()->paginate(20)->appends($request->all());
+
         return view('admin.partstock-sales.index', compact('sales'));
     }
+
 
     /**
      * Show form to create a new partstock sale
@@ -90,7 +110,7 @@ class PartstockSaleController extends Controller
         $payment = new PartStockSalePayment([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
-            'product_sale_id' => $partstockSale->id,
+            'partstock_sale_id' => $partstockSale->id,
         ]);
         $payment->save();
 
@@ -101,6 +121,12 @@ class PartstockSaleController extends Controller
         $partstockSale->save();
 
         return back()->with('success', 'Payment updated successfully.');
+    }
+
+    public function show($id)
+    {
+        $partstockSale = PartstockSale::with('payments')->findOrFail($id);
+        return view('admin.partstock-sales.show', compact('partstockSale'));
     }
 
    

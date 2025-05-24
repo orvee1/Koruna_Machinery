@@ -19,20 +19,79 @@
     @endif
 
     {{-- 🔎 Filter --}}
-    <form method="GET" class="row row-cols-lg-auto g-3 mb-4">
-        <div class="col">
-            <input type="date" name="date" class="form-control" value="{{ request('date') }}">
-        </div>
-        <div class="col">
-            <input type="number" name="month" class="form-control" placeholder="Month" value="{{ request('month') }}">
-        </div>
-        <div class="col">
-            <input type="number" name="year" class="form-control" placeholder="Year" value="{{ request('year') }}">
-        </div>
-        <div class="col">
-            <button type="submit" class="btn btn-secondary">🔎 Filter</button>
-        </div>
-    </form>
+    <form method="GET" action="{{ route('admin.product-sales.index') }}" class="row gy-2 gx-3 align-items-end mb-4">
+    {{-- Date --}}
+    <div class="col-auto">
+        <label for="date" class="form-label">Date</label>
+        <input
+            type="date"
+            name="date"
+            id="date"
+            class="form-control"
+            value="{{ request('date') }}"
+        >
+    </div>
+
+    {{-- Month --}}
+    <div class="col-auto">
+        <label for="month" class="form-label">Month</label>
+        <select name="month" id="month" class="form-select">
+            <option value="">All</option>
+            @for($m = 1; $m <= 12; $m++)
+                <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                    {{ DateTime::createFromFormat('!m', $m)->format('F') }}
+                </option>
+            @endfor
+        </select>
+    </div>
+
+    {{-- Year --}}
+    <div class="col-auto">
+        <label for="year" class="form-label">Year</label>
+        <select name="year" id="year" class="form-select">
+            <option value="">All</option>
+            @php
+                $current = date('Y');
+                $start = $current + 5;
+            @endphp
+            @for($y = $current; $y <= $start; $y++)
+                <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                    {{ $y }}
+                </option>
+            @endfor
+        </select>
+    </div>
+
+    {{-- Payment Status --}}
+    <div class="col-auto">
+    <label for="status" class="form-label">Payment Status</label>
+    <select name="status"
+            id="status"
+            class="form-select"
+            onchange="this.form.submit()">
+        <option value="" {{ request('status') === null || request('status') === '' ? 'selected' : '' }}>
+            All
+        </option>
+        <option value="paid" {{ request('status') === 'paid' ? 'selected' : '' }}>
+            Paid
+        </option>
+        <option value="due" {{ request('status') === 'due' ? 'selected' : '' }}>
+            Due
+        </option>
+    </select>
+    </div>
+
+    {{-- Buttons --}}
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-funnel"></i> Filter
+        </button>
+        <a href="{{ route('admin.partstock-sales.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Clear
+        </a>
+    </div>
+</form>
+
 
     {{-- 📋 Product Sales Table --}}
     <div class="table-responsive">

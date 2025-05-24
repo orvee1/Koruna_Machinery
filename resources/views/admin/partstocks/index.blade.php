@@ -68,7 +68,9 @@
                         <td>৳{{ number_format($partstock->sell_value, 2) }}</td>
                         <td>{{ $partstock->quantity }}</td>
                         <td>৳{{ number_format($partstock->total_amount, 2) }}</td>
-                        <td>৳{{ number_format($partstock->due_amount, 2) }}</td>
+                        <td class="{{ $partstock->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+                        {{ number_format($partstock->due_amount, 2) }}
+                        </td>
                         <td>৳{{ number_format($partstock->total_profit, 2) }}</td>
                         <td>
                             <a href="{{ route('admin.partstocks.edit', $partstock->id) }}" class="btn btn-sm btn-warning">Edit</a>

@@ -101,7 +101,11 @@ Route::middleware('auth')->group(function () {
 
             // Sales Management
             Route::resource('product-sales', AdminProductSaleController::class);
+            Route::post('product-sales/{productSale}/update-payment', [AdminProductSaleController::class, 'updatePayment'])
+                ->name('productSales.updatePayment');
             Route::resource('partstock-sales', AdminPartstockSaleController::class);
+            Route::post('partstock-sales/{partstockSale}/update-payment', [AdminPartstockSaleController::class, 'updatePayment'])
+                ->name('partstockSales.updatePayment');
 
             // Investment Management
             Route::resource('investors', AdminInvestorController::class);
