@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\PartStock;
-use App\Models\PartstockSale;
+use App\Models\PartStockSale;
 use App\Models\PartStockSalePayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class PartstockSaleController extends Controller
+class PartStockSaleController extends Controller
 {
     public function __construct()
     {
@@ -24,7 +24,7 @@ class PartstockSaleController extends Controller
     {
         $branchId = session('active_branch_id');
 
-        $query = PartstockSale::where('branch_id', $branchId)
+        $query = PartStockSale::where('branch_id', $branchId)
             ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
         
@@ -85,7 +85,7 @@ class PartstockSaleController extends Controller
             'paid_amount'   => 'nullable|numeric|min:0|max:99999999.99',
         ]);
 
-        PartstockSale::create([
+        PartStockSale::create([
             'branch_id'      => session('active_branch_id'),
             'part_stock_id'  => $request->part_stock_id,
             'customer_id'    => $request->customer_id,
@@ -99,10 +99,10 @@ class PartstockSaleController extends Controller
             ->with('success', 'Partstock sale added successfully.');
     }
 
-      public function updatePayment(Request $request, PartstockSale $partstockSale)
+      public function updatePayment(Request $request, PartStockSale $partStockSale)
     {
         $request->validate([
-            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partstockSale->due_amount,
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStockSale->due_amount,
             'payment_date' => 'required|date',
         ]);
 
@@ -110,32 +110,32 @@ class PartstockSaleController extends Controller
         $payment = new PartStockSalePayment([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
-            'partstock_sale_id' => $partstockSale->id,
+            'partstock_sale_id' => $partStockSale->id,
         ]);
         $payment->save();
 
         // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
-        $partstockSale->paid_amount += $request->paid_amount;
-        $partstockSale->due_amount = max($partstockSale->total_amount - $partstockSale->paid_amount, 0);
+        $partStockSale->paid_amount += $request->paid_amount;
+        $partStockSale->due_amount = max($partStockSale->total_amount - $partStockSale->paid_amount, 0);
 
-        $partstockSale->save();
+        $partStockSale->save();
 
         return back()->with('success', 'Payment updated successfully.');
     }
 
     public function show($id)
     {
-        $partstockSale = PartstockSale::with('payments')->findOrFail($id);
-        return view('admin.partstock-sales.show', compact('partstockSale'));
+        $partStockSale = PartStockSale::with('payments')->findOrFail($id);
+        return view('admin.partstock-sales.show', compact('partStockSale'));
     }
 
    
     /**
      * Delete a partstock sale
      */
-    public function destroy(PartstockSale $partstockSale)
+    public function destroy(PartStockSale $partStockSale)
     {
-        $partstockSale->delete();
+        $partStockSale->delete();
 
         return redirect()->route('admin.partstock-sales.index')
             ->with('success', 'Partstock sale deleted successfully.');

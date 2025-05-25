@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class PartstockSale extends Model
+class PartStockSale extends Model
 {
     use HasFactory;
 
@@ -32,18 +32,18 @@ class PartstockSale extends Model
 
         protected static function booted()
     {
-        static::creating(function (PartstockSale $sale) {
+        static::creating(function (PartStockSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
             $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
         });
 
-        static::updating(function (PartstockSale $sale) {
+        static::updating(function (PartStockSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
             $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
         });
 
         // Sale Created → Reduce stock quantity & increase profit
-        static::created(function (PartstockSale $sale) {
+        static::created(function (PartStockSale $sale) {
             $partStock = PartStock::find($sale->part_stock_id);
             if (!$partStock) return;
 
@@ -59,7 +59,7 @@ class PartstockSale extends Model
         });
 
         // Sale Deleted → Restore stock & reduce profit
-        static::deleted(function (PartstockSale $sale) {
+        static::deleted(function (PartStockSale $sale) {
             $partStock = PartStock::find($sale->part_stock_id);
             if (!$partStock) return;
 

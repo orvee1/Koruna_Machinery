@@ -7,7 +7,7 @@ use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Investor;
 use App\Models\PartStock;
-use App\Models\PartstockSale;
+use App\Models\PartStockSale;
 use App\Models\Product;
 use App\Models\ProductList;
 use App\Models\ProductSale;
@@ -81,8 +81,8 @@ class ManagerController extends Controller
         }
 
         $totalProductSales = $productSaleQuery->sum('total_amount');
-        $totalPartstockSales = $partSaleQuery->sum('total_amount');
-        $totalSales = $totalProductSales + $totalPartstockSales;
+        $totalPartStockSales = $partSaleQuery->sum('total_amount');
+        $totalSales = $totalProductSales + $totalPartStockSales;
 
         $totalProductValue = $productListQuery->sum('total_amount');
         

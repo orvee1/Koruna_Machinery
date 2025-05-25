@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\InvestmentHistoryController as AdminInvestmentHis
 use App\Http\Controllers\Admin\ProductSaleController as AdminProductSaleController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\PartStockController as AdminPartStockController;
-use App\Http\Controllers\Admin\PartstockSaleController as AdminPartstockSaleController;
+use App\Http\Controllers\Admin\PartStockSaleController as AdminPartStockSaleController;
 use App\Http\Controllers\Admin\ProductListController as AdminProductListController;
 // use App\Http\Controllers\Admin\ProductListController;
 // Manager Controllers
@@ -25,7 +25,7 @@ use App\Http\Controllers\Manager\ProductController as ManagerProductController;
 use App\Http\Controllers\Manager\ProductSaleController as ManagerProductSaleController;
 use App\Http\Controllers\Manager\StockController as ManagerStockController;
 use App\Http\Controllers\Manager\PartStockController as ManagerPartStockController;
-use App\Http\Controllers\Manager\PartstockSaleController as ManagerPartstockSaleController;
+use App\Http\Controllers\Manager\PartStockSaleController as ManagerPartStockSaleController;
 
 // Worker Controllers
 use App\Http\Controllers\Worker\WorkerController as WorkerWorkerController;
@@ -103,9 +103,9 @@ Route::middleware('auth')->group(function () {
             Route::resource('product-sales', AdminProductSaleController::class);
             Route::post('product-sales/{productSale}/update-payment', [AdminProductSaleController::class, 'updatePayment'])
                 ->name('productSales.updatePayment');
-            Route::resource('partstock-sales', AdminPartstockSaleController::class);
-            Route::post('partstock-sales/{partstockSale}/update-payment', [AdminPartstockSaleController::class, 'updatePayment'])
-                ->name('partstockSales.updatePayment');
+            Route::resource('partstock-sales', AdminPartStockSaleController::class);
+            Route::post('partstock-sales/{partStockSale}/update-payment', [AdminPartStockSaleController::class, 'updatePayment'])
+                ->name('partStockSales.updatePayment');
 
             // Investment Management
             Route::resource('investors', AdminInvestorController::class);
@@ -136,7 +136,7 @@ Route::middleware('auth')->group(function () {
 
             // Sales Management
             Route::resource('product-sales', ManagerProductSaleController::class);
-            Route::resource('partstock-sales', ManagerPartstockSaleController::class);
+            Route::resource('partstock-sales', ManagerPartStockSaleController::class);
 
             // Customer & Investor Management
             Route::resource('customers', ManagerCustomerController::class);

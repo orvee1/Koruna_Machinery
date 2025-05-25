@@ -85,8 +85,8 @@ class AdminController extends Controller
         }
 
         $totalProductSales = $productSaleQuery->sum('total_amount');
-        $totalPartstockSales = $partSaleQuery->sum('total_amount');
-        $totalSales = $totalProductSales + $totalPartstockSales;
+        $totalPartStockSales = $partSaleQuery->sum('total_amount');
+        $totalSales = $totalProductSales + $totalPartStockSales;
 
         $totalProductValue = $productListQuery->sum('total_amount');
         

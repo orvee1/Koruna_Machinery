@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <form action="{{ route('worker.partstock-sales.update', $partstockSale->id) }}" method="POST">
+    <form action="{{ route('worker.partstock-sales.update', $partStockSale->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -28,7 +28,7 @@
                 <label for="part_stock_id" class="form-label">Select Part Stock</label>
                 <select name="part_stock_id" id="part_stock_id" class="form-select" required>
                     @foreach($partStocks as $partStock)
-                        <option value="{{ $partStock->id }}" {{ $partstockSale->part_stock_id == $partStock->id ? 'selected' : '' }}>
+                        <option value="{{ $partStock->id }}" {{ $partStockSale->part_stock_id == $partStock->id ? 'selected' : '' }}>
                             {{ $partStock->product_name }}
                         </option>
                     @endforeach
@@ -39,7 +39,7 @@
                 <label for="customer_id" class="form-label">Select Customer</label>
                 <select name="customer_id" id="customer_id" class="form-select" required>
                     @foreach($customers as $customer)
-                        <option value="{{ $customer->id }}" {{ $partstockSale->customer_id == $customer->id ? 'selected' : '' }}>
+                        <option value="{{ $customer->id }}" {{ $partStockSale->customer_id == $customer->id ? 'selected' : '' }}>
                             {{ $customer->name }}
                         </option>
                     @endforeach
@@ -50,17 +50,17 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="quantity" class="form-label">Quantity</label>
-                <input type="number" name="quantity" id="quantity" class="form-control" value="{{ old('quantity', $partstockSale->quantity) }}" required>
+                <input type="number" name="quantity" id="quantity" class="form-control" value="{{ old('quantity', $partStockSale->quantity) }}" required>
             </div>
 
             <div class="col-md-4">
                 <label for="unit_price" class="form-label">Unit Price</label>
-                <input type="number" step="0.01" name="unit_price" id="unit_price" class="form-control" value="{{ old('unit_price', $partstockSale->unit_price) }}" required>
+                <input type="number" step="0.01" name="unit_price" id="unit_price" class="form-control" value="{{ old('unit_price', $partStockSale->unit_price) }}" required>
             </div>
 
             <div class="col-md-4">
                 <label for="paid_amount" class="form-label">Paid Amount</label>
-                <input type="number" step="0.01" name="paid_amount" id="paid_amount" class="form-control" value="{{ old('paid_amount', $partstockSale->paid_amount) }}" required>
+                <input type="number" step="0.01" name="paid_amount" id="paid_amount" class="form-control" value="{{ old('paid_amount', $partStockSale->paid_amount) }}" required>
             </div>
         </div>
 

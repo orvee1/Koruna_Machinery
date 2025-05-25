@@ -21,42 +21,42 @@
             <div class="row gx-3 gy-2">
                 <div class="col-md-4">
                     <strong>Customer:</strong><br>
-                    {{ $partstockSale->customer->name ?? 'N/A' }}
+                    {{ $partStockSale->customer->name ?? 'N/A' }}
                 </div>
                 <div class="col-md-4">
                     <strong>Product:</strong><br>
-                    {{ $partstockSale->partStock->product_name ?? 'N/A' }}
+                    {{ $partStockSale->partStock->product_name ?? 'N/A' }}
                 </div>
                 <div class="col-md-4">
                     <strong>Seller:</strong><br>
-                    {{ $partstockSale->seller->name ?? 'N/A' }}
+                    {{ $partStockSale->seller->name ?? 'N/A' }}
                 </div>
 
                 <div class="col-md-4">
                     <strong>Unit Price:</strong><br>
-                    ৳ {{ number_format($partstockSale->unit_price, 2) }}
+                    ৳ {{ number_format($partStockSale->unit_price, 2) }}
                 </div>
                 <div class="col-md-4">
                     <strong>Quantity:</strong><br>
-                    {{ $partstockSale->quantity }}
+                    {{ $partStockSale->quantity }}
                 </div>
                 <div class="col-md-4">
                     <strong>Sale Date:</strong><br>
-                    {{ $partstockSale->created_at->format('d M, Y') }}
+                    {{ $partStockSale->created_at->format('d M, Y') }}
                 </div>
 
                 <div class="col-md-4">
                     <strong>Total Amount:</strong><br>
-                    ৳ {{ number_format($partstockSale->total_amount, 2) }}
+                    ৳ {{ number_format($partStockSale->total_amount, 2) }}
                 </div>
                 <div class="col-md-4">
                     <strong>Paid Amount:</strong><br>
-                    ৳ {{ number_format($partstockSale->paid_amount, 2) }}
+                    ৳ {{ number_format($partStockSale->paid_amount, 2) }}
                 </div>
                 <div class="col-md-4">
                     <strong>Due Amount:</strong><br>
-                    <span class="{{ $partstockSale->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
-                        ৳ {{ number_format($partstockSale->due_amount, 2) }}
+                    <span class="{{ $partStockSale->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+                        ৳ {{ number_format($partStockSale->due_amount, 2) }}
                     </span>
                 </div>
             </div>
@@ -69,7 +69,7 @@
             <h5 class="mb-0"><i class="bi bi-credit-card"></i> Add Payment</h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.partstockSales.updatePayment', $partstockSale->id) }}" method="POST">
+            <form action="{{ route('admin.partStockSales.updatePayment', $partStockSale->id) }}" method="POST">
                 @csrf
                 <div class="row gx-3">
                     <div class="col-md-6 mb-3">
@@ -80,7 +80,7 @@
                                class="form-control @error('paid_amount') is-invalid @enderror"
                                value="{{ old('paid_amount') }}"
                                min="0.01"
-                               max="{{ $partstockSale->due_amount }}"
+                               max="{{ $partStockSale->due_amount }}"
                                step="0.01"
                                required>
                         @error('paid_amount')
@@ -123,7 +123,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($partstockSale->payments as $payment)
+                    @forelse($partStockSale->payments as $payment)
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M, Y') }}</td>
                             <td>৳ {{ number_format($payment->paid_amount, 2) }}</td>

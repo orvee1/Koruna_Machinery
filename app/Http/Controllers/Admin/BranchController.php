@@ -44,13 +44,13 @@ class BranchController extends Controller
             'customers',
             'products',
             'productSales',
-            'partstockSales',
+            'partStockSales',
             'partStocks',
         ]);
 
         $productIncome = $branch->productSales->sum('total_amount');
-        $partstockIncome = $branch->partstockSales->sum('total_amount');
-        $totalIncome = $productIncome + $partstockIncome;
+        $partStockIncome = $branch->partStockSales->sum('total_amount');
+        $totalIncome = $productIncome + $partStockIncome;
 
         $productExpense = $branch->products->sum(function ($product) {
             return $product->buying_price * $product->stock_quantity;

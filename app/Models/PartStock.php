@@ -30,7 +30,7 @@ class PartStock extends Model
 
     public function partSales()
     {
-        return $this->hasMany(PartstockSale::class, 'part_stock_id', 'id');
+        return $this->hasMany(PartStockSale::class, 'part_stock_id', 'id');
     }
 
     public function payments()

@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Worker;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\PartStock;
-use App\Models\PartstockSale;
+use App\Models\PartStockSale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class PartstockSaleController extends Controller
+class PartStockSaleController extends Controller
 {
     public function __construct()
     {
@@ -19,7 +19,7 @@ class PartstockSaleController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = PartstockSale::with(['partStock', 'customer', 'branch', 'seller', 'investor']);
+        $query = PartStockSale::with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
         // Worker: শুধু আজকের লিস্ট দেখবে
         if ($user->role === 'worker') {
@@ -54,7 +54,7 @@ class PartstockSaleController extends Controller
             'paid_amount' => 'required|numeric|min:0',
         ]);
 
-        PartstockSale::create([
+        PartStockSale::create([
             'branch_id' => session('active_branch_id'),
             'part_stock_id' => $validated['part_stock_id'],
             'customer_id' => $validated['customer_id'],
@@ -67,15 +67,15 @@ class PartstockSaleController extends Controller
         return redirect()->route('worker.partstock-sales.index')->with('success', 'Partstock Sale added successfully.');
     }
 
-    public function edit(PartstockSale $partstockSale)
+    public function edit(PartStockSale $partStockSale)
     {
         $partStocks = PartStock::where('branch_id', session('active_branch_id'))->get();
         $customers = Customer::where('branch_id', session('active_branch_id'))->get();
 
-        return view('worker.partstock-sales.edit', compact('partstockSale', 'partStocks', 'customers'));
+        return view('worker.partstock-sales.edit', compact('partStockSale', 'partStocks', 'customers'));
     }
 
-    public function update(Request $request, PartstockSale $partstockSale)
+    public function update(Request $request, PartStockSale $partStockSale)
     {
         $validated = $request->validate([
             'part_stock_id' => 'required|exists:part_stocks,id',
@@ -85,7 +85,7 @@ class PartstockSaleController extends Controller
             'paid_amount' => 'required|numeric|min:0',
         ]);
 
-        $partstockSale->update($validated);
+        $partStockSale->update($validated);
 
         return redirect()->route('worker.partstock-sales.index')->with('success', 'Partstock Sale updated successfully.');
     }

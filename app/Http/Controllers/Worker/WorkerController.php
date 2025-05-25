@@ -25,10 +25,9 @@ class WorkerController extends Controller
         $branch = Branch::find($branchId);
         // Sales
         $totalProductSales = ProductSale::where('branch_id', $branchId)->sum('paid_amount');
-        $totalPartstockSales = PartstockSale::where('branch_id', $branchId)->sum('paid_amount');
-        $totalSales = $totalProductSales + $totalPartstockSales;
+        $totalPartStockSales = PartStockSale::where('branch_id', $branchId)->sum('paid_amount');
+        $totalSales = $totalProductSales + $totalPartStockSales;
     
-        $totalProductValue = Product::where('branch_id', $branchId)->sum('buying_price');
         $totalPartStockValue = PartStock::where('branch_id', $branchId)->sum('buy_value');
         $totalValue = $totalProductValue + $totalPartStockValue;
 
@@ -41,7 +40,7 @@ class WorkerController extends Controller
         $totalDue = $productDue + $partStockDue;
 
         $productDueToHave = ProductSale::where('branch_id', $branchId)->sum('due_amount');
-        $partStockDueToHave = PartstockSale::where('branch_id', $branchId)->sum('due_amount');
+        $partStockDueToHave = PartStockSale::where('branch_id', $branchId)->sum('due_amount');
         $totalDueToHave = $productDueToHave + $partStockDueToHave;
 
         // Optional: all users of this branch

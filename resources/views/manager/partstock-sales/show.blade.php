@@ -15,31 +15,31 @@
 
             <div class="row mb-2">
                 <div class="col-md-6">
-                    <strong>Customer:</strong> {{ $partstockSale->customer->name ?? 'N/A' }}
+                    <strong>Customer:</strong> {{ $partStockSale->customer->name ?? 'N/A' }}
                 </div>
                 <div class="col-md-6">
-                    <strong>Part Stock Product:</strong> {{ $partstockSale->partStock->product_name ?? 'N/A' }}
+                    <strong>Part Stock Product:</strong> {{ $partStockSale->partStock->product_name ?? 'N/A' }}
                 </div>
             </div>
 
             <div class="row mb-2">
                 <div class="col-md-4">
-                    <strong>Quantity:</strong> {{ $partstockSale->quantity }}
+                    <strong>Quantity:</strong> {{ $partStockSale->quantity }}
                 </div>
                 <div class="col-md-4">
-                    <strong>Unit Price:</strong> {{ number_format($partstockSale->unit_price, 2) }}
+                    <strong>Unit Price:</strong> {{ number_format($partStockSale->unit_price, 2) }}
                 </div>
                 <div class="col-md-4">
-                    <strong>Paid Amount:</strong> {{ number_format($partstockSale->paid_amount, 2) }}
+                    <strong>Paid Amount:</strong> {{ number_format($partStockSale->paid_amount, 2) }}
                 </div>
             </div>
 
             <div class="row mb-2">
                 <div class="col-md-6">
-                    <strong>Seller:</strong> {{ $partstockSale->seller->name ?? 'N/A' }}
+                    <strong>Seller:</strong> {{ $partStockSale->seller->name ?? 'N/A' }}
                 </div>
                 <div class="col-md-6">
-                    <strong>Sale Date:</strong> {{ $partstockSale->created_at->format('Y-m-d') }}
+                    <strong>Sale Date:</strong> {{ $partStockSale->created_at->format('Y-m-d') }}
                 </div>
             </div>
         </div>

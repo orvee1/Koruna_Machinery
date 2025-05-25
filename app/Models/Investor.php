@@ -16,12 +16,7 @@ class Investor extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'investor_product', 'investor_id', 'product_id');
-    }
-
-    public function partstocks()
+    public function partStocks()
     {
         return $this->belongsToMany(PartStock::class, 'investor_partstock', 'investor_id', 'partstock_id');
     }
@@ -31,9 +26,9 @@ class Investor extends Model
         return $this->hasMany(ProductSale::class);
     }
 
-    public function partstockSales()
+    public function partStockSales()
     {
-        return $this->hasMany(PartstockSale::class);
+        return $this->hasMany(PartStockSale::class);
     }
     
     // Relationship with investment histories
