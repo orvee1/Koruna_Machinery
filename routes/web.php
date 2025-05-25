@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\PartStockController as AdminPartStockController;
 use App\Http\Controllers\Admin\PartStockSaleController as AdminPartStockSaleController;
 use App\Http\Controllers\Admin\ProductListController as AdminProductListController;
+use App\Http\Controllers\BillController;
 // use App\Http\Controllers\Admin\ProductListController;
 // Manager Controllers
 use App\Http\Controllers\Manager\ManagerController as ManagerManagerController;
@@ -110,6 +111,9 @@ Route::middleware('auth')->group(function () {
             // Investment Management
             Route::resource('investors', AdminInvestorController::class);
             Route::resource('investment-histories', AdminInvestmentHistoryController::class);
+
+            Route::get('/bills/products', [BillController::class, 'getProducts']); // AJAX
+            Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
         });
 
     /*

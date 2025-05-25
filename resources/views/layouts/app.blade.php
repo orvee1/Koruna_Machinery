@@ -74,6 +74,11 @@
     <div class="topbar fixed-top shadow-sm">
         <div>Koruna Machinery  <strong>({{ session('active_branch_name') ?? 'None' }})</strong></div>
         <div class="d-flex align-items-center gap-2">
+            @if(auth()->check())
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#createBillModal">
+            ➕ Create Bill
+            </button>
+            @endif
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#switchBranchModal">
                     🔁 Switch Branch
@@ -232,6 +237,51 @@
         </div>
         @endif
     </div>
+    <div class="modal fade" id="createBillModal" tabindex="-1" aria-labelledby="createBillModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{{ route('bills.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Create Bill</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Customer Name</label>
+                        <input type="text" name="customer_name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Select Product Type</label>
+                        <select id="productType" class="form-select" required>
+                            <option value="">Select Type</option>
+                            <option value="product">Product</option>
+                            <option value="partstock">Part Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Select Products</label>
+                        <select name="products[]" id="productSelect" class="form-select" multiple required>
+                            <!-- Filled dynamically via JS -->
+                        </select>
+                    </div>
+
+                    <div id="productDetailsContainer"></div>
+
+                    <div class="mb-3">
+                        <label>Paid Amount</label>
+                        <input type="number" name="paid_amount" step="0.01" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -241,6 +291,46 @@
             });
             toastList.forEach(toast => toast.show());
         });
+        document.addEventListener('DOMContentLoaded', function () {
+    const productType = document.getElementById('productType');
+    const productSelect = document.getElementById('productSelect');
+    const container = document.getElementById('productDetailsContainer');
+
+    productType.addEventListener('change', function () {
+        fetch(`/bills/products?type=${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+                productSelect.innerHTML = '';
+                data.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.text = p.name;
+                    productSelect.appendChild(option);
+                });
+            });
+    });
+
+    productSelect.addEventListener('change', function () {
+        container.innerHTML = '';
+        Array.from(this.selectedOptions).forEach(opt => {
+            const id = opt.value, name = opt.text;
+            container.innerHTML += `
+                <div class="border p-2 mb-2">
+                    <h6>${name}</h6>
+                    <input type="hidden" name="product_details[${id}][id]" value="${id}">
+                    <div class="mb-2">
+                        <label>Quantity</label>
+                        <input type="number" name="product_details[${id}][quantity]" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label>Selling Price</label>
+                        <input type="number" name="product_details[${id}][price]" class="form-control" step="0.01" required>
+                    </div>
+                </div>
+            `;
+        });
+    });
+});
     </script>
 </body>
 </html>
