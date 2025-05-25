@@ -72,7 +72,7 @@
 <body>
     <!-- Topbar -->
     <div class="topbar fixed-top shadow-sm">
-        <div>Koruna Machinery — Empowering Industry  <strong>({{ session('active_branch_name') ?? 'None' }})</strong></div>
+        <div>Koruna Machinery  <strong>({{ session('active_branch_name') ?? 'None' }})</strong></div>
         <div class="d-flex align-items-center gap-2">
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#switchBranchModal">

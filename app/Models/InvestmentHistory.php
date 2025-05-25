@@ -18,8 +18,5 @@ class InvestmentHistory extends Model
     }
 
     // Relationship with product
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+   
 }
