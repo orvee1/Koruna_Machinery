@@ -21,7 +21,7 @@ class InvestmentHistoryController extends Controller
     public function index()
     {
         // Fetch all investment histories along with their investor and product relationships
-        $investmentHistories = InvestmentHistory::with('investor', 'product')->paginate(10);
+        $investmentHistories = InvestmentHistory::with('investor')->paginate(10);
 
         return view('admin.investment-histories.index', compact('investmentHistories'));
     }
@@ -33,9 +33,9 @@ class InvestmentHistoryController extends Controller
     {
         // Get all investors and products to be used in the form
         $investors = Investor::all();
-        $products = Product::all();
+       
 
-        return view('admin.investment-histories.create', compact('investors', 'products'));
+        return view('admin.investment-histories.create', compact('investors'));
     }
 
     /**
@@ -67,9 +67,9 @@ class InvestmentHistoryController extends Controller
     {
         // Get all products and investors to populate the form
         $investors = Investor::all();
-        $products = Product::all();
+      
 
-        return view('admin.investment-histories.edit', compact('investmentHistory', 'investors', 'products'));
+        return view('admin.investment-histories.edit', compact('investmentHistory', 'investors'));
     }
 
     /**
