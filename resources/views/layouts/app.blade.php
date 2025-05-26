@@ -248,14 +248,13 @@
                     <h5 class="modal-title">Create Bill</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-
+                <div class="modal-body" style="overflow: visible;">
                     <!-- Customer Info -->
                     <div class="mb-3 position-relative">
                         <label>Customer Name</label>
-                        <input type="text" id="customerNameInput" name="customer_name" class="form-control" autocomplete="off" required>
+                        <input list="customerList" id="customerNameInput" name="customer_name" class="form-control" autocomplete="off" required>
+                        <datalist id="customerList"></datalist>
                         <input type="hidden" name="customer_id" id="customerId">
-                        <div id="customerSuggestions" class="list-group position-absolute w-100" style="z-index: 999;"></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col">
@@ -279,9 +278,7 @@
                     </div>
                     <div class="mb-3">
                         <label>Select Products</label>
-                        <select name="products[]" id="productSelect" class="form-select" multiple required>
-                            <!-- Filled dynamically via JS -->
-                        </select>
+                        <select name="products[]" id="productSelect" class="form-select" multiple required></select>
                     </div>
 
                     <!-- Product Inputs -->
@@ -310,98 +307,117 @@
     </div>
 </div>
 
-<!-- Script -->
+<!-- ✅ SCRIPT -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Toasts
+    const customerInput     = document.getElementById('customerNameInput');
+    const customerIdInput   = document.getElementById('customerId');
+    const datalist          = document.getElementById('customerList');
+    const phoneInput        = document.getElementById('phoneInput');
+    const districtInput     = document.getElementById('districtInput');
+
+    const productType       = document.getElementById('productType');
+    const productSelect     = document.getElementById('productSelect');
+    const container         = document.getElementById('productDetailsContainer');
+
+    const totalAmount       = document.getElementById('totalAmount');
+    const previousDue       = document.getElementById('previousDue');
+    const totalDue          = document.getElementById('totalDue');
+    const paidInput         = document.querySelector('[name="paid_amount"]');
+
+    // 🍞 Bootstrap Toasts (optional)
     document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el, { delay: 3000 }).show());
 
-    const customerInput = document.getElementById('customerNameInput');
-    const suggestionBox = document.getElementById('customerSuggestions');
-    const customerIdInput = document.getElementById('customerId');
-    const phoneInput = document.getElementById('phoneInput');
-    const districtInput = document.getElementById('districtInput');
-
-    const productType = document.getElementById('productType');
-    const productSelect = document.getElementById('productSelect');
-    const container = document.getElementById('productDetailsContainer');
-
-    const totalAmount = document.getElementById('totalAmount');
-    const previousDue = document.getElementById('previousDue');
-    const totalDue = document.getElementById('totalDue');
-    const paidInput = document.querySelector('[name="paid_amount"]');
-
-    // 🔍 Autocomplete Customer
+    // 🔍 Fetch customer list
     customerInput.addEventListener('input', function () {
-        const query = this.value;
-        if (query.length < 2) return;
-        fetch(`/admin/customers/search?name=${query}`)
+        const query = this.value.trim();
+
+        // Clear fields on typing
+        customerIdInput.value = '';
+        phoneInput.value = '';
+        districtInput.value = '';
+        previousDue.textContent = '0';
+
+        if (query.length < 2) {
+            datalist.innerHTML = '';
+            return;
+        }
+
+        fetch(`/bills/customers?name=${encodeURIComponent(query)}`)
             .then(res => res.json())
             .then(data => {
-                suggestionBox.innerHTML = '';
+                datalist.innerHTML = '';
                 data.forEach(c => {
-                    const item = document.createElement('button');
-                    item.className = 'list-group-item list-group-item-action';
-                    item.textContent = `${c.name} (${c.phone})`;
-                    item.onclick = () => {
-                        customerInput.value = c.name;
-                        customerIdInput.value = c.id;
-                        phoneInput.value = c.phone || '';
-                        districtInput.value = c.district || '';
-                        previousDue.textContent = c.total_due ?? 0; // optional if added to response
-                        suggestionBox.innerHTML = '';
-                        calculateTotals();
-                    };
-                    suggestionBox.appendChild(item);
+                    const option = document.createElement('option');
+                    option.value = c.name;
+                    option.dataset.id = c.id;
+                    option.dataset.phone = c.phone || '';
+                    option.dataset.district = c.district || '';
+                    option.dataset.total_due = c.total_due ?? 0;
+                    datalist.appendChild(option);
                 });
             });
     });
 
-    // 🔁 Load products by type
+    // 📥 On customer select
+    customerInput.addEventListener('change', function () {
+        const options = Array.from(datalist.options);
+        const match = options.find(opt => opt.value === customerInput.value);
+        if (match) {
+            customerIdInput.value = match.dataset.id;
+            phoneInput.value = match.dataset.phone;
+            districtInput.value = match.dataset.district;
+            previousDue.textContent = match.dataset.total_due;
+            calculateTotals();
+        }
+    });
+
+    // 🔁 Product Type → Load Products
     productType.addEventListener('change', function () {
         const type = this.value;
-        if (!type) {
-            productSelect.innerHTML = '';
-            container.innerHTML = '';
-            return;
-        }
+        productSelect.innerHTML = '';
+        container.innerHTML = '';
+        if (!type) return;
 
         fetch(`/bills/products?type=${type}`)
             .then(res => res.json())
             .then(data => {
-                productSelect.innerHTML = '';
-                container.innerHTML = '';
                 data.forEach(p => {
                     const option = document.createElement('option');
-                    const isOut = p.quantity === 0;
                     option.value = `${type}_${p.id}`;
                     let label = `${p.name} — ${p.quantity} available`;
+
                     if (type === 'product' && p.buying_price !== undefined) {
-                    label += ` — ৳${p.buying_price}`;
+                        label += ` — ৳${p.buying_price}`;
                     }
                     if (type === 'partstock' && p.selling_price !== undefined) {
                         label += ` — ৳${p.selling_price}`;
                     }
-                    if (isOut) {
+                    if (p.quantity === 0) {
                         option.disabled = true;
                         label += ' (Out of Stock)';
                     }
+
                     option.text = label;
                     productSelect.appendChild(option);
                 });
             });
     });
 
-    // 🧮 Generate inputs for selected products
-    productSelect.addEventListener('change', function () {
+    // 🧮 Generate Inputs for Selected Products
+    productSelect.addEventListener('input', function () {
         container.innerHTML = '';
-        Array.from(this.selectedOptions).forEach(opt => {
+        const selected = Array.from(productSelect.selectedOptions);
+
+        selected.forEach(opt => {
             const [type, id] = opt.value.split('_');
             const name = opt.text;
             const uid = `${type}_${id}`;
 
-            container.innerHTML += `
-                <div class="border p-2 mb-2 rounded bg-light">
+            if (document.getElementById(`product_block_${uid}`)) return;
+
+            container.insertAdjacentHTML('beforeend', `
+                <div id="product_block_${uid}" class="border p-2 mb-2 rounded bg-light">
                     <h6>${name}</h6>
                     <input type="hidden" name="product_details[${uid}][id]" value="${id}">
                     <input type="hidden" name="product_details[${uid}][type]" value="${type}">
@@ -414,17 +430,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input type="number" name="product_details[${uid}][price]" class="form-control" step="0.01" required>
                     </div>
                 </div>
-            `;
+            `);
         });
+
         calculateTotals();
     });
 
-    // 🧮 Auto calculate totals
+    // 💰 Recalculate on quantity/price/paid
     document.addEventListener('input', function (e) {
+        const name = e.target.name || '';
         if (
-            e.target.name?.includes('[quantity]') ||
-            e.target.name?.includes('[price]') ||
-            e.target.name === 'paid_amount'
+            name.includes('[quantity]') ||
+            name.includes('[price]') ||
+            name === 'paid_amount'
         ) {
             calculateTotals();
         }
@@ -437,9 +455,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.querySelectorAll('[name^="product_details"]').forEach(input => {
             if (input.name.includes('[quantity]')) {
-                const id = input.name.match(/\[(.*?)\]/)[1];
+                const uid = input.name.match(/\[([^\]]+)]/)[1];
                 const qty = parseFloat(input.value || 0);
-                const price = parseFloat(document.querySelector(`[name="product_details[${id}][price]"]`)?.value || 0);
+                const priceInput = document.querySelector(`[name="product_details[${uid}][price]"]`);
+                const price = parseFloat(priceInput?.value || 0);
                 total += qty * price;
             }
         });
@@ -449,7 +468,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
-
 
 
 </body>

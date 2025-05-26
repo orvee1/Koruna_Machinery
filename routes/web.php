@@ -51,8 +51,10 @@ Route::post('/register-admin', [RegisterAdminController::class, 'store'])->name(
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/bills/products', [BillController::class, 'getProducts']);
-Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
+// Route::get('/bills/products', [BillController::class, 'getProducts']);
+// Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
+// Route::get('/bills/customers', [BillController::class, 'getCustomers']);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +68,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/select-branch', [AdminBranchSelectorController::class, 'set'])->name('admin.select-branch.set');
     Route::get('/admin/switch-branch', [AdminBranchSelectorController::class, 'switchBranch'])->name('admin.switch-branch');
     Route::post('/admin/switch-branch', [AdminBranchSelectorController::class, 'set'])->name('admin.switch-branch.set');
+    Route::prefix('bills')->middleware('auth')->group(function () {
+    Route::get('/products', [BillController::class, 'getProducts']);
+    Route::get('/customers', [BillController::class, 'getCustomers']);
+    Route::post('/', [BillController::class, 'store'])->name('bills.store');
+});
+
 
     /*
     |--------------------------------------------------------------------------
@@ -88,7 +96,6 @@ Route::middleware('auth')->group(function () {
 
             // Customer Management
             Route::resource('customers', AdminCustomerController::class);
-            Route::get('/customers/search', [AdminCustomerController::class, 'search'])->name('customers.search');
 
             Route::get('products', [AdminProductListController::class, 'index'])->name('products.index');
 

@@ -100,16 +100,40 @@ class CustomerController extends Controller
         return view('admin.customers.show', compact('customer'));
     }
 
-        public function search(Request $request)
-    {
-        $branchId = session('active_branch_id');
 
-        return Customer::where('branch_id', $branchId)
-            ->where('name', 'like', '%' . $request->name . '%')
-            ->select('id', 'name', 'phone', 'district')
-            ->limit(5)
-            ->get();
-    }
+    //  public function search(Request $request)
+    // {
+    //     $branchId = session('active_branch_id');
+
+    //     $customers = Customer::with(['productSales', 'partsStockSales'])
+    //         ->where('branch_id', $branchId)
+    //         ->where('name', 'like', '%' . $request->name . '%')
+    //         ->select('id', 'name', 'phone', 'district')
+    //         ->limit(5)
+    //         ->get();
+
+    //     // Attach total due manually
+    //     $customers->transform(function ($customer) {
+    //         $productDue = $customer->productSales
+    //             ->where('payment_status', '!=', 'paid')
+    //             ->sum(function ($sale) {
+    //                 return $sale->due_amount;
+    //             });
+
+    //         $partStockDue = $customer->partsStockSales
+    //             ->where('payment_status', '!=', 'paid')
+    //             ->sum(function ($sale) {
+    //                 return $sale->due_amount;
+    //             });
+
+    //         $customer->total_due = $productDue + $partStockDue;
+
+    //         return $customer;
+    //     });
+
+    //     return $customers;
+    // }
+
 
 
     public function destroy(Customer $customer)
