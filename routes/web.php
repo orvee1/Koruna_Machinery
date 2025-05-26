@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterAdminController;
+use App\Http\Controllers\BillController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\AdminController as AdminAdminController;
@@ -16,7 +17,6 @@ use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\PartStockController as AdminPartStockController;
 use App\Http\Controllers\Admin\PartStockSaleController as AdminPartStockSaleController;
 use App\Http\Controllers\Admin\ProductListController as AdminProductListController;
-use App\Http\Controllers\BillController;
 // use App\Http\Controllers\Admin\ProductListController;
 // Manager Controllers
 use App\Http\Controllers\Manager\ManagerController as ManagerManagerController;
@@ -51,6 +51,8 @@ Route::post('/register-admin', [RegisterAdminController::class, 'store'])->name(
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/bills/products', [BillController::class, 'getProducts']);
+Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -86,9 +88,9 @@ Route::middleware('auth')->group(function () {
 
             // Customer Management
             Route::resource('customers', AdminCustomerController::class);
-          
+            Route::get('/customers/search', [AdminCustomerController::class, 'search'])->name('customers.search');
+
             Route::get('products', [AdminProductListController::class, 'index'])->name('products.index');
-            // Route::get('products', [AdminProductListController::class, 'show'])->name('products.show');
 
             // Inventory: Stocks
             Route::resource('stocks', AdminStockController::class);
@@ -111,9 +113,6 @@ Route::middleware('auth')->group(function () {
             // Investment Management
             Route::resource('investors', AdminInvestorController::class);
             Route::resource('investment-histories', AdminInvestmentHistoryController::class);
-
-            Route::get('/bills/products', [BillController::class, 'getProducts']); // AJAX
-            Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
         });
 
     /*

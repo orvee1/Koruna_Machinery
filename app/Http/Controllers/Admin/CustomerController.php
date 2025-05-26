@@ -100,7 +100,17 @@ class CustomerController extends Controller
         return view('admin.customers.show', compact('customer'));
     }
 
-    
+        public function search(Request $request)
+    {
+        $branchId = session('active_branch_id');
+
+        return Customer::where('branch_id', $branchId)
+            ->where('name', 'like', '%' . $request->name . '%')
+            ->select('id', 'name', 'phone', 'district')
+            ->limit(5)
+            ->get();
+    }
+
 
     public function destroy(Customer $customer)
     {

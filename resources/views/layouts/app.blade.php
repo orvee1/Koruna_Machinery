@@ -224,43 +224,59 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Toast Messages -->
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-        @if(session('status'))
-        <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    {{ session('status') }}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    <!-- Toast Notifications -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    @if(session('status'))
+    <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ session('status') }}
             </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        @endif
     </div>
-    <div class="modal fade" id="createBillModal" tabindex="-1" aria-labelledby="createBillModalLabel" aria-hidden="true">
+    @endif
+</div>
+
+<!-- Create Bill Modal -->
+<div class="modal fade" id="createBillModal" tabindex="-1" aria-labelledby="createBillModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form method="POST" action="{{ route('bills.store') }}">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title">Create Bill</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
+
+                    <!-- Customer Info -->
+                    <div class="mb-3 position-relative">
                         <label>Customer Name</label>
-                        <input type="text" name="customer_name" class="form-control" required>
+                        <input type="text" id="customerNameInput" name="customer_name" class="form-control" autocomplete="off" required>
+                        <input type="hidden" name="customer_id" id="customerId">
+                        <div id="customerSuggestions" class="list-group position-absolute w-100" style="z-index: 999;"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Phone</label>
+                            <input type="text" name="phone" id="phoneInput" class="form-control">
+                        </div>
+                        <div class="col">
+                            <label>District</label>
+                            <input type="text" name="district" id="districtInput" class="form-control">
+                        </div>
                     </div>
 
+                    <!-- Product Selection -->
                     <div class="mb-3">
                         <label>Select Product Type</label>
                         <select id="productType" class="form-select" required>
                             <option value="">Select Type</option>
-                            <option value="product">Product</option>
-                            <option value="partstock">Part Stock</option>
+                            <option value="product">🛒 Product</option>
+                            <option value="partstock">🔩 Part Stock</option>
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label>Select Products</label>
                         <select name="products[]" id="productSelect" class="form-select" multiple required>
@@ -268,69 +284,173 @@
                         </select>
                     </div>
 
+                    <!-- Product Inputs -->
                     <div id="productDetailsContainer"></div>
 
-                    <div class="mb-3">
+                    <!-- Payment Summary -->
+                    <div class="mt-3 p-3 border rounded bg-light">
+                        <h5>Total Summary</h5>
+                        <p>Total Amount: ৳<span id="totalAmount">0</span></p>
+                        <p>Previous Due: ৳<span id="previousDue">0</span></p>
+                        <p>Total Due: ৳<span id="totalDue">0</span></p>
+                    </div>
+
+                    <!-- Payment -->
+                    <div class="mb-3 mt-2">
                         <label>Paid Amount</label>
                         <input type="number" name="paid_amount" step="0.01" class="form-control" required>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button class="btn btn-primary">Create</button>
                 </div>
             </div>
         </form>
     </div>
-    </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
-            var toastList = toastElList.map(function (toastEl) {
-                return new bootstrap.Toast(toastEl, { delay: 3000 });
-            });
-            toastList.forEach(toast => toast.show());
-        });
-        document.addEventListener('DOMContentLoaded', function () {
+<!-- Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Toasts
+    document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el, { delay: 3000 }).show());
+
+    const customerInput = document.getElementById('customerNameInput');
+    const suggestionBox = document.getElementById('customerSuggestions');
+    const customerIdInput = document.getElementById('customerId');
+    const phoneInput = document.getElementById('phoneInput');
+    const districtInput = document.getElementById('districtInput');
+
     const productType = document.getElementById('productType');
     const productSelect = document.getElementById('productSelect');
     const container = document.getElementById('productDetailsContainer');
 
+    const totalAmount = document.getElementById('totalAmount');
+    const previousDue = document.getElementById('previousDue');
+    const totalDue = document.getElementById('totalDue');
+    const paidInput = document.querySelector('[name="paid_amount"]');
+
+    // 🔍 Autocomplete Customer
+    customerInput.addEventListener('input', function () {
+        const query = this.value;
+        if (query.length < 2) return;
+        fetch(`/admin/customers/search?name=${query}`)
+            .then(res => res.json())
+            .then(data => {
+                suggestionBox.innerHTML = '';
+                data.forEach(c => {
+                    const item = document.createElement('button');
+                    item.className = 'list-group-item list-group-item-action';
+                    item.textContent = `${c.name} (${c.phone})`;
+                    item.onclick = () => {
+                        customerInput.value = c.name;
+                        customerIdInput.value = c.id;
+                        phoneInput.value = c.phone || '';
+                        districtInput.value = c.district || '';
+                        previousDue.textContent = c.total_due ?? 0; // optional if added to response
+                        suggestionBox.innerHTML = '';
+                        calculateTotals();
+                    };
+                    suggestionBox.appendChild(item);
+                });
+            });
+    });
+
+    // 🔁 Load products by type
     productType.addEventListener('change', function () {
-        fetch(`/bills/products?type=${this.value}`)
+        const type = this.value;
+        if (!type) {
+            productSelect.innerHTML = '';
+            container.innerHTML = '';
+            return;
+        }
+
+        fetch(`/bills/products?type=${type}`)
             .then(res => res.json())
             .then(data => {
                 productSelect.innerHTML = '';
+                container.innerHTML = '';
                 data.forEach(p => {
                     const option = document.createElement('option');
-                    option.value = p.id;
-                    option.text = p.name;
+                    const isOut = p.quantity === 0;
+                    option.value = `${type}_${p.id}`;
+                    let label = `${p.name} — ${p.quantity} available`;
+                    if (type === 'product' && p.buying_price !== undefined) {
+                    label += ` — ৳${p.buying_price}`;
+                    }
+                    if (type === 'partstock' && p.selling_price !== undefined) {
+                        label += ` — ৳${p.selling_price}`;
+                    }
+                    if (isOut) {
+                        option.disabled = true;
+                        label += ' (Out of Stock)';
+                    }
+                    option.text = label;
                     productSelect.appendChild(option);
                 });
             });
     });
 
+    // 🧮 Generate inputs for selected products
     productSelect.addEventListener('change', function () {
         container.innerHTML = '';
         Array.from(this.selectedOptions).forEach(opt => {
-            const id = opt.value, name = opt.text;
+            const [type, id] = opt.value.split('_');
+            const name = opt.text;
+            const uid = `${type}_${id}`;
+
             container.innerHTML += `
-                <div class="border p-2 mb-2">
+                <div class="border p-2 mb-2 rounded bg-light">
                     <h6>${name}</h6>
-                    <input type="hidden" name="product_details[${id}][id]" value="${id}">
+                    <input type="hidden" name="product_details[${uid}][id]" value="${id}">
+                    <input type="hidden" name="product_details[${uid}][type]" value="${type}">
                     <div class="mb-2">
                         <label>Quantity</label>
-                        <input type="number" name="product_details[${id}][quantity]" class="form-control" required>
+                        <input type="number" name="product_details[${uid}][quantity]" class="form-control" required>
                     </div>
                     <div class="mb-2">
                         <label>Selling Price</label>
-                        <input type="number" name="product_details[${id}][price]" class="form-control" step="0.01" required>
+                        <input type="number" name="product_details[${uid}][price]" class="form-control" step="0.01" required>
                     </div>
                 </div>
             `;
         });
+        calculateTotals();
     });
+
+    // 🧮 Auto calculate totals
+    document.addEventListener('input', function (e) {
+        if (
+            e.target.name?.includes('[quantity]') ||
+            e.target.name?.includes('[price]') ||
+            e.target.name === 'paid_amount'
+        ) {
+            calculateTotals();
+        }
+    });
+
+    function calculateTotals() {
+        let total = 0;
+        const previous = parseFloat(previousDue.textContent) || 0;
+        const paid = parseFloat(paidInput.value || 0);
+
+        document.querySelectorAll('[name^="product_details"]').forEach(input => {
+            if (input.name.includes('[quantity]')) {
+                const id = input.name.match(/\[(.*?)\]/)[1];
+                const qty = parseFloat(input.value || 0);
+                const price = parseFloat(document.querySelector(`[name="product_details[${id}][price]"]`)?.value || 0);
+                total += qty * price;
+            }
+        });
+
+        totalAmount.textContent = total.toFixed(2);
+        totalDue.textContent = Math.max(0, total - paid + previous).toFixed(2);
+    }
 });
-    </script>
+</script>
+
+
+
 </body>
 </html>
