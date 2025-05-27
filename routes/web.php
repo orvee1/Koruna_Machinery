@@ -69,10 +69,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/switch-branch', [AdminBranchSelectorController::class, 'switchBranch'])->name('admin.switch-branch');
     Route::post('/admin/switch-branch', [AdminBranchSelectorController::class, 'set'])->name('admin.switch-branch.set');
     Route::prefix('bills')->middleware('auth')->group(function () {
-    Route::get('/products', [BillController::class, 'getProducts']);
-    Route::get('/customers', [BillController::class, 'getCustomers']);
-    Route::post('/', [BillController::class, 'store'])->name('bills.store');
-});
+        Route::get('/products', [BillController::class, 'getProducts']);
+        Route::get('/customers', [BillController::class, 'getCustomers']);
+        Route::post('/', [BillController::class, 'store'])->name('bills.store');
+    });
 
 
     /*
@@ -113,7 +113,14 @@ Route::middleware('auth')->group(function () {
             Route::resource('product-sales', AdminProductSaleController::class);
             Route::post('product-sales/{productSale}/update-payment', [AdminProductSaleController::class, 'updatePayment'])
                 ->name('productSales.updatePayment');
-            Route::resource('partstock-sales', AdminPartStockSaleController::class);
+            // Route::resource('partstock-sales', AdminPartStockSaleController::class);
+            Route::get('partstock-sales', [AdminPartStockSaleController::class, 'index'])->name('partstock-sales.index');
+            Route::get('partstock-sales/create', [AdminPartStockSaleController::class, 'create'])->name('partstock-sales.create');
+            Route::post('partstock-sales', [AdminPartStockSaleController::class, 'store'])->name('partstock-sales.store');
+            Route::get('partstock-sales/{partStockSale}', [AdminPartStockSaleController::class, 'show'])->name('partstock-sales.show');
+            Route::get('partstock-sales/{partStockSale}/edit', [AdminPartStockSaleController::class, 'edit'])->name('partstock-sales.edit');
+            Route::put('partstock-sales/{partStockSale}', [AdminPartStockSaleController::class, 'update'])->name('partstock-sales.update');
+            Route::delete('partstock-sales/{partStockSale}', [AdminPartStockSaleController::class, 'destroy'])->name('partstock-sales.destroy');
             Route::post('partstock-sales/{partStockSale}/update-payment', [AdminPartStockSaleController::class, 'updatePayment'])
                 ->name('partStockSales.updatePayment');
 
@@ -182,5 +189,4 @@ Route::middleware('auth')->group(function () {
             // Customer Management
             Route::resource('customers', WorkerCustomerController::class);
         });
-
 });

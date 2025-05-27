@@ -27,7 +27,7 @@ class PartStockSaleController extends Controller
         $query = PartStockSale::where('branch_id', $branchId)
             ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
-        
+
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->input('date'));
         }
@@ -38,19 +38,19 @@ class PartStockSaleController extends Controller
             $query->forYear($request->input('year'));
         }
 
-        
+
         if ($request->filled('status')) {
-          if ($request->status === 'due') {
-            
-            $query->where('due_amount', '>', 0)
-                  ->orderBy('created_at', 'asc');  
-        } elseif ($request->status === 'paid') {
-            
-            $query->where('due_amount', 0)
-                  ->orderBy('created_at', 'asc');  
+            if ($request->status === 'due') {
+
+                $query->where('due_amount', '>', 0)
+                    ->orderBy('created_at', 'asc');
+            } elseif ($request->status === 'paid') {
+
+                $query->where('due_amount', 0)
+                    ->orderBy('created_at', 'asc');
             }
         } else {
-            
+
             $query->orderBy('created_at', 'desc');
         }
 
@@ -99,7 +99,7 @@ class PartStockSaleController extends Controller
             ->with('success', 'Partstock sale added successfully.');
     }
 
-      public function updatePayment(Request $request, PartStockSale $partStockSale)
+    public function updatePayment(Request $request, PartStockSale $partStockSale)
     {
         $request->validate([
             'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStockSale->due_amount,
@@ -129,7 +129,7 @@ class PartStockSaleController extends Controller
         return view('admin.partstock-sales.show', compact('partStockSale'));
     }
 
-   
+
     /**
      * Delete a partstock sale
      */
