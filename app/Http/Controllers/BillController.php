@@ -65,7 +65,6 @@ class BillController extends Controller
     $sellerId   = auth()->id();
     $paidAmount = $request->paid_amount;
 
-    // ✅ Step 1: Resolve or create customer
     if ($request->filled('customer_id')) {
         $customerId = $request->customer_id;
     } else {
@@ -78,13 +77,11 @@ class BillController extends Controller
         $customerId = $customer->id;
     }
 
-    // ✅ Step 2: Calculate total of all products
     $totalSaleAmount = 0;
     foreach ($request->product_details as $item) {
         $totalSaleAmount += $item['quantity'] * $item['price'];
     }
 
-    // ✅ Step 3: Distribute paid amount across products
     foreach ($request->product_details as $item) {
         $type       = $item['type'];
         $id         = $item['id'];
