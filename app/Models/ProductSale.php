@@ -131,4 +131,9 @@ class ProductSale extends Model
     {
         return $this->hasMany(ProductSalePayment::class);
     }
+
+    public function bill()
+    {
+        return $this->belongsTo(Bill::class);
+    }
 }

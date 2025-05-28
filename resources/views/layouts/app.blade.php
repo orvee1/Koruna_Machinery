@@ -294,14 +294,14 @@
                     </div>
 
                     <!-- Product Selection -->
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label>Select Product Type</label>
                         <select id="productType" class="form-select" required>
                             <option value="">Select Type</option>
                             <option value="product">🛒 Product</option>
                             <option value="partstock">🔩 Part Stock</option>
                         </select>
-                    </div>
+                    </div> --}}
 
                     <div class="mb-3">
                         <label>Search Product</label>
@@ -345,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const phoneInput = document.getElementById('phoneInput');
     const districtInput = document.getElementById('districtInput');
 
-    const productType = document.getElementById('productType');
     const productSearchInput = document.getElementById('productSearchInput');
     const productSelect = document.getElementById('productSelect');
     const container = document.getElementById('productDetailsContainer');
@@ -357,6 +356,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const selectedProducts = new Set();
 
+    // ✅ Fetch Mixed Product List (No Product Type Dropdown Needed)
+    fetch(`/bills/products`)
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(p => {
+                const id = `${p.type}_${p.id}`;
+                const labelParts = [`${p.name}`, `${p.quantity} available`];
+                if (p.type === 'product' && p.buying_price !== undefined) labelParts.push(`৳${p.buying_price}`);
+                if (p.type === 'partstock' && p.selling_price !== undefined) labelParts.push(`৳${p.selling_price}`);
+                if (p.quantity === 0) labelParts.push('Out of Stock');
+
+                const checkbox = document.createElement('div');
+                checkbox.classList.add('form-check');
+                checkbox.dataset.name = p.name.toLowerCase();
+
+                checkbox.innerHTML = `
+                    <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
+                    <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
+                `;
+                productSelect.appendChild(checkbox);
+
+                checkbox.querySelector('input').addEventListener('change', function () {
+                    if (this.checked) {
+                        selectedProducts.add(id);
+                        addProductInput(id, p.type, p.name, p.quantity);
+                    } else {
+                        selectedProducts.delete(id);
+                        document.getElementById(`product_block_${id}`)?.remove();
+                    }
+                    calculateTotals();
+                });
+            });
+        });
+
+    // 🔍 Product Search Filter
+    productSearchInput.addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const checkboxes = productSelect.querySelectorAll('.form-check');
+
+        checkboxes.forEach(cb => {
+            const isSelected = cb.querySelector('input').checked;
+            const match = cb.dataset.name?.includes(query);
+            cb.style.display = match || isSelected ? 'block' : 'none';
+        });
+    });
+
+    // ✅ Customer Auto-Suggest
     customerInput.addEventListener('input', function () {
         const query = this.value.trim();
         customerIdInput.value = '';
@@ -397,49 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    productType.addEventListener('change', function () {
-        const type = this.value;
-        productSelect.innerHTML = '';
-        container.innerHTML = '';
-        productSearchInput.value = '';
-        selectedProducts.clear();
-
-        if (!type) return;
-
-        fetch(`/bills/products?type=${type}`)
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(p => {
-                    const id = `${type}_${p.id}`;
-                    const labelParts = [`${p.name}`, `${p.quantity} available`];
-                    if (type === 'product' && p.buying_price !== undefined) labelParts.push(`৳${p.buying_price}`);
-                    if (type === 'partstock' && p.selling_price !== undefined) labelParts.push(`৳${p.selling_price}`);
-                    if (p.quantity === 0) labelParts.push('Out of Stock');
-
-                    const checkbox = document.createElement('div');
-                    checkbox.classList.add('form-check');
-                    checkbox.dataset.name = p.name.toLowerCase();
-
-                    checkbox.innerHTML = `
-                        <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
-                        <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
-                    `;
-                    productSelect.appendChild(checkbox);
-
-                    checkbox.querySelector('input').addEventListener('change', function () {
-                        if (this.checked) {
-                            selectedProducts.add(id);
-                            addProductInput(id, type, p.name, p.quantity);
-                        } else {
-                            selectedProducts.delete(id);
-                            document.getElementById(`product_block_${id}`)?.remove();
-                        }
-                        calculateTotals();
-                    });
-                });
-            });
-    });
-
+    // ✅ Product Quantity + Price Input Add
     function addProductInput(uid, type, name, availableQty) {
         if (document.getElementById(`product_block_${uid}`)) return;
 
@@ -460,18 +464,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `);
     }
 
-    // 🔍 Filter product list by search input
-    productSearchInput.addEventListener('input', function () {
-        const query = this.value.toLowerCase();
-        const checkboxes = productSelect.querySelectorAll('.form-check');
-
-        checkboxes.forEach(cb => {
-            const isSelected = cb.querySelector('input').checked;
-            const match = cb.dataset.name?.includes(query);
-            cb.style.display = match || isSelected ? 'block' : 'none';
-        });
-    });
-
+    // ✅ Quantity Validation + Total Calculation
     document.addEventListener('input', function (e) {
         const name = e.target.name || '';
 
@@ -513,6 +506,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
 
 
 

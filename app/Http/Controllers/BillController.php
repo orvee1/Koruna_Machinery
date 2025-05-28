@@ -8,25 +8,23 @@ use App\Models\Stock;
 use App\Models\PartStock;
 use App\Models\ProductSale;
 use App\Models\PartStockSale;
+use Illuminate\Support\Facades\DB;
 
 class BillController extends Controller
 {
-    public function getProducts(Request $request)
+        public function getProducts(Request $request)
     {
         $branchId = session('active_branch_id');
 
-        if ($request->type === 'product') {
-            return Stock::where('branch_id', $branchId)
-                ->select('id', 'product_name as name','quantity','buying_price')
-                ->get();
-        } elseif ($request->type === 'partstock') {
-            return PartStock::where('branch_id', $branchId)
-                ->select('id', 'product_name as name','quantity','sell_value as selling_price')
-                ->get();
-        }
+        $products = Stock::where('branch_id', $branchId)
+            ->select('id', 'product_name as name', 'quantity', 'buying_price', DB::raw("'product' as type"));
 
-        return response()->json([]);
+        $partstocks = PartStock::where('branch_id', $branchId)
+            ->select('id', 'product_name as name', 'quantity', 'sell_value as selling_price', DB::raw("'partstock' as type"));
+
+        return $products->unionAll($partstocks)->get();
     }
+
 
         public function getCustomers(Request $request)
     {

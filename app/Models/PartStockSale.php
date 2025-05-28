@@ -122,4 +122,9 @@ class PartStockSale extends Model
      { 
         return $this->hasMany(PartStockSalePayment::class);
      }
+
+     public function bill()
+    {
+        return $this->belongsTo(Bill::class);
+    }
 }
