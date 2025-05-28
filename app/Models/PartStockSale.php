@@ -34,12 +34,12 @@ class PartStockSale extends Model
     {
         static::creating(function (PartStockSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
+            $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
         });
 
         static::updating(function (PartStockSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
+           $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
         });
 
         // Sale Created → Reduce stock quantity & increase profit

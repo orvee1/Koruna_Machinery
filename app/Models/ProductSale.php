@@ -40,13 +40,13 @@ class ProductSale extends Model
         // ✅ সেল ক্রিয়েটের সময় total_amount এবং due_amount হিসাব
         static::creating(function (ProductSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
+            $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
         });
 
         // ✅ সেল আপডেটের সময়ও same হিসাব
         static::updating(function (ProductSale $sale) {
             $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = $sale->total_amount - ($sale->paid_amount ?? 0);
+           $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
         });
 
         // ✅ সেল হওয়ার পর স্টকের প্রফিট ও কোয়ান্টিটি কমানো

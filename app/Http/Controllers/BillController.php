@@ -39,7 +39,6 @@ class BillController extends Controller
         ], 'due_amount')
             ->where('branch_id', $branchId)
             ->where('name', 'like', "%{$query}%")
-            // ->select('id', 'name', 'phone', 'district')
             ->limit(5)
             ->get();
         $customers = $customers->map(function ($c) {
@@ -65,10 +64,9 @@ class BillController extends Controller
     $sellerId   = auth()->id();
     $paidAmount = $request->paid_amount;
 
-    if ($request->filled('customer_id')) {
-        $customerId = $request->customer_id;
-    } else {
-        $customer = \App\Models\Customer::create([
+    $customerId = $request->customer_id;
+    if (!$customerId) {
+        $customer = Customer::create([
             'name'      => $request->customer_name,
             'phone'     => $request->phone,
             'district'  => $request->district,
@@ -82,16 +80,16 @@ class BillController extends Controller
         $totalSaleAmount += $item['quantity'] * $item['price'];
     }
 
-    foreach ($request->product_details as $item) {
+    foreach ($request->product_details as $uid => $item) {
         $type       = $item['type'];
         $id         = $item['id'];
         $qty        = $item['quantity'];
         $unitPrice  = $item['price'];
         $lineTotal  = $qty * $unitPrice;
 
-        $allocatedPaid   = ($totalSaleAmount > 0) ? ($lineTotal / $totalSaleAmount) * $paidAmount : 0;
-        $dueAmount       = $lineTotal - $allocatedPaid;
-        $paymentStatus   = $dueAmount <= 0 ? 'paid' : 'due';
+        $allocatedPaid = ($totalSaleAmount > 0) ? ($lineTotal / $totalSaleAmount) * $paidAmount : 0;
+        $dueAmount     = max($lineTotal - $allocatedPaid, 0);
+        $paymentStatus = $dueAmount <= 0 ? 'paid' : 'due';
 
         $data = [
             'branch_id'      => $branchId,
@@ -100,13 +98,14 @@ class BillController extends Controller
             'quantity'       => $qty,
             'unit_price'     => $unitPrice,
             'paid_amount'    => round($allocatedPaid, 2),
+            'due_amount'     => round($dueAmount, 2),
             'payment_status' => $paymentStatus,
         ];
 
         if ($type === 'partstock') {
             $data['part_stock_id'] = $id;
             PartStockSale::create($data);
-        } else {
+        } elseif ($type === 'product') {
             $data['stock_id'] = $id;
             ProductSale::create($data);
         }
@@ -114,6 +113,7 @@ class BillController extends Controller
 
     return back()->with('status', 'Bill created successfully!');
 }
+
 
 
 }

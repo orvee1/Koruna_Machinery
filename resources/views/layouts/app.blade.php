@@ -264,254 +264,257 @@
     </div>
 
     <!-- Create Bill Modal -->
-    <div class="modal fade" id="createBillModal" tabindex="-1" aria-labelledby="createBillModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <form method="POST" action="{{ route('bills.store') }}">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title">Create Bill</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+   <!-- ✅ MODAL -->
+<div class="modal fade" id="createBillModal" tabindex="-1" aria-labelledby="createBillModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{{ route('bills.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Create Bill</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="overflow: visible;">
+                    <!-- Customer Info -->
+                    <div class="mb-3 position-relative">
+                        <label>Customer Name</label>
+                        <input list="customerList" id="customerNameInput" name="customer_name" class="form-control" autocomplete="off" required>
+                        <datalist id="customerList"></datalist>
+                        <input type="hidden" name="customer_id" id="customerId">
                     </div>
-                    <div class="modal-body" style="overflow: visible;">
-                        <!-- Customer Info -->
-                        <div class="mb-3 position-relative">
-                            <label>Customer Name</label>
-                            <input list="customerList" id="customerNameInput" name="customer_name"
-                                class="form-control" autocomplete="off" required>
-                            <datalist id="customerList"></datalist>
-                            <input type="hidden" name="customer_id" id="customerId">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Phone</label>
+                            <input type="text" name="phone" id="phoneInput" class="form-control">
                         </div>
-                        <div class="row mb-3">
-                            <div class="col">
-                                <label>Phone</label>
-                                <input type="text" name="phone" id="phoneInput" class="form-control">
-                            </div>
-                            <div class="col">
-                                <label>District</label>
-                                <input type="text" name="district" id="districtInput" class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- Product Selection -->
-                        <div class="mb-3">
-                            <label>Select Product Type</label>
-                            <select id="productType" class="form-select" required>
-                                <option value="">Select Type</option>
-                                <option value="product">🛒 Product</option>
-                                <option value="partstock">🔩 Part Stock</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label>Select Products</label>
-                            <div id="productSelect" class="form-group"></div>
-                        </div>
-
-                        <!-- Product Inputs -->
-                        <div id="productDetailsContainer"></div>
-
-                        <!-- Payment Summary -->
-                        <div class="mt-3 p-3 border rounded bg-light">
-                            <h5>Total Summary</h5>
-                            <p>Total Amount: ৳<span id="totalAmount">0</span></p>
-                            <p>Previous Due: ৳<span id="previousDue">0</span></p>
-                            <p>Total Due: ৳<span id="totalDue">0</span></p>
-                        </div>
-
-                        <!-- Payment -->
-                        <div class="mb-3 mt-2">
-                            <label>Paid Amount</label>
-                            <input type="number" name="paid_amount" step="0.01" class="form-control" required>
+                        <div class="col">
+                            <label>District</label>
+                            <input type="text" name="district" id="districtInput" class="form-control">
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button class="btn btn-primary">Create</button>
+                    <!-- Product Selection -->
+                    <div class="mb-3">
+                        <label>Select Product Type</label>
+                        <select id="productType" class="form-select" required>
+                            <option value="">Select Type</option>
+                            <option value="product">🛒 Product</option>
+                            <option value="partstock">🔩 Part Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Search Product</label>
+                        <input type="text" id="productSearchInput" class="form-control mb-2" placeholder="Search product name...">
+                        <div id="productSelect" class="form-group"></div>
+                    </div>
+
+                    <!-- Selected Product Inputs -->
+                    <div id="productDetailsContainer"></div>
+
+                    <!-- Payment Summary -->
+                    <div class="mt-3 p-3 border rounded bg-light">
+                        <h5>Total Summary</h5>
+                        <p>Total Amount: ৳<span id="totalAmount">0</span></p>
+                        <p>Previous Due: ৳<span id="previousDue">0</span></p>
+                        <p>Total Due: ৳<span id="totalDue">0</span></p>
+                    </div>
+
+                    <!-- Payment -->
+                    <div class="mb-3 mt-2">
+                        <label>Paid Amount</label>
+                        <input type="number" name="paid_amount" step="0.01" class="form-control" required>
                     </div>
                 </div>
-            </form>
-        </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- ✅ SCRIPT -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const customerInput = document.getElementById('customerNameInput');
-            const customerIdInput = document.getElementById('customerId');
-            const datalist = document.getElementById('customerList');
-            const phoneInput = document.getElementById('phoneInput');
-            const districtInput = document.getElementById('districtInput');
 
-            const productType = document.getElementById('productType');
-            const productSelect = document.getElementById('productSelect');
-            const container = document.getElementById('productDetailsContainer');
+<!-- ✅ SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const customerInput = document.getElementById('customerNameInput');
+    const customerIdInput = document.getElementById('customerId');
+    const datalist = document.getElementById('customerList');
+    const phoneInput = document.getElementById('phoneInput');
+    const districtInput = document.getElementById('districtInput');
 
-            const totalAmount = document.getElementById('totalAmount');
-            const previousDue = document.getElementById('previousDue');
-            const totalDue = document.getElementById('totalDue');
-            const paidInput = document.querySelector('[name="paid_amount"]');
+    const productType = document.getElementById('productType');
+    const productSearchInput = document.getElementById('productSearchInput');
+    const productSelect = document.getElementById('productSelect');
+    const container = document.getElementById('productDetailsContainer');
 
-            document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el, {
-                delay: 3000
-            }).show());
+    const totalAmount = document.getElementById('totalAmount');
+    const previousDue = document.getElementById('previousDue');
+    const totalDue = document.getElementById('totalDue');
+    const paidInput = document.querySelector('[name="paid_amount"]');
 
-            // 🔍 Fetch customer list
-            customerInput.addEventListener('input', function() {
-                const query = this.value.trim();
+    const selectedProducts = new Set();
 
-                customerIdInput.value = '';
-                phoneInput.value = '';
-                districtInput.value = '';
-                previousDue.textContent = '0';
+    customerInput.addEventListener('input', function () {
+        const query = this.value.trim();
+        customerIdInput.value = '';
+        phoneInput.value = '';
+        districtInput.value = '';
+        previousDue.textContent = '0';
 
-                if (query.length < 2) {
-                    datalist.innerHTML = '';
-                    return;
-                }
+        if (query.length < 2) {
+            datalist.innerHTML = '';
+            return;
+        }
 
-                fetch(`/bills/customers?name=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        datalist.innerHTML = '';
-                        data.forEach(c => {
-                            const option = document.createElement('option');
-                            option.value = c.name;
-                            option.dataset.id = c.id;
-                            option.dataset.phone = c.phone || '';
-                            option.dataset.district = c.district || '';
-                            option.dataset.total_due = c.total_due ?? 0;
-                            datalist.appendChild(option);
-                        });
-                    });
-            });
-
-            // 📥 On customer select
-            customerInput.addEventListener('change', function() {
-                const options = Array.from(datalist.options);
-                const match = options.find(opt => opt.value === customerInput.value);
-                if (match) {
-                    customerIdInput.value = match.dataset.id;
-                    phoneInput.value = match.dataset.phone;
-                    districtInput.value = match.dataset.district;
-                    previousDue.textContent = match.dataset.total_due;
-                    calculateTotals();
-                }
-            });
-
-            // 🔁 Load products by type
-            productType.addEventListener('change', function() {
-                const type = this.value;
-                productSelect.innerHTML = '';
-                container.innerHTML = '';
-                if (!type) return;
-
-                fetch(`/bills/products?type=${type}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        data.forEach(p => {
-                            const id = `${type}_${p.id}`;
-                            const labelParts = [`${p.name}`, `${p.quantity} available`];
-                            if (type === 'product' && p.buying_price !== undefined) labelParts
-                                .push(`৳${p.buying_price}`);
-                            if (type === 'partstock' && p.selling_price !== undefined)
-                                labelParts.push(`৳${p.selling_price}`);
-                            if (p.quantity === 0) labelParts.push('Out of Stock');
-
-                            const checkbox = document.createElement('div');
-                            checkbox.classList.add('form-check');
-
-                            checkbox.innerHTML = `
-                                <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
-                                <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
-                            `;
-
-                            productSelect.appendChild(checkbox);
-
-                            checkbox.querySelector('input').addEventListener('change',
-                                updateSelectedProducts);
-                        });
-                    });
-            });
-
-            // 🧮 Generate Inputs for Selected Products
-            function updateSelectedProducts() {
-                container.innerHTML = '';
-                const selected = productSelect.querySelectorAll('input[type="checkbox"]:checked');
-
-                selected.forEach(input => {
-                    const [type, id] = input.value.split('_');
-                    const name = input.nextElementSibling.textContent;
-                    const uid = `${type}_${id}`;
-                    const availableQty = input.dataset.quantity;
-
-                    if (document.getElementById(`product_block_${uid}`)) return;
-
-                    container.insertAdjacentHTML('beforeend', `
-                        <div id="product_block_${uid}" class="border p-2 mb-2 rounded bg-light">
-                            <h6>${name}</h6>
-                            <input type="hidden" name="product_details[${uid}][id]" value="${id}">
-                            <input type="hidden" name="product_details[${uid}][type]" value="${type}">
-                            <div class="mb-2">
-                                <label>Quantity (Max: ${availableQty})</label>
-                                <input type="number" name="product_details[${uid}][quantity]" class="form-control" required max="${availableQty}" data-max="${availableQty}">
-                            </div>
-                            <div class="mb-2">
-                                <label>Selling Price</label>
-                                <input type="number" name="product_details[${uid}][price]" class="form-control" step="0.01" required>
-                            </div>
-                        </div>
-                    `);
+        fetch(`/bills/customers?name=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                datalist.innerHTML = '';
+                data.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.name;
+                    option.dataset.id = c.id;
+                    option.dataset.phone = c.phone || '';
+                    option.dataset.district = c.district || '';
+                    option.dataset.total_due = c.total_due ?? 0;
+                    datalist.appendChild(option);
                 });
+            });
+    });
 
-                calculateTotals();
+    customerInput.addEventListener('change', function () {
+        const options = Array.from(datalist.options);
+        const match = options.find(opt => opt.value === customerInput.value);
+        if (match) {
+            customerIdInput.value = match.dataset.id;
+            phoneInput.value = match.dataset.phone;
+            districtInput.value = match.dataset.district;
+            previousDue.textContent = match.dataset.total_due;
+            calculateTotals();
+        }
+    });
+
+    productType.addEventListener('change', function () {
+        const type = this.value;
+        productSelect.innerHTML = '';
+        container.innerHTML = '';
+        productSearchInput.value = '';
+        selectedProducts.clear();
+
+        if (!type) return;
+
+        fetch(`/bills/products?type=${type}`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(p => {
+                    const id = `${type}_${p.id}`;
+                    const labelParts = [`${p.name}`, `${p.quantity} available`];
+                    if (type === 'product' && p.buying_price !== undefined) labelParts.push(`৳${p.buying_price}`);
+                    if (type === 'partstock' && p.selling_price !== undefined) labelParts.push(`৳${p.selling_price}`);
+                    if (p.quantity === 0) labelParts.push('Out of Stock');
+
+                    const checkbox = document.createElement('div');
+                    checkbox.classList.add('form-check');
+                    checkbox.dataset.name = p.name.toLowerCase();
+
+                    checkbox.innerHTML = `
+                        <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
+                        <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
+                    `;
+                    productSelect.appendChild(checkbox);
+
+                    checkbox.querySelector('input').addEventListener('change', function () {
+                        if (this.checked) {
+                            selectedProducts.add(id);
+                            addProductInput(id, type, p.name, p.quantity);
+                        } else {
+                            selectedProducts.delete(id);
+                            document.getElementById(`product_block_${id}`)?.remove();
+                        }
+                        calculateTotals();
+                    });
+                });
+            });
+    });
+
+    function addProductInput(uid, type, name, availableQty) {
+        if (document.getElementById(`product_block_${uid}`)) return;
+
+        container.insertAdjacentHTML('beforeend', `
+            <div id="product_block_${uid}" class="border p-2 mb-2 rounded bg-light">
+                <h6>${name}</h6>
+                <input type="hidden" name="product_details[${uid}][id]" value="${uid.split('_')[1]}">
+                <input type="hidden" name="product_details[${uid}][type]" value="${type}">
+                <div class="mb-2">
+                    <label>Quantity (Max: ${availableQty})</label>
+                    <input type="number" name="product_details[${uid}][quantity]" class="form-control" required max="${availableQty}" data-max="${availableQty}">
+                </div>
+                <div class="mb-2">
+                    <label>Selling Price</label>
+                    <input type="number" name="product_details[${uid}][price]" class="form-control" step="0.01" required>
+                </div>
+            </div>
+        `);
+    }
+
+    // 🔍 Filter product list by search input
+    productSearchInput.addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const checkboxes = productSelect.querySelectorAll('.form-check');
+
+        checkboxes.forEach(cb => {
+            const isSelected = cb.querySelector('input').checked;
+            const match = cb.dataset.name?.includes(query);
+            cb.style.display = match || isSelected ? 'block' : 'none';
+        });
+    });
+
+    document.addEventListener('input', function (e) {
+        const name = e.target.name || '';
+
+        if (name.includes('[quantity]')) {
+            const max = parseInt(e.target.dataset.max || '0');
+            const val = parseInt(e.target.value || '0');
+            if (val > max) {
+                e.target.value = max;
+                alert(`You cannot sell more than ${max} units for this product.`);
             }
+        }
 
-            // 💰 Recalculate and validate input
-            document.addEventListener('input', function(e) {
-                const name = e.target.name || '';
+        if (
+            name.includes('[quantity]') ||
+            name.includes('[price]') ||
+            name === 'paid_amount'
+        ) {
+            calculateTotals();
+        }
+    });
 
-                // 🔐 Prevent overselling
-                if (name.includes('[quantity]')) {
-                    const max = parseInt(e.target.dataset.max || '0');
-                    const val = parseInt(e.target.value || '0');
-                    if (val > max) {
-                        e.target.value = max;
-                        alert(`You cannot sell more than ${max} units for this product.`);
-                    }
-                }
+    function calculateTotals() {
+        let total = 0;
+        const previous = parseFloat(previousDue.textContent) || 0;
+        const paid = parseFloat(paidInput.value || 0);
 
-                if (
-                    name.includes('[quantity]') ||
-                    name.includes('[price]') ||
-                    name === 'paid_amount'
-                ) {
-                    calculateTotals();
-                }
-            });
-
-            function calculateTotals() {
-                let total = 0;
-                const previous = parseFloat(previousDue.textContent) || 0;
-                const paid = parseFloat(paidInput.value || 0);
-
-                document.querySelectorAll('[name^="product_details"]').forEach(input => {
-                    if (input.name.includes('[quantity]')) {
-                        const uid = input.name.match(/\[([^\]]+)]/)[1];
-                        const qty = parseFloat(input.value || 0);
-                        const priceInput = document.querySelector(
-                            `[name="product_details[${uid}][price]"]`);
-                        const price = parseFloat(priceInput?.value || 0);
-                        total += qty * price;
-                    }
-                });
-
-                totalAmount.textContent = total.toFixed(2);
-                totalDue.textContent = Math.max(0, total - paid + previous).toFixed(2);
+        document.querySelectorAll('[name^="product_details"]').forEach(input => {
+            if (input.name.includes('[quantity]')) {
+                const uid = input.name.match(/\[([^\]]+)]/)[1];
+                const qty = parseFloat(input.value || 0);
+                const priceInput = document.querySelector(`[name="product_details[${uid}][price]"]`);
+                const price = parseFloat(priceInput?.value || 0);
+                total += qty * price;
             }
         });
-    </script>
+
+        totalAmount.textContent = total.toFixed(2);
+        totalDue.textContent = Math.max(0, total - paid + previous).toFixed(2);
+    }
+});
+</script>
+
+
 
 
 
