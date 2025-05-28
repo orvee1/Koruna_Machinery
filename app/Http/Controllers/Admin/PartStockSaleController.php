@@ -20,44 +20,46 @@ class PartStockSaleController extends Controller
     /**
      * Display all partstock sales with optional filters
      */
-    public function index(Request $request)
-    {
-        $branchId = session('active_branch_id');
+   public function index(Request $request)
+{
+    $branchId = session('active_branch_id');
 
-        $query = PartStockSale::where('branch_id', $branchId)
-            ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
+    $query = PartStockSale::where('branch_id', $branchId)
+        ->with(['partStock', 'customer', 'branch', 'seller', 'investor']);
 
-
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->input('date'));
-        }
-        if ($request->filled('month')) {
-            $query->forMonth($request->input('month'));
-        }
-        if ($request->filled('year')) {
-            $query->forYear($request->input('year'));
-        }
-
-
-        if ($request->filled('status')) {
-            if ($request->status === 'due') {
-
-                $query->where('due_amount', '>', 0)
-                    ->orderBy('created_at', 'asc');
-            } elseif ($request->status === 'paid') {
-
-                $query->where('due_amount', 0)
-                    ->orderBy('created_at', 'asc');
-            }
-        } else {
-
-            $query->orderBy('created_at', 'desc');
-        }
-
-        $sales = $query->latest()->paginate(20)->appends($request->all());
-
-        return view('admin.partstock-sales.index', compact('sales'));
+    if ($request->filled('date')) {
+        $query->whereDate('created_at', $request->input('date'));
     }
+    if ($request->filled('month')) {
+        $query->forMonth($request->input('month'));
+    }
+    if ($request->filled('year')) {
+        $query->forYear($request->input('year'));
+    }
+    if ($request->filled('status')) {
+        if ($request->status === 'due') {
+            $query->where('due_amount', '>', 0);
+        } elseif ($request->status === 'paid') {
+            $query->where('due_amount', 0);
+        }
+    }
+
+    $sales = $query->get();
+
+    $salesGrouped = $sales->groupBy(fn($s) => $s->customer_id . '_' . $s->created_at->toDateString())
+        ->map(function ($group) {
+            $first = $group->first();
+            return [
+                'customer' => $first->customer,
+                'sales' => $group,
+                'total' => $group->sum('total_amount'),
+                'paid' => $group->sum('paid_amount'),
+                'due' => $group->sum('due_amount'),
+            ];
+        })->values();
+
+    return view('admin.partstock-sales.index', compact('salesGrouped'));
+}
 
 
     /**

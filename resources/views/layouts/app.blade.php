@@ -293,15 +293,6 @@
                         </div>
                     </div>
 
-                    <!-- Product Selection -->
-                    {{-- <div class="mb-3">
-                        <label>Select Product Type</label>
-                        <select id="productType" class="form-select" required>
-                            <option value="">Select Type</option>
-                            <option value="product">🛒 Product</option>
-                            <option value="partstock">🔩 Part Stock</option>
-                        </select>
-                    </div> --}}
 
                     <div class="mb-3">
                         <label>Search Product</label>

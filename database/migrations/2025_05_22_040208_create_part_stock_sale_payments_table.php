@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('part_stock_sale_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('partstock_sale_id')->constrained('partstock_sales')->onDelete('cascade');
+            $table->foreignId('part_stock_sale_id')->constrained('part_stock_sales')->onDelete('cascade');
             $table->decimal('paid_amount', 10, 2)->default(0);
             $table->date('payment_date')->nullable();
             $table->timestamps();

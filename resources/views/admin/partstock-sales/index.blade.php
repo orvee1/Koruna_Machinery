@@ -89,8 +89,6 @@
                         <th>SL No</th>
                         <th>Customer</th>
                         <th>Part Stock</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
                         <th>Total Amount (৳)</th>
                         <th>Paid</th>
                         <th>Due (৳)</th>
@@ -99,44 +97,42 @@
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse($sales as $sale)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $sale->customer->name ?? 'N/A' }}</td>
-                            <td>{{ $sale->partStock->product_name ?? 'N/A' }}</td>
-                            <td>{{ $sale->quantity }}</td>
-                            <td>{{ number_format($sale->unit_price, 2) }}</td>
-                            <td>{{ number_format($sale->total_amount, 2) }}</td>
-                            <td>{{ number_format($sale->paid_amount, 2) }}</td>
-                            <td class="{{ $sale->due_amount > 0 ? 'text-danger' : 'text-success' }}">
-                                {{ number_format($sale->due_amount, 2) }}
-                            </td>
-                            <td>{{ $sale->seller->name ?? 'N/A' }}</td>
-                            <td>{{ $sale->created_at->format('Y-m-d') }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('admin.partstock-sales.show', $sale->id) }}"
-                                    class="btn btn-sm btn-info">View</a>
-                                <form action="{{ route('admin.partstock-sales.destroy', $sale->id) }}" method="POST"
-                                    class="d-inline-block"
-                                    onsubmit="return confirm('Are you sure you want to delete this sale?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="text-center">No sales found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
+               <tbody>
+    @foreach($salesGrouped as $group)
+        <tr>
+            <td>{{ $loop->iteration }}</td>
+            <td>{{ $group['customer']->name ?? 'N/A' }}</td>
+            <td>
+                @foreach($group['sales'] as $sale)
+                    {{ $sale->partStock->product_name ?? 'N/A' }} ({{ $sale->quantity }}x{{ number_format($sale->unit_price, 2) }})<br>
+                @endforeach
+            </td>
+            <td>{{ number_format($group['total'], 2) }}</td>
+            <td>{{ number_format($group['paid'], 2) }}</td>
+            <td class="{{ $group['due'] > 0 ? 'text-danger' : 'text-success' }}">
+                {{ number_format($group['due'], 2) }}
+            </td>
+            <td>{{ $group['sales'][0]->seller->name ?? 'N/A' }}</td>
+            <td>{{ \Carbon\Carbon::parse($group['sales'][0]->created_at)->format('Y-m-d') }}</td>
+            <td class="text-center">
+    <a href="{{ route('admin.partstock-sales.show', $group['sales'][0]->id) }}" class="btn btn-sm btn-info">🔎 View</a>
+
+    <form action="{{ route('admin.partstock-sales.destroy', $group['sales'][0]->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this group sale?');">
+        @csrf
+        @method('DELETE')
+        <button class="btn btn-sm btn-danger">🗑️ Delete</button>
+    </form>
+</td>
+
+        </tr>
+    @endforeach
+</tbody>
+
             </table>
         </div>
 
-        <div class="d-flex justify-content-center">
+        {{-- <div class="d-flex justify-content-center">
             {{ $sales->links() }}
-        </div>
+        </div> --}}
     </div>
 @endsection
