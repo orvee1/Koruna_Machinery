@@ -35,55 +35,58 @@ class ProductSale extends Model
     /**
      * ✅ **স্টক এন্ট্রি অ্যাড হওয়া মাত্রই এর কোয়ান্টিটি ও প্রফিট আপডেট হবে**
      */
-   protected static function booted()
-    {
-        // ✅ সেল ক্রিয়েটের সময় total_amount এবং due_amount হিসাব
-        static::creating(function (ProductSale $sale) {
-            $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
-        });
+  protected static function booted()
+{
+    // ✅ সেল তৈরি হলে total_amount ও due_amount হিসাব হবে
+    static::creating(function (ProductSale $sale) {
+        $sale->total_amount = $sale->quantity * $sale->unit_price;
+        $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
+    });
 
-        // ✅ সেল আপডেটের সময়ও same হিসাব
-        static::updating(function (ProductSale $sale) {
-            $sale->total_amount = $sale->quantity * $sale->unit_price;
-           $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
-        });
+    // ✅ সেল আপডেট হলেও হিসাব হবে (for safety)
+    static::updating(function (ProductSale $sale) {
+        $sale->total_amount = $sale->quantity * $sale->unit_price;
+        $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
+    });
 
-        // ✅ সেল হওয়ার পর স্টকের প্রফিট ও কোয়ান্টিটি কমানো
-        static::created(function (ProductSale $sale) {
+    // ✅ সেল তৈরি হলে স্টক quantity, total_amount, profit একসাথে আপডেট
+    static::created(function (ProductSale $sale) {
         $stock = Stock::find($sale->stock_id);
         if (!$stock) return;
 
+        // 🔻 Quantity কমানো
         $stock->quantity -= $sale->quantity;
 
+        // 🔻 Profit হিসাব
         $profitPerUnit = $sale->unit_price - $stock->buying_price;
-        $totalProfit = $profitPerUnit * $sale->quantity;
-        $stock->total_profit += $totalProfit;
+        $stock->total_profit += $profitPerUnit * $sale->quantity;
 
-        // 👉 save() না করে নিচের line ব্যবহার করুন
-        $stock->updateQuietly([
-            'quantity' => max($stock->quantity, 0),
-            'total_profit' => $stock->total_profit,
-        ]);
+        // 🔻 Total Amount পুনঃহিসাব
+        $stock->total_amount = $stock->buying_price * $stock->quantity;
+
+        // ✅ সব একসাথে save
+        $stock->save();
     });
 
+    // ✅ সেল ডিলিট হলে স্টক quantity ও profit ফেরত
+    static::deleted(function (ProductSale $sale) {
+        $stock = Stock::find($sale->stock_id);
+        if (!$stock) return;
 
-        // ✅ সেল ডিলিট হলে স্টক quantity ও profit ফেরত
-        static::deleted(function (ProductSale $sale) {
-            $stock = Stock::find($sale->stock_id);
-            if (!$stock) return;
+        $stock->quantity += $sale->quantity;
 
-            $stock->quantity += $sale->quantity;
+        $profitPerUnit = $sale->unit_price - $stock->buying_price;
+        $stock->total_profit -= $profitPerUnit * $sale->quantity;
 
-            $profitPerUnit = $sale->unit_price - $stock->buying_price;
-            $totalProfit = $profitPerUnit * $sale->quantity;
-            $stock->total_profit -= $totalProfit;
+        if ($stock->total_profit < 0) $stock->total_profit = 0;
 
-            if ($stock->total_profit < 0) $stock->total_profit = 0;
+        // 🔁 total_amount পুনঃহিসাব
+        $stock->total_amount = $stock->buying_price * $stock->quantity;
 
-            $stock->save();
-        });
-    }
+        $stock->save();
+    });
+}
+
 
     // Scopes for filtering
     public function scopeForToday($query)

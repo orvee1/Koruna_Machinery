@@ -30,50 +30,57 @@ class PartStockSale extends Model
         'due_amount' => 'decimal:2',
     ];
 
-        protected static function booted()
-    {
-        static::creating(function (PartStockSale $sale) {
-            $sale->total_amount = $sale->quantity * $sale->unit_price;
-            $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
-        });
+     protected static function booted()
+{
+    // ✅ সেল তৈরি হলে total_amount ও due_amount হিসাব হবে
+    static::creating(function (PartStockSale $sale) {
+        $sale->total_amount = $sale->quantity * $sale->unit_price;
+        $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
+    });
 
-        static::updating(function (PartStockSale $sale) {
-            $sale->total_amount = $sale->quantity * $sale->unit_price;
-           $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
-        });
+    // ✅ সেল আপডেট হলেও হিসাব হবে (for safety)
+    static::updating(function (PartStockSale $sale) {
+        $sale->total_amount = $sale->quantity * $sale->unit_price;
+        $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
+    });
 
-        // Sale Created → Reduce stock quantity & increase profit
-        static::created(function (PartStockSale $sale) {
-            $partStock = PartStock::find($sale->part_stock_id);
-            if (!$partStock) return;
+    // ✅ সেল তৈরি হলে PartStock quantity, total_amount, total_profit একসাথে আপডেট
+    static::created(function (PartStockSale $sale) {
+        $partStock = PartStock::find($sale->part_stock_id);
+        if (!$partStock) return;
 
-            $partStock->quantity -= $sale->quantity;
+        $partStock->quantity -= $sale->quantity;
 
-            $profitPerUnit = $sale->unit_price - $partStock->buying_price;
-            $totalProfit = $profitPerUnit * $sale->quantity;
+        $profitPerUnit = $sale->unit_price - $partStock->buying_price;
+        $partStock->total_profit += $profitPerUnit * $sale->quantity;
 
-            $partStock->updateQuietly([
-                'quantity' => max($partStock->quantity, 0),
-                'total_profit' => $partStock->total_profit + $totalProfit,
-            ]);
-        });
+        // 🔄 Total amount update
+        $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
 
-        // Sale Deleted → Restore stock & reduce profit
-        static::deleted(function (PartStockSale $sale) {
-            $partStock = PartStock::find($sale->part_stock_id);
-            if (!$partStock) return;
+        $partStock->save(); // সব একসাথে save
+    });
 
-            $partStock->quantity += $sale->quantity;
+    // ✅ সেল ডিলিট হলে quantity ও profit ফেরত, total_amount পুনঃহিসাব
+    static::deleted(function (PartStockSale $sale) {
+        $partStock = PartStock::find($sale->part_stock_id);
+        if (!$partStock) return;
 
-            $profitPerUnit = $sale->unit_price - $partStock->buying_price;
-            $totalProfit = $profitPerUnit * $sale->quantity;
+        $partStock->quantity += $sale->quantity;
 
-            $partStock->updateQuietly([
-                'quantity' => $partStock->quantity,
-                'total_profit' => max($partStock->total_profit - $totalProfit, 0),
-            ]);
-        });
-    }
+        $profitPerUnit = $sale->unit_price - $partStock->buying_price;
+        $partStock->total_profit -= $profitPerUnit * $sale->quantity;
+
+        if ($partStock->total_profit < 0) {
+            $partStock->total_profit = 0;
+        }
+
+        // 🔄 Total amount পুনঃহিসাব
+        $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+
+        $partStock->save();
+    });
+}
+
 
 
     // Scope Filters
