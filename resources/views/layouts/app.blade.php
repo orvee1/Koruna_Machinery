@@ -349,37 +349,48 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ✅ Fetch Mixed Product List (No Product Type Dropdown Needed)
     fetch(`/bills/products`)
-        .then(res => res.json())
-        .then(data => {
-            data.forEach(p => {
-                const id = `${p.type}_${p.id}`;
-                const labelParts = [`${p.name}`, `${p.quantity} available`];
-                if (p.type === 'product' && p.buying_price !== undefined) labelParts.push(`৳${p.buying_price}`);
-                if (p.type === 'partstock' && p.selling_price !== undefined) labelParts.push(`৳${p.selling_price}`);
-                if (p.quantity === 0) labelParts.push('Out of Stock');
+    .then(res => res.json())
+    .then(data => {
+        data.forEach(p => {
+            const id = `${p.type}_${p.id}`;
+            const labelParts = [`${p.name}`, `${p.quantity} available`];
 
-                const checkbox = document.createElement('div');
-                checkbox.classList.add('form-check');
-                checkbox.dataset.name = p.name.toLowerCase();
+            if (p.type === 'product' && p.buying_price != null) {
+                labelParts.push(`৳${p.buying_price} (Buying Price)`);
+            }
 
-                checkbox.innerHTML = `
-                    <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
-                    <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
-                `;
-                productSelect.appendChild(checkbox);
+            if (p.type === 'partstock' && p.selling_price != null) {
+                labelParts.push(`৳${p.selling_price} (Selling Price)`);
+            }
 
-                checkbox.querySelector('input').addEventListener('change', function () {
-                    if (this.checked) {
-                        selectedProducts.add(id);
-                        addProductInput(id, p.type, p.name, p.quantity);
-                    } else {
-                        selectedProducts.delete(id);
-                        document.getElementById(`product_block_${id}`)?.remove();
-                    }
-                    calculateTotals();
-                });
+            if (p.quantity === 0) {
+                labelParts.push('Out of Stock');
+            }
+
+            const checkbox = document.createElement('div');
+            checkbox.classList.add('form-check');
+            checkbox.dataset.name = p.name.toLowerCase();
+
+            checkbox.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
+                <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
+            `;
+
+            productSelect.appendChild(checkbox);
+
+            checkbox.querySelector('input').addEventListener('change', function () {
+                if (this.checked) {
+                    selectedProducts.add(id);
+                    addProductInput(id, p.type, p.name, p.quantity);
+                } else {
+                    selectedProducts.delete(id);
+                    document.getElementById(`product_block_${id}`)?.remove();
+                }
+                calculateTotals();
             });
         });
+    });
+
 
     // 🔍 Product Search Filter
     productSearchInput.addEventListener('input', function () {

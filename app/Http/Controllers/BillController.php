@@ -17,12 +17,40 @@ class BillController extends Controller
         $branchId = session('active_branch_id');
 
         $products = Stock::where('branch_id', $branchId)
-            ->select('id', 'product_name as name', 'quantity', 'buying_price', DB::raw("'product' as type"));
+            ->select(
+                'id',
+                'product_name as name',
+                'quantity',
+                'buying_price',
+                DB::raw('NULL as selling_price'),
+                DB::raw("'product' as type")
+            );
 
         $partstocks = PartStock::where('branch_id', $branchId)
-            ->select('id', 'product_name as name', 'quantity', 'sell_value as selling_price', DB::raw("'partstock' as type"));
+            ->select(
+                'id',
+                'product_name as name',
+                'quantity',
+                DB::raw('NULL as buying_price'),
+                DB::raw('sell_value as selling_price'),
+                DB::raw("'partstock' as type")
+            );
 
-        return $products->unionAll($partstocks)->get();
+        $results = $products->unionAll($partstocks)->get();
+
+        // 🛠️ Fix: force numeric conversion
+        $results = $results->map(function ($item) {
+            if ($item->type === 'product') {
+                $item->buying_price = (float) $item->buying_price;
+                $item->selling_price = null;
+            } elseif ($item->type === 'partstock') {
+                $item->buying_price = null;
+                $item->selling_price = (float) $item->selling_price;
+            }
+            return $item;
+        });
+
+        return response()->json($results);
     }
 
 
