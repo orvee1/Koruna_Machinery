@@ -23,6 +23,7 @@ class ProductSale extends Model
         'due_amount',
         'payment_status',
         'investor_id',
+        'bill_id',
     ];
 
     protected $casts = [
@@ -32,43 +33,30 @@ class ProductSale extends Model
         'due_amount' => 'decimal:2',
     ];
 
-    /**
-     * ✅ **স্টক এন্ট্রি অ্যাড হওয়া মাত্রই এর কোয়ান্টিটি ও প্রফিট আপডেট হবে**
-     */
   protected static function booted()
 {
-    // ✅ সেল তৈরি হলে total_amount ও due_amount হিসাব হবে
     static::creating(function (ProductSale $sale) {
         $sale->total_amount = $sale->quantity * $sale->unit_price;
         $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
     });
 
-    // ✅ সেল আপডেট হলেও হিসাব হবে (for safety)
     static::updating(function (ProductSale $sale) {
         $sale->total_amount = $sale->quantity * $sale->unit_price;
         $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
     });
 
-    // ✅ সেল তৈরি হলে স্টক quantity, total_amount, profit একসাথে আপডেট
     static::created(function (ProductSale $sale) {
-        $stock = Stock::find($sale->stock_id);
+       $stock = Stock::find($sale->stock_id);
         if (!$stock) return;
 
-        // 🔻 Quantity কমানো
         $stock->quantity -= $sale->quantity;
 
-        // 🔻 Profit হিসাব
         $profitPerUnit = $sale->unit_price - $stock->buying_price;
         $stock->total_profit += $profitPerUnit * $sale->quantity;
 
-        // 🔻 Total Amount পুনঃহিসাব
-        $stock->total_amount = $stock->buying_price * $stock->quantity;
-
-        // ✅ সব একসাথে save
-        $stock->save();
+        $stock->saveQuietly();
     });
 
-    // ✅ সেল ডিলিট হলে স্টক quantity ও profit ফেরত
     static::deleted(function (ProductSale $sale) {
         $stock = Stock::find($sale->stock_id);
         if (!$stock) return;
@@ -80,15 +68,10 @@ class ProductSale extends Model
 
         if ($stock->total_profit < 0) $stock->total_profit = 0;
 
-        // 🔁 total_amount পুনঃহিসাব
-        $stock->total_amount = $stock->buying_price * $stock->quantity;
-
         $stock->save();
     });
 }
 
-
-    // Scopes for filtering
     public function scopeForToday($query)
     {
         return $query->whereDate('created_at', now());
@@ -104,7 +87,6 @@ class ProductSale extends Model
         return $query->whereYear('created_at', $year);
     }
 
-    // ✅ **Relationships**
     public function branch()
     {
         return $this->belongsTo(Branch::class);

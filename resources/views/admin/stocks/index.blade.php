@@ -1,17 +1,41 @@
 @extends('layouts.app')
 
-@section('title', 'Stock List')
+@section('title', '📦 Stock List')
 
 @section('content')
 <div class="container mt-4">
 
-    {{-- ✅ Page Title --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">📦 Stock List</h2>
+    {{-- ✅ Page Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-primary m-0">📦 Stock List</h2>
+            <small class="text-muted">Showing all stock entries for the selected branch</small>
+        </div>
         <a href="{{ route('admin.stocks.create') }}" class="btn btn-success shadow-sm">
             ➕ Add New Stock
         </a>
     </div>
+
+    {{-- ✅ Filters --}}
+    <form method="GET" class="row g-2 mb-4">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" value="{{ $search }}"
+                placeholder="🔍 Search by product or supplier...">
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="date" class="form-control" value="{{ $date }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                🔎 Filter
+            </button>
+        </div>
+        <div class="col-md-2">
+            <a href="{{ route('admin.stocks.index') }}" class="btn btn-outline-secondary w-100">
+                ❌ Clear
+            </a>
+        </div>
+    </form>
 
     {{-- ✅ Alerts --}}
     @if(session('success'))
@@ -26,7 +50,7 @@
         </div>
     @endif
 
-    {{-- ✅ Table --}}
+    {{-- ✅ Data Table --}}
     <div class="card shadow-sm border-0">
         <div class="card-body table-responsive p-0">
             <table class="table table-hover table-bordered align-middle mb-0">
@@ -37,7 +61,7 @@
                         <th>Supplier</th>
                         <th>Qty</th>
                         <th>Unit Price (৳)</th>
-                        <th>Total (৳)</th>
+                        <th>Total Amount(৳)</th>
                         <th>Profit (৳)</th>
                         <th>Due (৳)</th>
                         <th>Purchase Date</th>
@@ -57,13 +81,17 @@
                             <td class="text-end fw-bold {{ $stock->due_amount > 0 ? 'text-danger' : 'text-success' }}">
                                 {{ number_format($stock->due_amount, 2) }}
                             </td>
-                            <td class="text-nowrap">{{ \Carbon\Carbon::parse($stock->purchase_date)->format('d M, Y') }}</td>
+                            <td class="text-nowrap text-center">
+                                {{ \Carbon\Carbon::parse($stock->purchase_date)->format('d M, Y') }}
+                            </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <a href="{{ route('admin.stocks.show', $stock) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ route('admin.stocks.show', $stock) }}"
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
                                         🔍
                                     </a>
-                                    <a href="{{ route('admin.stocks.edit', $stock) }}" class="btn btn-sm btn-outline-warning">
+                                    <a href="{{ route('admin.stocks.edit', $stock) }}"
+                                       class="btn btn-sm btn-outline-warning" title="Edit Stock">
                                         ✏️
                                     </a>
                                 </div>
@@ -72,7 +100,7 @@
                     @empty
                         <tr>
                             <td colspan="10" class="text-center text-muted py-4">
-                                😕 No stock records found.
+                                😕 No stock records found for this filter.
                             </td>
                         </tr>
                     @endforelse

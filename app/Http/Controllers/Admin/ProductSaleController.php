@@ -78,16 +78,13 @@ class ProductSaleController extends Controller
             'paid_amount' => 'nullable|numeric|min:0|max:99999999.99',
         ]);
 
-        // ✅ **স্টক খুঁজে বের করা**
         $stock = Stock::findOrFail($validated['stock_id']);
 
-        // ✅ **পর্যাপ্ত পরিমাণ স্টকে আছে কিনা চেক করুন**
         if ($stock->quantity < $validated['quantity']) {
             return redirect()->route('admin.product-sales.create')
                 ->with('error', 'Insufficient stock available for this product.');
         }
 
-        // ✅ **সেল রেকর্ড তৈরি করা হচ্ছে**
         $productSale = ProductSale::create([
             'branch_id' => session('active_branch_id'),
             'stock_id' => $validated['stock_id'],
@@ -108,7 +105,6 @@ class ProductSaleController extends Controller
             'payment_date' => 'required|date',
         ]);
 
-        // ✅ নতুন পেমেন্ট রেকর্ড তৈরি
         $payment = new ProductSalePayment([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
@@ -116,7 +112,6 @@ class ProductSaleController extends Controller
         ]);
         $payment->save();
 
-        // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
         $productSale->paid_amount += $request->paid_amount;
         $productSale->due_amount = max($productSale->total_amount - $productSale->paid_amount, 0);
 

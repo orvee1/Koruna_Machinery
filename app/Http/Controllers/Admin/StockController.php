@@ -16,17 +16,38 @@ class StockController extends Controller
         $this->middleware('checkRole:admin');
     }
 
-    // স্টক এন্ট্রির তালিকা দেখাবে
-    public function index()
+       public function index(Request $request)
     {
+        $date = $request->get('date');
+        $search = $request->get('search', '');
         $branchId = session('active_branch_id');
-        $stocks = Stock::where('branch_id', $branchId)
-            ->with('branch')->latest()->paginate(20);
 
-        return view('admin.stocks.index', compact('stocks'));
+        if (!$branchId) {
+            return redirect()
+                ->route('admin.select-branch')
+                ->with('error', 'Please select a branch first.');
+        }
+
+        $query = Stock::where('branch_id', $branchId)
+            ->with('branch')
+            ->latest();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('supplier_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($date) {
+            $query->whereDate('purchase_date', $date);
+        }
+
+        $stocks = $query->paginate(20);
+
+        return view('admin.stocks.index', compact('stocks', 'date', 'search'));
     }
 
-    // নতুন স্টক এন্ট্রির ফর্ম
     public function create()
     {
         $branchId = session('active_branch_id');
@@ -38,8 +59,7 @@ class StockController extends Controller
         $branch = Branch::find($branchId);
         return view('admin.stocks.create', compact('branch'));
     }
- 
-    // ✅ **স্টক এন্ট্রি সেভ এবং প্রোডাক্ট সিঙ্ক**
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -59,21 +79,16 @@ class StockController extends Controller
 
         $data['branch_id'] = $branchId;
 
-        // ✅ **স্টক তৈরি হচ্ছে** (Model Event Listener কাজ করবে এখানে)
         Stock::create($data);
 
         return redirect()->route('admin.stocks.index')->with('success', 'Stock entry created successfully.');
     }
 
-
-
-    // স্টক এডিট ফর্ম
     public function edit(Stock $stock)
     {
         return view('admin.stocks.edit', compact('stock'));
     }
 
-    // ✅ **স্টক এন্ট্রি আপডেট**
         public function update(Request $request, Stock $stock)
     {
         $data = $request->validate([
@@ -114,7 +129,6 @@ class StockController extends Controller
             'payment_date' => 'required|date',
         ]);
 
-        // ✅ নতুন পেমেন্ট রেকর্ড তৈরি
         $payment = new ProductPayment([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
@@ -122,7 +136,6 @@ class StockController extends Controller
         ]);
         $payment->save();
 
-        // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
         $stock->deposit_amount += $request->paid_amount;
         $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
 

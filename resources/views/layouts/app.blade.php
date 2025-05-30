@@ -266,65 +266,81 @@
     <!-- Create Bill Modal -->
    <!-- ✅ MODAL -->
 <div class="modal fade" id="createBillModal" tabindex="-1" aria-labelledby="createBillModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <form method="POST" action="{{ route('bills.store') }}">
-            @csrf
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Create Bill</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" style="overflow: visible;">
-                    <!-- Customer Info -->
-                    <div class="mb-3 position-relative">
-                        <label>Customer Name</label>
-                        <input list="customerList" id="customerNameInput" name="customer_name" class="form-control" autocomplete="off" required>
-                        <datalist id="customerList"></datalist>
-                        <input type="hidden" name="customer_id" id="customerId">
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>Phone</label>
-                            <input type="text" name="phone" id="phoneInput" class="form-control">
-                        </div>
-                        <div class="col">
-                            <label>District</label>
-                            <input type="text" name="district" id="districtInput" class="form-control">
-                        </div>
-                    </div>
+  <div class="modal-dialog modal-lg">
+    <form id="billCreateForm" method="POST" action="{{ route('bills.store') }}">
+      @csrf
+      <input type="hidden" name="branch_id" value="{{ session('active_branch_id') }}">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Create Bill</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
+        <div class="modal-body" style="overflow: visible;">
+          @if(session('success'))
+              <div class="alert alert-success">{{ session('success') }}</div>
+          @endif
+          @if($errors->any())
+              <div class="alert alert-danger">
+                  <ul class="mb-0">
+                      @foreach($errors->all() as $error)
+                          <li>{{ $error }}</li>
+                      @endforeach
+                  </ul>
+              </div>
+          @endif
 
-                    <div class="mb-3">
-                        <label>Search Product</label>
-                        <input type="text" id="productSearchInput" class="form-control mb-2" placeholder="Search product name...">
-                        <div id="productSelect" class="form-group"></div>
-                    </div>
-
-                    <!-- Selected Product Inputs -->
-                    <div id="productDetailsContainer"></div>
-
-                    <!-- Payment Summary -->
-                    <div class="mt-3 p-3 border rounded bg-light">
-                        <h5>Total Summary</h5>
-                        <p>Total Amount: ৳<span id="totalAmount">0</span></p>
-                        <p>Previous Due: ৳<span id="previousDue">0</span></p>
-                        <p>Total Due: ৳<span id="totalDue">0</span></p>
-                    </div>
-
-                    <!-- Payment -->
-                    <div class="mb-3 mt-2">
-                        <label>Paid Amount</label>
-                        <input type="number" name="paid_amount" step="0.01" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-primary">Create</button>
-                </div>
+          <!-- Customer Info -->
+          <div class="mb-3 position-relative">
+            <label>Customer Name</label>
+            <input list="customerList" id="customerNameInput" name="customer_name" class="form-control" autocomplete="off" required>
+            <datalist id="customerList"></datalist>
+            <input type="hidden" name="customer_id" id="customerId">
+          </div>
+          <div class="row mb-3">
+            <div class="col">
+              <label>Phone</label>
+              <input type="text" name="phone" id="phoneInput" class="form-control">
             </div>
-        </form>
-    </div>
+            <div class="col">
+              <label>District</label>
+              <input type="text" name="district" id="districtInput" class="form-control">
+            </div>
+          </div>
+
+          <!-- Products -->
+          <div class="mb-3">
+            <label>Search Product</label>
+            <input type="text" id="productSearchInput" class="form-control mb-2" placeholder="Search product name...">
+            <div id="productSelect" class="form-group"></div>
+          </div>
+
+          <!-- Selected Product Inputs -->
+          <div id="productDetailsContainer"></div>
+
+          <!-- Summary -->
+          <div class="mt-3 p-3 border rounded bg-light">
+            <h5>Total Summary</h5>
+            <p>Total Amount: ৳<span id="totalAmount">0</span></p>
+            <p>Previous Due: ৳<span id="previousDue">0</span></p>
+            <p>Total Due: ৳<span id="totalDue">0</span></p>
+          </div>
+
+          <div class="mb-3 mt-2">
+            <label>Paid Amount</label>
+            <input type="number" name="paid_amount" step="0.01" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
+
+
 
 
 <!-- ✅ SCRIPT -->
@@ -347,52 +363,51 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const selectedProducts = new Set();
 
-    // ✅ Fetch Mixed Product List (No Product Type Dropdown Needed)
+    // ✅ Fetch Products
     fetch(`/bills/products`)
-    .then(res => res.json())
-    .then(data => {
-        data.forEach(p => {
-            const id = `${p.type}_${p.id}`;
-            const labelParts = [`${p.name}`, `${p.quantity} available`];
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(p => {
+                const id = `${p.type}_${p.id}`;
+                const labelParts = [`${p.name}`, `${p.quantity} available`];
 
-            if (p.type === 'product' && p.buying_price != null) {
-                labelParts.push(`৳${p.buying_price} (Buying Price)`);
-            }
-
-            if (p.type === 'partstock' && p.selling_price != null) {
-                labelParts.push(`৳${p.selling_price} (Selling Price)`);
-            }
-
-            if (p.quantity === 0) {
-                labelParts.push('Out of Stock');
-            }
-
-            const checkbox = document.createElement('div');
-            checkbox.classList.add('form-check');
-            checkbox.dataset.name = p.name.toLowerCase();
-
-            checkbox.innerHTML = `
-                <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
-                <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
-            `;
-
-            productSelect.appendChild(checkbox);
-
-            checkbox.querySelector('input').addEventListener('change', function () {
-                if (this.checked) {
-                    selectedProducts.add(id);
-                    addProductInput(id, p.type, p.name, p.quantity);
-                } else {
-                    selectedProducts.delete(id);
-                    document.getElementById(`product_block_${id}`)?.remove();
+                if (p.type === 'product' && p.buying_price != null) {
+                    labelParts.push(`৳${p.buying_price} (Buying Price)`);
                 }
-                calculateTotals();
+
+                if (p.type === 'partstock' && p.selling_price != null) {
+                    labelParts.push(`৳${p.selling_price} (Selling Price)`);
+                }
+
+                if (p.quantity === 0) {
+                    labelParts.push('Out of Stock');
+                }
+
+                const checkbox = document.createElement('div');
+                checkbox.classList.add('form-check');
+                checkbox.dataset.name = p.name.toLowerCase();
+
+                checkbox.innerHTML = `
+                    <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
+                    <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
+                `;
+
+                productSelect.appendChild(checkbox);
+
+                checkbox.querySelector('input').addEventListener('change', function () {
+                    if (this.checked) {
+                        selectedProducts.add(id);
+                        addProductInput(id, p.type, p.name, p.quantity);
+                    } else {
+                        selectedProducts.delete(id);
+                        document.getElementById(`product_block_${id}`)?.remove();
+                        calculateTotals(); // recalculate when removed
+                    }
+                });
             });
         });
-    });
 
-
-    // 🔍 Product Search Filter
+    // 🔍 Search
     productSearchInput.addEventListener('input', function () {
         const query = this.value.toLowerCase();
         const checkboxes = productSelect.querySelectorAll('.form-check');
@@ -404,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ✅ Customer Auto-Suggest
+    // ✅ Customer Auto Suggest
     customerInput.addEventListener('input', function () {
         const query = this.value.trim();
         customerIdInput.value = '';
@@ -445,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // ✅ Product Quantity + Price Input Add
+    // ✅ Add Product Input Block
     function addProductInput(uid, type, name, availableQty) {
         if (document.getElementById(`product_block_${uid}`)) return;
 
@@ -453,20 +468,23 @@ document.addEventListener('DOMContentLoaded', function () {
             <div id="product_block_${uid}" class="border p-2 mb-2 rounded bg-light">
                 <h6>${name}</h6>
                 <input type="hidden" name="product_details[${uid}][id]" value="${uid.split('_')[1]}">
-                <input type="hidden" name="product_details[${uid}][type]" value="${type}">
+                <input type="hidden" name="product_details[${uid}][type]" value="${type === 'partstock' ? 'part' : 'product'}">
                 <div class="mb-2">
                     <label>Quantity (Max: ${availableQty})</label>
                     <input type="number" name="product_details[${uid}][quantity]" class="form-control" required max="${availableQty}" data-max="${availableQty}">
                 </div>
                 <div class="mb-2">
                     <label>Selling Price</label>
-                    <input type="number" name="product_details[${uid}][price]" class="form-control" step="0.01" required>
+                    <input type="number" name="product_details[${uid}][unit_price]" class="form-control" step="0.01" required>
                 </div>
             </div>
         `);
+
+        // ⚠️ Delay added to ensure DOM inputs are ready
+        setTimeout(() => calculateTotals(), 50);
     }
 
-    // ✅ Quantity Validation + Total Calculation
+    // ✅ Listen to quantity/price/paid change
     document.addEventListener('input', function (e) {
         const name = e.target.name || '';
 
@@ -481,26 +499,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (
             name.includes('[quantity]') ||
-            name.includes('[price]') ||
+            name.includes('[unit_price]') ||
             name === 'paid_amount'
         ) {
             calculateTotals();
         }
     });
 
+    // ✅ Totals
     function calculateTotals() {
         let total = 0;
         const previous = parseFloat(previousDue.textContent) || 0;
         const paid = parseFloat(paidInput.value || 0);
 
-        document.querySelectorAll('[name^="product_details"]').forEach(input => {
-            if (input.name.includes('[quantity]')) {
-                const uid = input.name.match(/\[([^\]]+)]/)[1];
-                const qty = parseFloat(input.value || 0);
-                const priceInput = document.querySelector(`[name="product_details[${uid}][price]"]`);
-                const price = parseFloat(priceInput?.value || 0);
-                total += qty * price;
-            }
+        const blocks = container.querySelectorAll('[id^="product_block_"]');
+        blocks.forEach(block => {
+            const qtyInput = block.querySelector('[name$="[quantity]"]');
+            const priceInput = block.querySelector('[name$="[unit_price]"]');
+
+            const qty = parseFloat(qtyInput?.value || 0);
+            const price = parseFloat(priceInput?.value || 0);
+            total += qty * price;
         });
 
         totalAmount.textContent = total.toFixed(2);
@@ -508,6 +527,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+
+
+
 
 
 

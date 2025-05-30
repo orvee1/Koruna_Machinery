@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('stock_id')->nullable()->constrained('stocks')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('seller_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('bill_id')->nullable()->constrained('bills')->onDelete('set null');
             $table->integer('quantity');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_amount', 10, 2);

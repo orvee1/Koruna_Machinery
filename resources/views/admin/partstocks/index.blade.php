@@ -35,8 +35,9 @@
             <a href="{{ route('admin.partstocks.index') }}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Clear</a>
         </div>
         <div class="col-md-auto ms-auto">
-            <a href="{{ route('admin.partstocks.create') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Add New
+            <a href="{{ route('admin.partstocks.create') }}" class="btn btn-success shadow-sm">
+                <i class="bi bi-plus-circle"></i>➕ Add New Stock
+
             </a>
         </div>
     </form>

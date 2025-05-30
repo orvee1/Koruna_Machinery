@@ -21,6 +21,7 @@ class PartStockSale extends Model
         'due_amount',
         'payment_status',
         'investor_id',
+        'bill_id',
     ];
 
     protected $casts = [
@@ -31,59 +32,50 @@ class PartStockSale extends Model
     ];
 
      protected static function booted()
-{
-    // ✅ সেল তৈরি হলে total_amount ও due_amount হিসাব হবে
-    static::creating(function (PartStockSale $sale) {
-        $sale->total_amount = $sale->quantity * $sale->unit_price;
-        $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
-    });
+    {
+        static::creating(function (PartStockSale $sale) {
+            $sale->total_amount = $sale->quantity * $sale->unit_price;
+            $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
+            $sale->payment_status = $sale->due_amount <= 0 ? 'paid' : 'due';
+        });
 
-    // ✅ সেল আপডেট হলেও হিসাব হবে (for safety)
-    static::updating(function (PartStockSale $sale) {
-        $sale->total_amount = $sale->quantity * $sale->unit_price;
-        $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
-    });
+        static::updating(function (PartStockSale $sale) {
+            $sale->total_amount = $sale->quantity * $sale->unit_price;
+            $sale->due_amount = max($sale->total_amount - ($sale->paid_amount ?? 0), 0);
+            $sale->payment_status = $sale->due_amount <= 0 ? 'paid' : 'due';
+        });
 
-    // ✅ সেল তৈরি হলে PartStock quantity, total_amount, total_profit একসাথে আপডেট
-    static::created(function (PartStockSale $sale) {
-        $partStock = PartStock::find($sale->part_stock_id);
-        if (!$partStock) return;
+        static::created(function (PartStockSale $sale) {
+            $partStock = PartStock::find($sale->part_stock_id);
+            if (!$partStock) return;
 
-        $partStock->quantity -= $sale->quantity;
+            $partStock->quantity -= $sale->quantity;
 
-        $profitPerUnit = $sale->unit_price - $partStock->buying_price;
-        $partStock->total_profit += $profitPerUnit * $sale->quantity;
+            $profitPerUnit = $sale->unit_price - $partStock->buying_price;
+            $partStock->total_profit += $profitPerUnit * $sale->quantity;
 
-        // 🔄 Total amount update
-        $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+            $partStock->saveQuietly();
+        });
 
-        $partStock->save(); // সব একসাথে save
-    });
+        static::deleted(function (PartStockSale $sale) {
+            $partStock = PartStock::find($sale->part_stock_id);
+            if (!$partStock) return;
 
-    // ✅ সেল ডিলিট হলে quantity ও profit ফেরত, total_amount পুনঃহিসাব
-    static::deleted(function (PartStockSale $sale) {
-        $partStock = PartStock::find($sale->part_stock_id);
-        if (!$partStock) return;
+            $partStock->quantity += $sale->quantity;
 
-        $partStock->quantity += $sale->quantity;
+            $profitPerUnit = $sale->unit_price - $partStock->buying_price;
+            $partStock->total_profit -= $profitPerUnit * $sale->quantity;
 
-        $profitPerUnit = $sale->unit_price - $partStock->buying_price;
-        $partStock->total_profit -= $profitPerUnit * $sale->quantity;
+            if ($partStock->total_profit < 0) {
+                $partStock->total_profit = 0;
+            }
 
-        if ($partStock->total_profit < 0) {
-            $partStock->total_profit = 0;
-        }
-
-        // 🔄 Total amount পুনঃহিসাব
-        $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
-
-        $partStock->save();
-    });
-}
+            $partStock->saveQuietly();
+        });
+    }
 
 
 
-    // Scope Filters
     public function scopeForToday($query)
     {
         return $query->whereDate('created_at', now());
@@ -99,7 +91,6 @@ class PartStockSale extends Model
         return $query->whereYear('created_at', $year);
     }
 
-    // Relationships
     public function branch()
      { 
         return $this->belongsTo(Branch::class);

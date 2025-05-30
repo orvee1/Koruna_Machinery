@@ -68,22 +68,12 @@
             @enderror
         </div>
 
-         <div class="form-group">
-        <label for="purchase_date">Purchase Date</label>
-        <input type="date" id="purchase_date" name="purchase_date" class="form-control @error('purchase_date') is-invalid @enderror" value="{{ old('purchase_date') }}" required>
-        @error('purchase_date')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-       </div>
+         <div class="mb-3">
+            <label for="purchase_date" class="form-label">Purchase Date</label>
+            <input type="date" id="purchase_date" name="purchase_date" class="form-control" value="{{ now()->toDateString() }}" required>
+        </div>
 
-        <!-- সরাসরি Active Branch দেখানো হচ্ছে, Dropdown বাদ -->
-        {{-- <div class="form-group">
-            <label for="branch_name">Branch</label>
-            <input type="text" class="form-control" value="{{ $branch->name }}" disabled>
-            <input type="hidden" name="branch_id" value="{{ $branch->id }}">
-        </div> --}}
-
-        <button type="submit" class="btn btn-success mt-3">Save Part Stock</button>
+        <button type="submit" class="btn btn-success mt-3">✔️Save Part Stock</button>
     </form>
 </div>
 @endsection

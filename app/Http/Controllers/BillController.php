@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\Stock;
@@ -26,7 +27,7 @@ class BillController extends Controller
                 DB::raw("'product' as type")
             );
 
-        $partstocks = PartStock::where('branch_id', $branchId)
+        $partStocks = PartStock::where('branch_id', $branchId)
             ->select(
                 'id',
                 'product_name as name',
@@ -36,9 +37,8 @@ class BillController extends Controller
                 DB::raw("'partstock' as type")
             );
 
-        $results = $products->unionAll($partstocks)->get();
+        $results = $products->unionAll($partStocks)->get();
 
-        // 🛠️ Fix: force numeric conversion
         $results = $results->map(function ($item) {
             if ($item->type === 'product') {
                 $item->buying_price = (float) $item->buying_price;
@@ -75,69 +75,106 @@ class BillController extends Controller
         return response()->json($customers);
     }
 
-    public function store(Request $request)
+ public function store(Request $request)
 {
-    $request->validate([
-        'customer_name'     => 'required|string',
-        'product_details'   => 'required|array',
-        'paid_amount'       => 'required|numeric',
-        'phone'             => 'nullable|string|max:20',
-        'district'          => 'nullable|string|max:255',
-        'customer_id'       => 'nullable|exists:customers,id',
+    $validated = $request->validate([
+        'branch_id' => 'required|exists:branches,id',
+        'paid_amount' => 'required|numeric|min:0|max:99999999.99',
+        'product_details' => 'required|array|min:1',
+        'product_details.*.type' => 'required|in:product,part',
+        'product_details.*.id' => 'required|integer',
+        'product_details.*.quantity' => 'required|integer|min:1',
+        'product_details.*.unit_price' => 'required|numeric|min:0|max:99999999.99',
+        'customer_id' => 'nullable|exists:customers,id',
+        'customer_name' => 'required|string|max:255',
+        'phone' => 'nullable|string|max:20',
+        'district' => 'nullable|string|max:255',
     ]);
 
-    $branchId   = session('active_branch_id');
-    $sellerId   = auth()->id();
-    $paidAmount = $request->paid_amount;
+    $branchId = $validated['branch_id'];
+    $paidAmount = $validated['paid_amount'];
+    $details = $validated['product_details'];
+    $totalBillAmount = 0;
+    $appliedTotalPaid = 0;
 
-    $customerId = $request->customer_id;
-    if (!$customerId) {
-        $customer = Customer::create([
-            'name'      => $request->customer_name,
-            'phone'     => $request->phone,
-            'district'  => $request->district,
+    // ✅ যদি পুরাতন গ্রাহক না থাকে, নতুন customer তৈরি করবো
+    if (empty($validated['customer_id'])) {
+        $newCustomer = Customer::create([
+            'name' => $validated['customer_name'],
+            'phone' => $validated['phone'] ?? null,
+            'district' => $validated['district'] ?? null,
             'branch_id' => $branchId,
+            'type' => 2, // সাধারণত 2 হলে সাধারণ customer বোঝায়, আপনি চাইলে পরিবর্তন করতে পারেন
+            'status' => 1, // অ্যাক্টিভ
         ]);
-        $customerId = $customer->id;
+        $customerId = $newCustomer->id;
+    } else {
+        $customerId = $validated['customer_id'];
     }
 
-    $totalSaleAmount = 0;
-    foreach ($request->product_details as $item) {
-        $totalSaleAmount += $item['quantity'] * $item['price'];
-    }
+    // ✅ Bill তৈরি
+    $bill = Bill::create([
+        'customer_id' => $customerId,
+        'branch_id' => $branchId,
+        'seller_id' => auth()->id(),
+        'total_amount' => 0,
+        'paid_amount' => 0,
+        'due_amount' => 0,
+        'payment_status' => 'due',
+    ]);
 
-    foreach ($request->product_details as $uid => $item) {
-        $type       = $item['type'];
-        $id         = $item['id'];
-        $qty        = $item['quantity'];
-        $unitPrice  = $item['price'];
-        $lineTotal  = $qty * $unitPrice;
+    foreach ($details as $item) {
+        $type = $item['type'];
+        $id = $item['id'];
+        $quantity = $item['quantity'];
+        $unitPrice = $item['unit_price'];
+        $total = $quantity * $unitPrice;
 
-        $allocatedPaid = ($totalSaleAmount > 0) ? ($lineTotal / $totalSaleAmount) * $paidAmount : 0;
-        $dueAmount     = max($lineTotal - $allocatedPaid, 0);
-        $paymentStatus = $dueAmount <= 0 ? 'paid' : 'due';
+        $availablePaid = $paidAmount - $appliedTotalPaid;
+        $applyPay = min($availablePaid, $total);
+        $due = max($total - $applyPay, 0);
 
-        $data = [
-            'branch_id'      => $branchId,
-            'customer_id'    => $customerId,
-            'seller_id'      => $sellerId,
-            'quantity'       => $qty,
-            'unit_price'     => $unitPrice,
-            'paid_amount'    => round($allocatedPaid, 2),
-            'due_amount'     => round($dueAmount, 2),
-            'payment_status' => $paymentStatus,
-        ];
+        $appliedTotalPaid += $applyPay;
+        $totalBillAmount += $total;
 
-        if ($type === 'partstock') {
-            $data['part_stock_id'] = $id;
-            PartStockSale::create($data);
-        } elseif ($type === 'product') {
-            $data['stock_id'] = $id;
-            ProductSale::create($data);
+        if ($type === 'product') {
+            ProductSale::create([
+                'branch_id' => $branchId,
+                'stock_id' => $id,
+                'customer_id' => $customerId,
+                'seller_id' => auth()->id(),
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'paid_amount' => $applyPay,
+                'due_amount' => $due,
+                'payment_status' => $due <= 0 ? 'paid' : 'due',
+                'bill_id' => $bill->id,
+            ]);
+        } elseif ($type === 'part') {
+            PartStockSale::create([
+                'branch_id' => $branchId,
+                'part_stock_id' => $id,
+                'customer_id' => $customerId,
+                'seller_id' => auth()->id(),
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'paid_amount' => $applyPay,
+                'due_amount' => $due,
+                'payment_status' => $due <= 0 ? 'paid' : 'due',
+                'bill_id' => $bill->id,
+            ]);
         }
     }
 
-    return back()->with('status', 'Bill created successfully!');
+    // ✅ Final bill update
+    $bill->total_amount = $totalBillAmount;
+    $bill->paid_amount = $appliedTotalPaid;
+    $bill->due_amount = max(0, $totalBillAmount - $appliedTotalPaid);
+    $bill->payment_status = $bill->due_amount <= 0 ? 'paid' : 'due';
+    $bill->save();
+
+    return redirect()->back()
+        ->with('success', 'Bill created successfully with ID: ' . $bill->id);
 }
 
 

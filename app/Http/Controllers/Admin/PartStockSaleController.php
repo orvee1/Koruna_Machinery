@@ -17,9 +17,6 @@ class PartStockSaleController extends Controller
         $this->middleware('checkRole:admin');
     }
 
-    /**
-     * Display all partstock sales with optional filters
-     */
    public function index(Request $request)
 {
     $branchId = session('active_branch_id');
@@ -61,10 +58,6 @@ class PartStockSaleController extends Controller
     return view('admin.partstock-sales.index', compact('salesGrouped'));
 }
 
-
-    /**
-     * Show form to create a new partstock sale
-     */
     public function create()
     {
         $branchId = session('active_branch_id');
@@ -74,12 +67,9 @@ class PartStockSaleController extends Controller
         return view('admin.partstock-sales.create', compact('partStocks', 'customers'));
     }
 
-    /**
-     * Store a newly created partstock sale
-     */
-    public function store(Request $request)
+        public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'part_stock_id' => 'required|exists:part_stocks,id',
             'customer_id'   => 'required|exists:customers,id',
             'quantity'      => 'required|integer|min:1',
@@ -87,19 +77,34 @@ class PartStockSaleController extends Controller
             'paid_amount'   => 'nullable|numeric|min:0|max:99999999.99',
         ]);
 
+        $partStock = PartStock::findOrFail($validated['part_stock_id']);
+
+        if ($partStock->quantity < $validated['quantity']) {
+            return redirect()->route('admin.partstock-sales.create')
+                ->with('error', 'Insufficient stock available for this item.');
+        }
+
+        $totalAmount = $validated['quantity'] * $validated['unit_price'];
+        $paid = $validated['paid_amount'] ?? 0;
+        $due = max($totalAmount - $paid, 0);
+
         PartStockSale::create([
             'branch_id'      => session('active_branch_id'),
-            'part_stock_id'  => $request->part_stock_id,
-            'customer_id'    => $request->customer_id,
+            'part_stock_id'  => $validated['part_stock_id'],
+            'customer_id'    => $validated['customer_id'],
             'seller_id'      => Auth::id(),
-            'quantity'       => $request->quantity,
-            'unit_price'     => $request->unit_price,
-            'paid_amount'    => $request->paid_amount,
+            'quantity'       => $validated['quantity'],
+            'unit_price'     => $validated['unit_price'],
+            'paid_amount'    => $paid,
+            'total_amount'   => $totalAmount,
+            'due_amount'     => $due,
+            'payment_status' => $due <= 0 ? 'paid' : 'due',
         ]);
 
         return redirect()->route('admin.partstock-sales.index')
-            ->with('success', 'Partstock sale added successfully.');
+            ->with('success', 'Part stock sale added successfully.');
     }
+
 
     public function updatePayment(Request $request, PartStockSale $partStockSale)
     {
@@ -108,7 +113,6 @@ class PartStockSaleController extends Controller
             'payment_date' => 'required|date',
         ]);
 
-        // ✅ নতুন পেমেন্ট রেকর্ড তৈরি
         $payment = new PartStockSalePayment([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
@@ -116,7 +120,6 @@ class PartStockSaleController extends Controller
         ]);
         $payment->save();
 
-        // ✅ ডিপোজিট ও ডিউ এমাউন্ট আপডেট
         $partStockSale->paid_amount += $request->paid_amount;
         $partStockSale->due_amount = max($partStockSale->total_amount - $partStockSale->paid_amount, 0);
 
@@ -131,10 +134,6 @@ class PartStockSaleController extends Controller
         return view('admin.partstock-sales.show', compact('partStockSale'));
     }
 
-
-    /**
-     * Delete a partstock sale
-     */
     public function destroy(PartStockSale $partStockSale)
     {
         $partStockSale->delete();

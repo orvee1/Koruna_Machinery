@@ -38,16 +38,6 @@ class PartStock extends Model
         return $this->hasMany(PartStockPayment::class, 'part_stock_id', 'id');
     }
 
-    // public function paidAmount()
-    // {
-    //     return $this->payments()->sum('paid_amount');
-    // }
-
-    // public function remainingBalance()
-    // {
-    //     return $this->due_amount - $this->paidAmount();
-    // }
-
     protected static function booted()
     {
         static::creating(function (PartStock $partStock) {
