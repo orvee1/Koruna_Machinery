@@ -19,162 +19,127 @@
             <p><strong>জেলা:</strong> {{ $customer->district ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6 text-end">
-            <p><strong>তারিখ:</strong> {{ now()->format('d M, Y') }}</p>
-            <p><strong>Customer ID:</strong> {{ $customer->customer_id ?? 'N/A' }}</p>
+            <p><strong>তারিখ:</strong> {{ now()->format('d/m/Y') }}</p>
+            <p><strong>মেমো নং:</strong> {{ $customer->customer_id ?? 'N/A' }}</p>
         </div>
     </div>
 
     @php
         $mergedSales = collect();
 
-        $productSales = $customer->productSales()->with(['product', 'seller'])->get();
-        foreach ($productSales as $sale) {
+        // product sales
+        foreach ($customer->productSales()->with(['stock', 'seller'])->get() as $sale) {
             $mergedSales->push([
-                'type' => 'product',
-                'name' => $sale->product->name ?? 'N/A',
-                'quantity' => $sale->quantity,
+                'name'       => $sale->stock->product_name ?? 'N/A',
+                'quantity'   => $sale->quantity,
                 'unit_price' => $sale->unit_price,
-                'total' => $sale->total_amount,
-                'paid' => $sale->paid_amount,
-                'due' => $sale->due_amount,
-                'status' => $sale->payment_status,
-                'seller' => $sale->seller->name ?? 'N/A',
-                'date' => $sale->created_at->format('d M, Y'),
+                'total'      => $sale->unit_price * $sale->quantity,
+                'paid'       => $sale->paid_amount,
+                'due'        => $sale->due_amount,
+                'seller'     => $sale->seller->name ?? 'N/A',
             ]);
         }
 
-        $partSales = $customer->partsStockSales()->with(['partStock', 'seller'])->get();
-        foreach ($partSales as $sale) {
+        // part stock sales
+        foreach ($customer->partsStockSales()->with(['partStock', 'seller'])->get() as $sale) {
             $mergedSales->push([
-                'type' => 'part',
-                'name' => $sale->partStock->name ?? 'N/A',
-                'quantity' => $sale->quantity,
+                'name'       => $sale->partStock->product_name ?? 'N/A',
+                'quantity'   => $sale->quantity,
                 'unit_price' => $sale->unit_price,
-                'total' => $sale->total_amount,
-                'paid' => $sale->paid_amount,
-                'due' => $sale->due_amount,
-                'status' => $sale->payment_status,
-                'seller' => $sale->seller->name ?? 'N/A',
-                'date' => $sale->created_at->format('d M, Y'),
+                'total'      => $sale->unit_price * $sale->quantity,
+                'paid'       => $sale->paid_amount,
+                'due'        => $sale->due_amount,
+                'seller'     => $sale->seller->name ?? 'N/A',
             ]);
         }
 
-        $totalAmount = $mergedSales->sum('total');
-        $totalPaid = $mergedSales->sum('paid');
-        $totalDue = $mergedSales->sum('due');
+        $grandTotal = $mergedSales->sum('total');
+        $grandPaid = $mergedSales->sum('paid');
+        $grandDue = $mergedSales->sum('due');
+        $lastSeller = $mergedSales->isNotEmpty() ? $mergedSales->last()['seller'] : 'N/A';
     @endphp
 
-    @if($mergedSales->isEmpty())
-        <div class="alert alert-warning">এই গ্রাহকের কোনো বিক্রয় রেকর্ড নেই।</div>
-    @else
-        <table class="table table-bordered text-center">
-            <thead class="table-light">
+    @if($mergedSales->isNotEmpty())
+    <table class="table table-bordered text-center align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>ক্রম</th>
+                <th>পণ্যের নাম</th>
+                <th>পরিমাণ</th>
+                <th>দর (৳)</th>
+                <th>মোট (৳)</th>
+                <th>পেইড (৳)</th>
+                <th>বাকি (৳)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($mergedSales as $i => $item)
                 <tr>
-                    <th>#</th>
-                    <th>তারিখ</th>
-                    <th>পণ্যের নাম</th>
-                    <th>পরিমাণ</th>
-                    <th>দর (৳)</th>
-                    <th>মোট (৳)</th>
-                    <th>পরিশোধ (৳)</th>
-                    <th>বাকি (৳)</th>
-                    <th>স্ট্যাটাস</th>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $item['name'] }}</td>
+                    <td>{{ $item['quantity'] }}</td>
+                    <td>{{ number_format($item['unit_price'], 2) }}</td>
+                    <td>{{ number_format($item['total'], 2) }}</td>
+                    <td>{{ number_format($item['paid'], 2) }}</td>
+                    <td class="{{ $item['due'] > 0 ? 'text-danger' : 'text-success' }}">
+                        {{ $item['due'] > 0 ? number_format($item['due'], 2) . ' (Due)' : 'Paid' }}
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach($mergedSales as $index => $sale)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $sale['date'] }}</td>
-                        <td>{{ $sale['name'] }}</td>
-                        <td>{{ $sale['quantity'] }}</td>
-                        <td>{{ number_format($sale['unit_price'], 2) }}</td>
-                        <td>{{ number_format($sale['total'], 2) }}</td>
-                        <td>{{ number_format($sale['paid'], 2) }}</td>
-                        <td>{{ number_format($sale['due'], 2) }}</td>
-                        <td>
-                            @if($sale['status'] === 'paid')
-                                <span class="badge bg-success">Paid</span>
-                            @elseif($sale['status'] === 'partial')
-                                <span class="badge bg-warning text-dark">Partial</span>
-                            @else
-                                <span class="badge bg-danger">Due</span>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr class="fw-bold table-light">
-                    <td colspan="5" class="text-end">সর্বমোট</td>
-                    <td>{{ number_format($totalAmount, 2) }} ৳</td>
-                    <td>{{ number_format($totalPaid, 2) }} ৳</td>
-                    <td>{{ number_format($totalDue, 2) }} ৳</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
-
-        <p class="text-end"><strong>সর্বশেষ বিক্রেতা:</strong> {{ $mergedSales->last()['seller'] }}</p>
-
-        {{-- Signature Line --}}
-        <div class="text-end mt-5">
-            <p><strong>পক্ষে - করুনা মেশিনারী</strong></p>
-        </div>
-
-        <div class="text-center no-print mt-4">
-            <button class="btn btn-outline-primary" onclick="printInvoice()">🖨️ প্রিন্ট করুন</button>
-        </div>
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr class="table-light">
+                <td colspan="4" class="text-end fw-bold">মোট</td>
+                <td>{{ number_format($grandTotal, 2) }}</td>
+                <td>{{ number_format($grandPaid, 2) }}</td>
+                <td class="{{ $grandDue > 0 ? 'text-danger' : 'text-success' }}">
+                    {{ $grandDue > 0 ? number_format($grandDue, 2) . ' (Due)' : 'Paid' }}
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    @else
+        <p class="text-center text-muted">কোন বিক্রয় রেকর্ড পাওয়া যায়নি।</p>
     @endif
 
-    {{-- Back Button - No Print --}}
+    {{-- 🔷 Signature --}}
+    <div class="text-end mt-5">
+        <p><strong>পক্ষে - {{ $lastSeller }}</strong></p>
+    </div>
+
+    <div class="text-center no-print mt-4">
+        <button class="btn btn-outline-primary" onclick="printInvoice()">🖨️ প্রিন্ট করুন</button>
+    </div>
     <div class="mt-3 no-print">
         <a href="{{ route('worker.customers.index') }}" class="btn btn-secondary">← ফিরে যান</a>
     </div>
 </div>
-
-{{-- ✅ Print Style --}}
-<style>
-@media print {
-    @page {
-        size: A4;
-        margin: 20mm;
-    }
-
-    body * {
-        visibility: hidden;
-    }
-
-    #invoice-section, #invoice-section * {
-        visibility: visible;
-    }
-
-    #invoice-section {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        page-break-after: always;
-    }
-
-    .no-print {
-        display: none !important;
-    }
-
-    table {
-        page-break-inside: auto;
-    }
-
-    tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-    }
-}
-</style>
 
 <script>
 function printInvoice() {
     window.print();
 }
 </script>
+
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #invoice-section, #invoice-section * {
+        visibility: visible;
+    }
+    #invoice-section {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .text-danger { color: red !important; }
+    .text-success { color: green !important; }
+}
+</style>
 @endsection

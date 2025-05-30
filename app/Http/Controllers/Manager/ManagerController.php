@@ -8,7 +8,6 @@ use App\Models\Customer;
 use App\Models\Investor;
 use App\Models\PartStock;
 use App\Models\PartStockSale;
-use App\Models\Product;
 use App\Models\ProductList;
 use App\Models\ProductSale;
 use App\Models\Stock;
@@ -29,7 +28,7 @@ class ManagerController extends Controller
 
         // Query Building
         $branch = Branch::find($branchId);
-        // Sales
+
         $from = $request->filled('from_date') ? Carbon::parse($request->from_date)->startOfDay() : null;
         $to = $request->filled('to_date') ? Carbon::parse($request->to_date)->endOfDay() : null;
         $month = $request->month;
@@ -84,7 +83,10 @@ class ManagerController extends Controller
         $totalPartStockSales = $partSaleQuery->sum('total_amount');
         $totalSales = $totalProductSales + $totalPartStockSales;
 
-        $totalProductValue = $productListQuery->sum('total_amount');
+        // $totalProductValue = $productListQuery->sum('total_amount');
+        $stockValue = $stockQuery->sum('total_amount');
+        $partStockValue = $partStockQuery->sum('total_amount');
+        $totalProductValue = $stockValue + $partStockValue;
         
         $productDue = $stockQuery->sum('due_amount');
         $partStockDue = $partStockQuery->sum('due_amount');

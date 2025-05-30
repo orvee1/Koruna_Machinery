@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\ProductSale;
+use App\Models\ProductSalePayment;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,16 +17,18 @@ class ProductSaleController extends Controller
     {
         $this->middleware('checkRole:admin,worker');
     }
-    public function index(Request $request)
+
+     public function index(Request $request)
     {
+        $branchId = auth()->user()->branch_id;
         $user = Auth::user();
-        $query = ProductSale::with(['product', 'customer', 'branch', 'seller', 'investor']);
+
+        $query = ProductSale::with(['stock', 'customer', 'branch', 'seller', 'investor'])
+            ->where('branch_id', $branchId);
 
         if ($user->role === 'worker') {
-            // Worker: শুধু আজকের সেলস দেখতে পারবে
             $query->forToday()->where('seller_id', $user->id);
         } else {
-            // worker/worker: তারিখ, মাস, বছর অনুযায়ী ফিল্টার করতে পারবে
             if ($request->filled('date')) {
                 $query->whereDate('created_at', $request->input('date'));
             }
@@ -34,11 +38,13 @@ class ProductSaleController extends Controller
             if ($request->filled('year')) {
                 $query->forYear($request->input('year'));
             }
-        }
-
-        // Active Branch Filtering
-        if (session('active_branch_id')) {
-            $query->where('branch_id', session('active_branch_id'));
+            if ($request->filled('status')) {
+                if ($request->status === 'due') {
+                    $query->where('due_amount', '>', 0);
+                } elseif ($request->status === 'paid') {
+                    $query->where('due_amount', 0);
+                }
+            }
         }
 
         $sales = $query->latest()->paginate(20);
@@ -47,39 +53,49 @@ class ProductSaleController extends Controller
 
     public function create()
     {
-        $user = Auth::user();
+        $branchId = auth()->user()->branch_id;
 
-        if (!in_array($user->role, ['worker', 'worker', 'worker'])) {
-            abort(403);
-        }
+        $stocks = Stock::where('branch_id', $branchId)->get();
+        $customers = Customer::where('branch_id', $branchId)->get();
 
-        $products = Product::where('branch_id', session('active_branch_id'))->get();
-        $customers = Customer::where('branch_id', session('active_branch_id'))->get();
-
-        return view('worker.product-sales.create', compact('products', 'customers'));
+        return view('worker.product-sales.create', compact('stocks', 'customers'));
     }
 
     public function store(Request $request)
     {
-        $user = Auth::user();
+        $branchId = auth()->user()->branch_id;
+        $userId = Auth::id();
 
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'stock_id' => 'required|exists:stocks,id',
             'customer_id' => 'required|exists:customers,id',
             'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-            'paid_amount' => 'required|numeric|min:0',
+            'unit_price' => 'required|numeric|min:0|max:99999999.99',
+            'paid_amount' => 'nullable|numeric|min:0|max:99999999.99',
         ]);
 
+        $stock = Stock::where('branch_id', $branchId)->findOrFail($validated['stock_id']);
+
+        if ($stock->quantity < $validated['quantity']) {
+            return redirect()->route('worker.product-sales.create')
+                ->with('error', 'Insufficient stock available for this product.');
+        }
+
+        $totalAmount = $validated['quantity'] * $validated['unit_price'];
+        $paid = $validated['paid_amount'] ?? 0;
+        $due = max($totalAmount - $paid, 0);
+
         ProductSale::create([
-            'branch_id' => session('active_branch_id'),
-            'product_id' => $validated['product_id'],
+            'branch_id' => $branchId,
+            'stock_id' => $validated['stock_id'],
             'customer_id' => $validated['customer_id'],
-            'seller_id' => $user->id,
+            'seller_id' => $userId,
             'quantity' => $validated['quantity'],
             'unit_price' => $validated['unit_price'],
-            'paid_amount' => $validated['paid_amount'],
-            'due_amount' => ($validated['quantity'] * $validated['unit_price']) - $validated['paid_amount'],
+            'paid_amount' => $paid,
+            'total_amount' => $totalAmount,
+            'due_amount' => $due,
+            'payment_status' => $due <= 0 ? 'paid' : 'due',
         ]);
 
         return redirect()->route('worker.product-sales.index')->with('success', 'Product Sale added successfully.');
@@ -87,29 +103,83 @@ class ProductSaleController extends Controller
 
     public function edit(ProductSale $productSale)
     {
-        $products = Product::where('branch_id', session('active_branch_id'))->get();
-        $customers = Customer::where('branch_id', session('active_branch_id'))->get();
+        $branchId = auth()->user()->branch_id;
 
-        return view('worker.product-sales.edit', compact('productSale', 'products', 'customers'));
+        if ($productSale->branch_id != $branchId) {
+            abort(403);
+        }
+
+        $stocks = Stock::where('branch_id', $branchId)->get();
+        $customers = Customer::where('branch_id', $branchId)->get();
+
+        return view('worker.product-sales.edit', compact('productSale', 'stocks', 'customers'));
     }
 
     public function update(Request $request, ProductSale $productSale)
     {
+        $branchId = auth()->user()->branch_id;
+
+        if ($productSale->branch_id != $branchId) {
+            abort(403);
+        }
+
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'stock_id' => 'required|exists:stocks,id',
             'customer_id' => 'required|exists:customers,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
         ]);
 
-        $productSale->update($validated);
+        $totalAmount = $validated['quantity'] * $validated['unit_price'];
+        $dueAmount = max($totalAmount - $validated['paid_amount'], 0);
+
+        $productSale->update([
+            'stock_id' => $validated['stock_id'],
+            'customer_id' => $validated['customer_id'],
+            'quantity' => $validated['quantity'],
+            'unit_price' => $validated['unit_price'],
+            'paid_amount' => $validated['paid_amount'],
+            'total_amount' => $totalAmount,
+            'due_amount' => $dueAmount,
+            'payment_status' => $dueAmount <= 0 ? 'paid' : 'due',
+        ]);
 
         return redirect()->route('worker.product-sales.index')->with('success', 'Product Sale updated successfully.');
     }
 
-        public function show(ProductSale $productSale)
+    public function updatePayment(Request $request, ProductSale $productSale)
     {
+        if ($productSale->branch_id !== auth()->user()->branch_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $productSale->due_amount,
+            'payment_date' => 'required|date',
+        ]);
+
+        ProductSalePayment::create([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'product_sale_id' => $productSale->id,
+        ]);
+
+        $productSale->paid_amount += $request->paid_amount;
+        $productSale->due_amount = max($productSale->total_amount - $productSale->paid_amount, 0);
+        $productSale->payment_status = $productSale->due_amount <= 0 ? 'paid' : 'due';
+        $productSale->save();
+
+        return back()->with('success', 'Payment updated successfully.');
+    }
+
+    public function show(ProductSale $productSale)
+    {
+        if ($productSale->branch_id !== auth()->user()->branch_id) {
+            abort(403);
+        }
+
+        $productSale->load('payments');
         return view('worker.product-sales.show', compact('productSale'));
     }
 

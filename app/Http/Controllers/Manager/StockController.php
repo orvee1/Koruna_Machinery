@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\Product;
 use App\Models\Stock;
+use App\Models\ProductPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,78 +13,133 @@ class StockController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('checkRole:admin,manager');
+        $this->middleware('checkRole:manager');
     }
+
     public function index(Request $request)
     {
-        $query = Stock::query();
+        $branchId = auth()->user()->branch_id;
+        $search = $request->get('search');
+        $date = $request->get('date');
 
-        // Worker বা Manager হলে নিজের ব্রাঞ্চের স্টক
-        if (Auth::user()->role == 'manager') {
-            $query->where('branch_id', session('active_branch_id'));
+        $query = Stock::where('branch_id', $branchId)
+            ->with('branch')
+            ->latest();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                    ->orWhere('supplier_name', 'like', "%{$search}%");
+            });
         }
 
-        $stocks = $query->latest()->paginate(20);
+        if ($date) {
+            $query->whereDate('purchase_date', $date);
+        }
 
-        return view('manager.stocks.index', compact('stocks'));
+        $stocks = $query->paginate(20);
+
+        return view('manager.stocks.index', compact('stocks', 'search', 'date'));
     }
 
     public function create()
     {
-        $branches = Branch::all();
-        $products = Product::where('branch_id', session('active_branch_id'))->get();
-        return view('manager.stocks.create', compact('products', 'branches'));
+        $branchId = auth()->user()->branch_id;
+        $branch = Branch::find($branchId);
+
+        return view('manager.stocks.create', compact('branch'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'product_id'      => 'required|exists:products,id',
-            'supplier_name'   => 'required|string|max:255',
-            'buying_price'    => 'required|numeric|min:0',
-            'quantity'        => 'required|integer|min:1',
-            'deposit_amount'  => 'nullable|numeric|min:0',
-            'purchase_date'   => 'required|date',
+        $branchId = auth()->user()->branch_id;
+
+        $data = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'supplier_name' => 'required|string|max:255',
+            'buying_price' => 'required|numeric|min:0|max:99999999.99',
+            'quantity' => 'required|integer|min:1',
+            'deposit_amount' => 'nullable|numeric|min:0|max:99999999.99',
+            'purchase_date' => 'required|date',
         ]);
 
-        Stock::create([
-            'branch_id'       => session('active_branch_id'),
-            'product_id'      => $request->product_id,
-            'supplier_name'   => $request->supplier_name,
-            'buying_price'    => $request->buying_price,
-            'quantity'        => $request->quantity,
-            'deposit_amount'  => $request->deposit_amount,
-            'purchase_date'   => $request->purchase_date,
-        ]);
+        $data['branch_id'] = $branchId;
+
+        Stock::create($data);
 
         return redirect()->route('manager.stocks.index')->with('success', 'Stock added successfully.');
     }
 
     public function edit(Stock $stock)
     {
-        $products = Product::where('branch_id', session('active_branch_id'))->get();
-        return view('manager.stocks.edit', compact('stock', 'products'));
+        if ($stock->branch_id !== auth()->user()->branch_id) {
+            abort(403);
+        }
+
+        return view('manager.stocks.edit', compact('stock'));
     }
 
     public function update(Request $request, Stock $stock)
     {
+        if ($stock->branch_id !== auth()->user()->branch_id) {
+            abort(403);
+        }
 
-        $request->validate([
-            'product_id'      => 'required|exists:products,id',
-            'supplier_name'   => 'required|string|max:255',
-            'buying_price'    => 'required|numeric|min:0',
-            'quantity'        => 'required|integer|min:1',
-            'deposit_amount'  => 'nullable|numeric|min:0',
-            'purchase_date'   => 'required|date',
+        $data = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'supplier_name' => 'required|string|max:255',
+            'buying_price' => 'required|numeric|min:0|max:99999999.99',
+            'quantity' => 'required|integer|min:1',
+            'deposit_amount' => 'nullable|numeric|min:0|max:99999999.99',
+            'purchase_date' => 'required|date',
         ]);
 
-        $stock->update($request->all());
+        $previousQuantity = $stock->quantity;
+
+        $stock->update($data);
+
+        $stock->quantity = ($stock->quantity - $previousQuantity) + $data['quantity'];
+        if ($stock->quantity < 0) {
+            $stock->quantity = 0;
+        }
+        $stock->save();
 
         return redirect()->route('manager.stocks.index')->with('success', 'Stock updated successfully.');
     }
 
-    public function show(Stock $stock)
+    public function updatePayment(Request $request, Stock $stock)
     {
+        if ($stock->branch_id !== auth()->user()->branch_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
+            'payment_date' => 'required|date',
+        ]);
+
+        ProductPayment::create([
+            'stock_id' => $stock->id,
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+        ]);
+
+        $stock->deposit_amount += $request->paid_amount;
+        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
+
+        $stock->save();
+
+        return back()->with('success', 'Payment updated successfully.');
+    }
+
+    public function show($id)
+    {
+        $stock = Stock::with('payments')->findOrFail($id);
+
+        if ($stock->branch_id !== auth()->user()->branch_id) {
+            abort(403);
+        }
+
         return view('manager.stocks.show', compact('stock'));
     }
 }

@@ -154,14 +154,11 @@
                         </a>
 
                         <span class="fw-bold text-muted mt-3">Sales</span>
-                        <a href="{{ route('admin.product-sales.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.product-sales.index') ? 'text-primary fw-bold' : '' }}">
-                            Product Sales
-                        </a>
-                        <a href="{{ route('admin.partstock-sales.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.partstock-sales.index') ? 'text-primary fw-bold' : '' }}">
-                            Part Stock Sales
-                        </a>
+                        <a href="{{ route('admin.sales.index') }}"
+    class="nav-link {{ request()->routeIs('admin.sales.index') ? 'text-primary fw-bold' : '' }}">
+    📑 All Sales Panel
+</a>
+
 
                         <span class="fw-bold text-muted mt-3">Investors</span>
                         <a href="{{ route('admin.investors.index') }}"

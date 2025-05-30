@@ -4,125 +4,109 @@
 
 @section('content')
 <div class="container">
-    <h1>Products List</h1>
+    <h1 class="mb-4">Products List</h1>
 
-    <!-- Display success or error messages -->
+    <!-- Messages -->
     @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @elseif(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <form method="GET" action="{{ route('manager.products.index') }}" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input type="date" 
-                       name="date" 
-                       class="form-control @if(request('date')) border-success @endif"
-                       value="{{ old('date', request('date')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-filter-circle me-1"></i> Filter
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('manager.products.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
+    <!-- Filter & Search Form -->
+    <form method="GET" action="{{ route('admin.products.index') }}" class="mb-4 row g-2">
+        <!-- Date Filter -->
+        <div class="col-md-3">
+            <input
+                type="date"
+                name="date"
+                id="date"
+                class="form-control @if(request('date')) border-success @endif"
+                value="{{ request('date') }}"
+            >
         </div>
-    </form>
-    <form action="{{ route('manager.products.index') }}" method="GET" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
-                <input type="text" 
-                       name="search" 
-                       class="form-control @if(request('search')) border-info @endif" 
-                       placeholder="Search by Product Name" 
-                       value="{{ old('search', request('search')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i> Search
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('manager.products.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
-        </div>
-    </form>
-    
-    
 
-    <!-- Search Form -->
-    <form action="{{ route('manager.products.index') }}" method="GET" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
-                <input type="text" 
-                       name="search" 
-                       class="form-control @if(request('search')) border-info @endif" 
-                       placeholder="Search by Product or Supplier" 
-                       value="{{ old('search', request('search')) }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i> Search
-                </button>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('manager.products.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Clear
-                </a>
-            </div>
+        <!-- Product Name Filter -->
+        <div class="col-md-3">
+            <input
+                type="text"
+                name="product_name"
+                id="product_name"
+                class="form-control @if(request('product_name')) border-info @endif"
+                placeholder="Product Name"
+                value="{{ request('product_name') }}"
+            >
+        </div>
+
+        <!-- Supplier Name Filter -->
+        <div class="col-md-3">
+            <input
+                type="text"
+                name="supplier_name"
+                id="supplier_name"
+                class="form-control @if(request('supplier_name')) border-warning @endif"
+                placeholder="Supplier Name"
+                value="{{ request('supplier_name') }}"
+            >
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-auto align-self-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-filter-circle me-1"></i> Search
+            </button>
+        </div>
+        <div class="col-auto align-self-end">
+            <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Clear
+            </a>
         </div>
     </form>
 
-    <!-- Button to create new product -->
-    <a href="{{ route('manager.products.create') }}" class="btn btn-primary mb-3">Add New Product</a>
-
-    <!-- Products table -->
-    <table class="table table-striped">
-        <thead>
+    <!-- Products Table -->
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
             <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Buying Price</th>
-                <th>Selling Price</th>
-                <th>Stock Quantity</th>
-                <th>Branch</th>
-                <th>Actions</th>
+                <th style="width:5%; text-align: center">SL No</th>
+                <th style="width:20%; text-align: center">Product Name</th>
+                <th style="width:15%; text-align: center">Supplier Name</th>
+                <th style="width:10%; text-align: center">Stock Quantity</th>
+                <th style="width:15%; text-align: center">Unit Price (৳)</th>
+                <th style="width:15%; text-align: center">Total Amount (৳)</th>
+                <th style="width:15%; text-align: center">Branch</th>
+                <th style="width:15%; text-align: center">Purchase Date</th>
+                {{-- <th style="width:10%; text-align: center">Actions</th> --}}
             </tr>
         </thead>
         <tbody>
-            @foreach($products as $key => $product)
+             @forelse($products as $i => $product)
                 <tr>
-                    <td>{{ $key +1  }}</td>
-                    <td>{{ $product->name }}</td>
-                    <td>{{ $product->buying_price }}</td>
-                    <td>{{ $product->selling_price }}</td>
-                    <td>{{ $product->stock_quantity }}</td>
-                    <td>{{ $product->branch->name ?? 'No branch assigned' }}</td>
-                    <td class="d-flex">
-                        <a href="{{ route('manager.products.show', $product->id) }}" class="btn btn-info btn-sm me-2">View</a>
-                        <a href="{{ route('manager.products.edit', $product->id) }}" class="btn btn-warning btn-sm">Edit</a>
-                        {{-- <form action="{{ route('manager.products.adjustStock', $product->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-success btn-sm me-2">Adjust Stock</button>
-                        </form> --}}
-                    </td>
+                    <td style="text-align: center">{{ $products->firstItem() + $i }}</td>
+                    <td style="text-align: center">{{ $product->product_name }}</td>
+                    <td style="text-align: center">{{ $product->supplier_name }}</td>
+                    <td style="text-align: center">{{ $product->quantity }}</td>
+                    <td style="text-align: center">{{ number_format($product->buying_price, 2) }}</td>
+                    <td style="text-align: center">{{ number_format($product->total_amount, 2) }}</td>
+                    <td style="text-align: center">{{ $product->branch->name ?? '—' }}</td>
+                    <td style="text-align: center">{{ $product->purchase_date }}</td>
+                    {{-- <td style="text-align: center">
+                        <a href="{{ route('admin.products.show', $product->id) }}"
+                           class="btn btn-sm btn-info">
+                            🔎 View
+                        </a>
+                    </td> --}}
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center">কোনো পণ্য পাওয়া যায়নি।</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 
     <!-- Pagination -->
-    {{ $products->links() }}
+    <div class="d-flex justify-content-center">
+        {{ $products->links() }}
+    </div>
 </div>
 @endsection

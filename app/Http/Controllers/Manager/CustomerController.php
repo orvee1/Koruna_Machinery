@@ -12,18 +12,19 @@ class CustomerController extends Controller
     public function __construct()
     {
         $this->middleware('checkRole:admin,manager');
-        // Worker, Manager, Admin - সবারই অ্যাক্সেস লাগবে
     }
 
     public function index()
     {
         $query = Customer::query();
 
-        if (auth()->user()->role == 'manager') {
-            $query->where('branch_id', session('active_branch_id'));
-        }
+        $branchId = auth()->user()->branch_id;
 
-        $customers = $query->latest()->paginate(20);
+        $customers = Customer::where('branch_id', $branchId)
+            ->with('branch')
+            ->latest()
+            ->paginate(20);
+
         return view('manager.customers.index', compact('customers'));
     }
 
@@ -45,7 +46,7 @@ class CustomerController extends Controller
             'name'       => $request->name,
             'phone'      => $request->phone,
             'district'   => $request->district,
-            'branch_id'  => session('active_branch_id'), 
+            'branch_id'  => auth()->user()->branch_id,
         ]);
 
         return redirect()->route('manager.customers.index')->with('success', 'Customer created successfully.');
@@ -64,7 +65,7 @@ class CustomerController extends Controller
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
             'district'  => 'nullable|string|max:255',
-            'branch_id'  => session('active_branch_id'), 
+            'branch_id'  => auth()->user()->branch_id, 
         ]);
 
         $customer->update($request->only('name', 'phone', 'district'));

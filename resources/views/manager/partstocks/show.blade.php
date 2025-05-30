@@ -29,7 +29,7 @@
         </tr>
         <tr>
             <th>Buy Value</th>
-            <td>{{ $partStock->buy_value }}</td>
+            <td>{{ $partStock->buying_price }}</td>
         </tr>
         <tr>
             <th>Sell Value</th>
@@ -41,15 +41,17 @@
         </tr>
         <tr>
             <th>Total Amount</th>
-            <td>{{ $partStock->amount }}</td>
+            <td>{{ $partStock->total_amount }}</td>
         </tr>
         <tr>
             <th>Paid Amount</th>
-            <td>{{ $partStock->paidAmount() }}</td>
+            <td>{{ $partStock->deposit_amount }}</td>
         </tr>
         <tr>
             <th>Due Amount</th>
-            <td>{{ $partStock->remainingBalance() }}</td>
+            <td class="{{ $partStock->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+                    {{ number_format($partStock->due_amount, 2) }}
+                </td>
         </tr>
         <tr>
             <th>Total Profit</th>
@@ -57,52 +59,63 @@
         </tr>   
     </table>
 
-    <div class="card shadow-lg p-4 mb-4">
-        <h3 class="mb-3">Update Payment</h3>
+     <div class="card shadow-lg p-4 mb-5">
+        <h5 class="mb-3">Update Supplier Payment</h5>
         <form action="{{ route('manager.partstocks.updatePayment', $partStock->id) }}" method="POST">
             @csrf
-            <div class="form-group mb-3">
-                <label for="paid_amount" class="form-label">Paid Amount</label>
-                <input type="number" id="paid_amount" name="paid_amount" max="{{ $partStock->remainingBalance() }}" class="form-control @error('paid_amount') is-invalid @enderror" value="{{ old('paid_amount') }}" required min="1">
-                @error('paid_amount')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+            <div class="row">
+                <!-- Paid Amount -->
+                <div class="col-md-6 mb-3">
+                    <label for="paid_amount" class="form-label">Paid Amount (৳)</label>
+                    <input type="number" name="paid_amount" id="paid_amount"
+                        class="form-control @error('paid_amount') is-invalid @enderror"
+                        value="{{ old('paid_amount') }}" min="1"
+                        max="{{ $partStock->due_amount }}" step="0.01" required>
+                    @error('paid_amount')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Payment Date -->
+                <div class="col-md-6 mb-3">
+                    <label for="payment_date" class="form-label">Payment Date</label>
+                    <input type="date" name="payment_date" id="payment_date"
+                        class="form-control @error('payment_date') is-invalid @enderror"
+                        value="{{ old('payment_date', date('Y-m-d')) }}" required>
+                    @error('payment_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label for="payment_date" class="form-label">Payment Date</label>
-                <input type="date" id="payment_date" name="payment_date" class="form-control @error('payment_date') is-invalid @enderror" value="{{ old('payment_date') }}" required>
-                @error('payment_date')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <button type="submit" class="btn btn-success mt-3">Update Payment</button>
+            <button type="submit" class="btn btn-success">➕ Add Payment</button>
         </form>
     </div>
 
-    <!-- Payment History Section -->
-    <div class="card shadow-lg p-4 mb-4">
-        <h3 class="mb-3">Payment History</h3>
+    <!-- Payment History -->
+    <div class="card shadow-lg p-4 mb-5">
+        <h5 class="mb-3">Supplier Payment History</h5>
         <table class="table table-bordered table-striped">
-            <thead>
+            <thead class="table-light">
                 <tr>
                     <th>Date</th>
-                    <th>Paid Amount</th>
+                    <th>Paid Amount (৳)</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($partStock->payments as $payment)
+                @forelse($partStock->payments as $payment)
                     <tr>
-                        <td>{{ $payment->payment_date }}</td>
-                        <td>{{ $payment->paid_amount }}</td>
+                        <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M, Y') }}</td>
+                        <td>{{ number_format($payment->paid_amount, 2) }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">No payments found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Back Button -->
-    <a href="{{ route('manager.partstocks.index') }}" class="btn btn-primary">Back to Part Stocks</a>
 </div>
 @endsection

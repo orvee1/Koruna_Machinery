@@ -3,45 +3,140 @@
 @section('title', 'View Part Stock Sale')
 
 @section('content')
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>View Part Stock Sale</h2>
-        <a href="{{ route('manager.partstock-sales.index') }}" class="btn btn-secondary">Back to List</a>
+<div class="container py-4">
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Part Stock Sale Details</h2>
+        <a href="{{ route('manager.partstock-sales.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
     </div>
 
-    <div class="card shadow-sm">
+    {{-- Sale Summary --}}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-receipt"></i> Sale Summary</h5>
+        </div>
         <div class="card-body">
-            <h5 class="card-title mb-3">Sale Details</h5>
-
-            <div class="row mb-2">
-                <div class="col-md-6">
-                    <strong>Customer:</strong> {{ $partStockSale->customer->name ?? 'N/A' }}
-                </div>
-                <div class="col-md-6">
-                    <strong>Part Stock Product:</strong> {{ $partStockSale->partStock->product_name ?? 'N/A' }}
-                </div>
-            </div>
-
-            <div class="row mb-2">
+            <div class="row gx-3 gy-2">
                 <div class="col-md-4">
-                    <strong>Quantity:</strong> {{ $partStockSale->quantity }}
+                    <strong>Customer:</strong><br>
+                    {{ $partStockSale->customer->name ?? 'N/A' }}
                 </div>
                 <div class="col-md-4">
-                    <strong>Unit Price:</strong> {{ number_format($partStockSale->unit_price, 2) }}
+                    <strong>Product:</strong><br>
+                    {{ $partStockSale->partStock->product_name ?? 'N/A' }}
                 </div>
                 <div class="col-md-4">
-                    <strong>Paid Amount:</strong> {{ number_format($partStockSale->paid_amount, 2) }}
+                    <strong>Seller:</strong><br>
+                    {{ $partStockSale->seller->name ?? 'N/A' }}
                 </div>
-            </div>
 
-            <div class="row mb-2">
-                <div class="col-md-6">
-                    <strong>Seller:</strong> {{ $partStockSale->seller->name ?? 'N/A' }}
+                <div class="col-md-4">
+                    <strong>Unit Price:</strong><br>
+                    ৳ {{ number_format($partStockSale->unit_price, 2) }}
                 </div>
-                <div class="col-md-6">
-                    <strong>Sale Date:</strong> {{ $partStockSale->created_at->format('Y-m-d') }}
+                <div class="col-md-4">
+                    <strong>Quantity:</strong><br>
+                    {{ $partStockSale->quantity }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Sale Date:</strong><br>
+                    {{ $partStockSale->created_at->format('d M, Y') }}
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Total Amount:</strong><br>
+                    ৳ {{ number_format($partStockSale->total_amount, 2) }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Paid Amount:</strong><br>
+                    ৳ {{ number_format($partStockSale->paid_amount, 2) }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Due Amount:</strong><br>
+                    <span class="{{ $partStockSale->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+                        ৳ {{ number_format($partStockSale->due_amount, 2) }}
+                    </span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- Payment Form --}}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-credit-card"></i> Add Payment</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('manager.partStockSales.updatePayment', $partStockSale->id) }}" method="POST">
+                @csrf
+                <div class="row gx-3">
+                    <div class="col-md-6 mb-3">
+                        <label for="paid_amount" class="form-label">Paid Amount (৳)</label>
+                        <input type="number"
+                               name="paid_amount"
+                               id="paid_amount"
+                               class="form-control @error('paid_amount') is-invalid @enderror"
+                               value="{{ old('paid_amount') }}"
+                               min="0.01"
+                               max="{{ $partStockSale->due_amount }}"
+                               step="0.01"
+                               required>
+                        @error('paid_amount')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_date" class="form-label">Payment Date</label>
+                        <input type="date"
+                               name="payment_date"
+                               id="payment_date"
+                               class="form-control @error('payment_date') is-invalid @enderror"
+                               value="{{ old('payment_date', now()->toDateString()) }}"
+                               required>
+                        @error('payment_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-lg"></i> Add Payment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{-- Payment History --}}
+    <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Payment History</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Paid Amount (৳)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($partStockSale->payments as $payment)
+                        <tr>
+                            <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M, Y') }}</td>
+                            <td>৳ {{ number_format($payment->paid_amount, 2) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-3">
+                                No payments found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

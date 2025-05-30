@@ -18,11 +18,13 @@ class CustomerController extends Controller
     {
         $query = Customer::query();
 
-        if (auth()->user()->role == 'worker') {
-            $query->where('branch_id', session('active_branch_id'));
-        }
+        $branchId = auth()->user()->branch_id;
 
-        $customers = $query->latest()->paginate(20);
+        $customers = Customer::where('branch_id', $branchId)
+            ->with('branch')
+            ->latest()
+            ->paginate(20);
+
         return view('worker.customers.index', compact('customers'));
     }
 
@@ -44,7 +46,7 @@ class CustomerController extends Controller
             'name'       => $request->name,
             'phone'      => $request->phone,
             'district'   => $request->district,
-            'branch_id'  => session('active_branch_id'), 
+            'branch_id'  => auth()->user()->branch_id,
         ]);
 
         return redirect()->route('worker.customers.index')->with('success', 'Customer created successfully.');
@@ -63,11 +65,12 @@ class CustomerController extends Controller
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
             'district'  => 'nullable|string|max:255',
+            'branch_id'  => auth()->user()->branch_id,
         ]);
 
         $customer->update($request->only('name', 'phone', 'district'));
 
-        return redirect()->rote('worker.customers.index')->with('success', 'Customer updated successfully.');
+        return redirect()->route('worker.customers.index')->with('success', 'Customer updated successfully.');
     }
 
     public function show(Customer $customer)

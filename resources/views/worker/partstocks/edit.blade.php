@@ -38,9 +38,9 @@
         </div>
 
         <div class="form-group">
-            <label for="buy_value">Buy Value</label>
-            <input type="number" step="0.01" id="buy_value" name="buy_value" class="form-control @error('buy_value') is-invalid @enderror" value="{{ old('buy_value', $partStock->buy_value) }}" required>
-            @error('buy_value')
+            <label for="buying_price">Buying Price</label>
+            <input type="number" step="0.01" id="buying_price" name="buying_price" class="form-control @error('buying_price') is-invalid @enderror" value="{{ old('buying_price', $partStock->buying_price) }}" required>
+            @error('buying_price')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -62,9 +62,9 @@
         </div>
 
         <div class="form-group">
-            <label for="amount">Amount</label>
-            <input type="number" id="amount" name="amount" class="form-control @error('amount') is-invalid @enderror" value="{{ old('amount', $partStock->amount) }}" readonly>
-            @error('amount')
+            <label for="total_amount">Total Amount</label>
+            <input type="number" id="total_amount" name="total_amount" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount', $partStock->total_amount) }}" readonly>
+            @error('total_amount')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -94,13 +94,13 @@
 </div>
 
 <script>
-    // Calculate Amount and Total Profit on the fly when 'buy_value', 'quantity', or 'sell_value' changes
-    document.getElementById('buy_value').addEventListener('input', calculateValues);
+    // Calculate Amount and Total Profit on the fly when 'buying_price', 'quantity', or 'sell_value' changes
+    document.getElementById('buying_price').addEventListener('input', calculateValues);
     document.getElementById('quantity').addEventListener('input', calculateValues);
     document.getElementById('sell_value').addEventListener('input', calculateValues);
 
     function calculateValues() {
-        let buyValue = parseFloat(document.getElementById('buy_value').value) || 0;
+        let buyValue = parseFloat(document.getElementById('buying_price').value) || 0;
         let quantity = parseInt(document.getElementById('quantity').value) || 0;
         let sellValue = parseFloat(document.getElementById('sell_value').value) || 0;
 

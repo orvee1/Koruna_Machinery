@@ -5,29 +5,67 @@
 @section('content')
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Part Stock Sales</h2>
-        <a href="{{ route('worker.partstock-sales.create') }}" class="btn btn-primary">Add Sale</a>
+        <h2>🛒 Part Stock Sales</h2>
+        <a href="{{ route('worker.partstock-sales.create') }}" class="btn btn-primary">➕ Add Sale</a>
     </div>
 
-    @if(session('success'))
+    @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <form method="GET" class="row row-cols-lg-auto g-3 mb-4">
-        <div class="col">
-            <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+    <form method="GET" action="{{ route('worker.partstock-sales.index') }}" class="row gy-2 gx-3 align-items-end mb-4">
+        <div class="col-auto">
+            <label for="date" class="form-label">Date</label>
+            <input type="date" name="date" id="date" class="form-control" value="{{ request('date') }}">
         </div>
-        {{-- <div class="col">
-            <input type="number" name="month" class="form-control" placeholder="Month" value="{{ request('month') }}">
-        </div> --}}
-        {{-- <div class="col">
-            <input type="number" name="year" class="form-control" placeholder="Year" value="{{ request('year') }}">
-        </div> --}}
-        <div class="col">
-            <button type="submit" class="btn btn-secondary">Filter</button>
+
+        <div class="col-auto">
+            <label for="month" class="form-label">Month</label>
+            <select name="month" id="month" class="form-select">
+                <option value="">All</option>
+                @for ($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                        {{ DateTime::createFromFormat('!m', $m)->format('F') }}
+                    </option>
+                @endfor
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <label for="year" class="form-label">Year</label>
+            <select name="year" id="year" class="form-select">
+                <option value="">All</option>
+                @php
+                    $current = date('Y');
+                    $start = $current + 5;
+                @endphp
+                @for ($y = $current; $y <= $start; $y++)
+                    <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                        {{ $y }}
+                    </option>
+                @endfor
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <label for="status" class="form-label">Payment Status</label>
+            <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                <option value="" {{ request('status') === null || request('status') === '' ? 'selected' : '' }}>All</option>
+                <option value="paid" {{ request('status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                <option value="due" {{ request('status') === 'due' ? 'selected' : '' }}>Due</option>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+            <a href="{{ route('worker.partstock-sales.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Clear
+            </a>
         </div>
     </form>
 
@@ -38,47 +76,45 @@
                     <th>SL No</th>
                     <th>Customer</th>
                     <th>Part Stock</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
+                    <th>Total Amount (৳)</th>
                     <th>Paid</th>
+                    <th>Due (৳)</th>
                     <th>Seller</th>
                     <th>Date</th>
                     <th class="text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($sales as $sale)
+                @foreach($salesGrouped as $group)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $sale->customer->name ?? 'N/A' }}</td>
-                    <td>{{ $sale->partStock->product_name ?? 'N/A' }}</td>
-                    <td>{{ $sale->quantity }}</td>
-                    <td>{{ number_format($sale->unit_price, 2) }}</td>
-                    <td>{{ number_format($sale->paid_amount, 2) }}</td>
-                    <td>{{ $sale->seller->name ?? 'N/A' }}</td>
-                    <td>{{ $sale->created_at->format('Y-m-d') }}</td>
+                    <td>{{ $group['customer']->name ?? 'N/A' }}</td>
+                    <td>
+                        @foreach($group['sales'] as $sale)
+                            {{ $sale->partStock->product_name ?? 'N/A' }}
+                            ({{ $sale->quantity }} x {{ number_format($sale->unit_price, 2) }}) =
+                            ৳{{ number_format($sale->total_amount, 2) }}<br>
+                        @endforeach
+                    </td>
+                    <td>{{ number_format($group['total'], 2) }}</td>
+                    <td>{{ number_format($group['paid'], 2) }}</td>
+                    <td class="{{ $group['due'] > 0 ? 'text-danger' : 'text-success' }}">
+                        {{ number_format($group['due'], 2) }}
+                    </td>
+                    <td>{{ $group['sales'][0]->seller->name ?? 'N/A' }}</td>
+                    <td>{{ \Carbon\Carbon::parse($group['sales'][0]->created_at)->format('Y-m-d') }}</td>
                     <td class="text-center">
-                        <a href="{{ route('worker.partstock-sales.edit', $sale->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{{ route('worker.partstock-sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
-                        <form action="{{ route('worker.partstock-sales.destroy', $sale->id) }}" method="POST" class="d-inline-block"
-                              onsubmit="return confirm('Are you sure you want to delete this sale?');">
+                        <a href="{{ route('worker.partstock-sales.show', $group['sales'][0]->id) }}" class="btn btn-sm btn-info">🔎 View</a>
+                        <form action="{{ route('worker.partstock-sales.destroy', $group['sales'][0]->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this group sale?');">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-danger">Delete</button>
+                            <button class="btn btn-sm btn-danger">🗑️ Delete</button>
                         </form>
                     </td>
                 </tr>
-                @empty
-                <tr>
-                    <td colspan="9" class="text-center">No sales found.</td>
-                </tr>
-                @endforelse
+                @endforeach
             </tbody>
         </table>
-    </div>
-
-    <div class="d-flex justify-content-center">
-        {{ $sales->links() }}
     </div>
 </div>
 @endsection

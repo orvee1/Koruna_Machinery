@@ -17,17 +17,19 @@ use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\PartStockController as AdminPartStockController;
 use App\Http\Controllers\Admin\PartStockSaleController as AdminPartStockSaleController;
 use App\Http\Controllers\Admin\ProductListController as AdminProductListController;
+use App\Http\Controllers\Admin\UnifiedSaleController;
 // use App\Http\Controllers\Admin\ProductListController;
 // Manager Controllers
 use App\Http\Controllers\Manager\ManagerController as ManagerManagerController;
 use App\Http\Controllers\Manager\CustomerController as ManagerCustomerController;
 use App\Http\Controllers\Manager\InvestorController as ManagerInvestorController;
+use App\Http\Controllers\Manager\ManagerUnifiedSaleController;
 use App\Http\Controllers\Manager\ProductController as ManagerProductController;
 use App\Http\Controllers\Manager\ProductSaleController as ManagerProductSaleController;
 use App\Http\Controllers\Manager\StockController as ManagerStockController;
 use App\Http\Controllers\Manager\PartStockController as ManagerPartStockController;
 use App\Http\Controllers\Manager\PartStockSaleController as ManagerPartStockSaleController;
-
+use App\Http\Controllers\Manager\ProductListController as ManagerProductListController;
 // Worker Controllers
 use App\Http\Controllers\Worker\WorkerController as WorkerWorkerController;
 use App\Http\Controllers\Worker\CustomerController as WorkerCustomerController;
@@ -36,6 +38,8 @@ use App\Http\Controllers\Worker\ProductSaleController as WorkerProductSaleContro
 use App\Http\Controllers\Worker\StockController as WorkerStockController;
 use App\Http\Controllers\Worker\PartStockController as WorkerPartStockController;
 use App\Http\Controllers\Worker\PartStockSaleController as WorkerPartStockSaleController;
+use App\Http\Controllers\Worker\ProductListController as WorkerProductListController;
+use App\Http\Controllers\Worker\WorkerUnifiedSaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,6 +100,10 @@ Route::middleware('auth')->group(function () {
             Route::resource('customers', AdminCustomerController::class);
 
             Route::get('products', [AdminProductListController::class, 'index'])->name('products.index');
+            Route::get('sales',[UnifiedSaleController::class, 'index'])->name('sales.index');
+            Route::get('sales/{bill}', [UnifiedSaleController::class, 'show'])->name('sales.show');
+            Route::delete('sales/{bill}', [UnifiedSaleController::class, 'destroy'])->name('sales.destroy');
+
 
             // Inventory: Stocks
             Route::resource('stocks', AdminStockController::class);
@@ -155,6 +163,10 @@ Route::middleware('auth')->group(function () {
 
             // Customer & Investor Management
             Route::resource('customers', ManagerCustomerController::class);
+            Route::get('products', [ManagerProductListController::class, 'index'])->name('products.index');
+            Route::get('sales',[ManagerUnifiedSaleController::class, 'index'])->name('sales.index');
+            Route::get('sales/{bill}', [UnifiedSaleController::class, 'show'])->name('sales.show');
+            Route::delete('sales/{bill}', [UnifiedSaleController::class, 'destroy'])->name('sales.destroy');
             Route::resource('investors', ManagerInvestorController::class);
         });
 
@@ -186,5 +198,10 @@ Route::middleware('auth')->group(function () {
 
             // Customer Management
             Route::resource('customers', WorkerCustomerController::class);
+            Route::get('products', [WorkerProductListController::class, 'index'])->name('products.index');
+            Route::get('sales',[WorkerUnifiedSaleController::class, 'index'])->name('sales.index');
+            Route::get('sales/{bill}', [WorkerUnifiedSaleController::class, 'show'])->name('sales.show');
+            Route::delete('sales/{bill}', [WorkerUnifiedSaleController::class, 'destroy'])->name('sales.destroy');
+
         });
 });
