@@ -24,7 +24,6 @@ use App\Http\Controllers\Manager\ManagerController as ManagerManagerController;
 use App\Http\Controllers\Manager\CustomerController as ManagerCustomerController;
 use App\Http\Controllers\Manager\InvestorController as ManagerInvestorController;
 use App\Http\Controllers\Manager\ManagerUnifiedSaleController;
-use App\Http\Controllers\Manager\ProductController as ManagerProductController;
 use App\Http\Controllers\Manager\ProductSaleController as ManagerProductSaleController;
 use App\Http\Controllers\Manager\StockController as ManagerStockController;
 use App\Http\Controllers\Manager\PartStockController as ManagerPartStockController;
@@ -147,11 +146,11 @@ Route::middleware('auth')->group(function () {
             Route::get('dashboard', [ManagerManagerController::class, 'dashboard'])->name('dashboard');
 
             // Branch Inventory
-            Route::resource('products', ManagerProductController::class);
-            Route::post('products/{product}/update-payment', [ManagerProductController::class, 'updatePayment'])
-                ->name('products.updatePayment');
+            Route::resource('products', ManagerProductListController::class);
 
             Route::resource('stocks', ManagerStockController::class);
+            Route::post('stocks/{stock}/update-payment', [ManagerStockController::class, 'updatePayment'])
+                ->name('stocks.updatePayment');
 
             Route::resource('partstocks', ManagerPartStockController::class);
             Route::post('partstocks/{partstock}/update-payment', [ManagerPartStockController::class, 'updatePayment'])
@@ -182,11 +181,11 @@ Route::middleware('auth')->group(function () {
             Route::get('dashboard', [WorkerWorkerController::class, 'dashboard'])->name('dashboard');
 
             // Branch Inventory
-            Route::resource('products', WorkerProductController::class);
-            Route::post('products/{product}/update-payment', [WorkerProductController::class, 'updatePayment'])
-                ->name('products.updatePayment');
+            Route::resource('products', WorkerProductListController::class);
 
             Route::resource('stocks', WorkerStockController::class);
+             Route::post('stocks/{stock}/update-payment', [WorkerStockController::class, 'updatePayment'])
+                ->name('stocks.updatePayment');
 
             Route::resource('partstocks', WorkerPartStockController::class);
             Route::post('partstocks/{partstock}/update-payment', [WorkerPartStockController::class, 'updatePayment'])
