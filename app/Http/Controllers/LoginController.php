@@ -72,7 +72,7 @@ class LoginController extends Controller
             return redirect()->route('manager.dashboard');
         }
         if ($user->role === 'worker') {
-            return redirect()->route('worker.dashboard');
+            return redirect()->route('worker.sales');
         }
 
         abort(403, 'Unauthorized Role');

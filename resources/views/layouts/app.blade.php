@@ -155,10 +155,9 @@
 
                         <span class="fw-bold text-muted mt-3">Sales</span>
                         <a href="{{ route('admin.sales.index') }}"
-    class="nav-link {{ request()->routeIs('admin.sales.index') ? 'text-primary fw-bold' : '' }}">
-    📑 All Sales Panel
-</a>
-
+                        class="nav-link {{ request()->routeIs('admin.sales.index') ? 'text-primary fw-bold' : '' }}">
+                        📑 All Sales Panel
+                        </a>
 
                         <span class="fw-bold text-muted mt-3">Investors</span>
                         <a href="{{ route('admin.investors.index') }}"
@@ -179,22 +178,27 @@
                         <a href="{{ route('manager.stocks.index') }}" class="nav-link">Stocks</a>
                         <a href="{{ route('manager.partstocks.index') }}" class="nav-link">Part Stocks</a>
                         <span class="fw-bold text-muted mt-3">Sales</span>
-                        <a href="{{ route('manager.product-sales.index') }}" class="nav-link">Product Sales</a>
-                        <a href="{{ route('manager.partstock-sales.index') }}" class="nav-link">Part Stock Sales</a>
+                        <a href="{{ route('manager.sales.index') }}"
+                        class="nav-link {{ request()->routeIs('manager.sales.index') ? 'text-primary fw-bold' : '' }}">
+                        📑 All Sales Panel
+                        </a>
                         <span class="fw-bold text-muted mt-3">Customers & Investors</span>
                         <a href="{{ route('manager.customers.index') }}" class="nav-link">Customers</a>
                         <a href="{{ route('manager.investors.index') }}" class="nav-link">Investors</a>
                     @endif
+
                     @if (auth()->user()->role === 'worker')
                         <h5 class="text-secondary">Worker Panel</h5>
-                        <a href="{{ route('worker.dashboard') }}" class="nav-link">Dashboard</a>
+                        {{-- <a href="{{ route('worker.dashboard') }}" class="nav-link">Dashboard</a> --}}
                         <span class="fw-bold text-muted mt-3">Access</span>
                         <a href="{{ route('worker.products.index') }}" class="nav-link">Products</a>
                         <a href="{{ route('worker.stocks.index') }}" class="nav-link">Stocks</a>
                         <a href="{{ route('worker.partstocks.index') }}" class="nav-link">Part Stocks</a>
                         <a href="{{ route('worker.customers.index') }}" class="nav-link">Customers</a>
-                        <a href="{{ route('worker.product-sales.index') }}" class="nav-link">Product Sales</a>
-                        <a href="{{ route('worker.partstock-sales.index') }}" class="nav-link">Part Stock Sales</a>
+                        <a href="{{ route('worker.sales.index') }}"
+                        class="nav-link {{ request()->routeIs('worker.sales.index') ? 'text-primary fw-bold' : '' }}">
+                        📑 All Sales Panel
+                        </a>
                     @endif
                 </nav>
             </div>

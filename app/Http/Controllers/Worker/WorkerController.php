@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\PartStock;
-use App\Models\PartstockSale;
+use App\Models\PartStockSale;
 use App\Models\ProductList;
 use App\Models\ProductSale;
 use App\Models\Stock;

@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
             Route::get('sales',[UnifiedSaleController::class, 'index'])->name('sales.index');
             Route::get('sales/{bill}', [UnifiedSaleController::class, 'show'])->name('sales.show');
             Route::delete('sales/{bill}', [UnifiedSaleController::class, 'destroy'])->name('sales.destroy');
+            Route::post('/sales/{type}/{id}/update-payment', [UnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
 
 
             // Inventory: Stocks
@@ -178,7 +179,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('checkRole:worker')
         ->name('worker.')
         ->group(function () {
-            Route::get('dashboard', [WorkerWorkerController::class, 'dashboard'])->name('dashboard');
+            // Route::get('dashboard', [WorkerWorkerController::class, 'dashboard'])->name('dashboard');
 
             // Branch Inventory
             Route::resource('products', WorkerProductListController::class);
