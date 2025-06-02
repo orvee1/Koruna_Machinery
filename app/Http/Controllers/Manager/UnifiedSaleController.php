@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
+use App\Models\BillPayment;
 use Illuminate\Http\Request;
 
 class ManagerUnifiedSaleController extends Controller
@@ -34,6 +35,30 @@ class ManagerUnifiedSaleController extends Controller
     {
         $bill->load(['customer', 'productSales.stock', 'partStockSales.partStock', 'seller']);
         return view('manager.sales.show', compact('bill'));
+    }
+
+       public function updatePayment(Request $request, Bill $bill)
+    {
+        $request->validate([
+            'paid_amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+        ]);
+
+        if ($request->paid_amount > $bill->due_amount) {
+            return back()->withErrors(['paid_amount' => 'Amount exceeds total due.']);
+        }
+
+        BillPayment::create([
+            'bill_id' => $bill->id,
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+        ]);
+
+        $bill->paid_amount += $request->paid_amount;
+        $bill->due_amount = max($bill->total_amount - $bill->paid_amount, 0);
+        $bill->save();
+
+        return back()->with('success', 'Payment updated and logged successfully.');
     }
 
     public function destroy(Bill $bill)

@@ -93,11 +93,12 @@ class CustomerController extends Controller
 
         public function show(Customer $customer)
     {
-        if ($customer->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized action.');
-        }
+          $bills = $customer->bills()
+        ->with(['productSales.stock', 'partStockSales.partStock', 'payments', 'seller'])
+        ->orderBy('created_at')
+        ->get();
 
-        return view('admin.customers.show', compact('customer'));
+        return view('admin.customers.show', compact('customer','bills'));
     }
 
 

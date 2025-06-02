@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
+use App\Models\BillPayment;
 use App\Models\PartStockSale;
 use App\Models\PartStockSalePayment;
 use App\Models\ProductSale;
@@ -41,48 +42,28 @@ class UnifiedSaleController extends Controller
         return view('admin.sales.show', compact('bill'));
     }
 
-        public function updatePayment(Request $request, $type, $id)
+        public function updatePayment(Request $request, Bill $bill)
     {
         $request->validate([
             'paid_amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
         ]);
 
-        if ($type === 'product') {
-            $sale = ProductSale::findOrFail($id);
-            if ($request->paid_amount > $sale->due_amount) {
-                return back()->withErrors(['paid_amount' => 'Amount exceeds due.']);
-            }
-
-            ProductSalePayment::create([
-                'product_sale_id' => $sale->id,
-                'paid_amount' => $request->paid_amount,
-                'payment_date' => $request->payment_date,
-            ]);
-
-            $sale->paid_amount += $request->paid_amount;
-            $sale->due_amount = max($sale->total_amount - $sale->paid_amount, 0);
-            $sale->save();
-        } elseif ($type === 'part') {
-            $sale = PartStockSale::findOrFail($id);
-            if ($request->paid_amount > $sale->due_amount) {
-                return back()->withErrors(['paid_amount' => 'Amount exceeds due.']);
-            }
-
-            PartStockSalePayment::create([
-                'partstock_sale_id' => $sale->id,
-                'paid_amount' => $request->paid_amount,
-                'payment_date' => $request->payment_date,
-            ]);
-
-            $sale->paid_amount += $request->paid_amount;
-            $sale->due_amount = max($sale->total_amount - $sale->paid_amount, 0);
-            $sale->save();
-        } else {
-            return back()->withErrors(['error' => 'Invalid payment type.']);
+        if ($request->paid_amount > $bill->due_amount) {
+            return back()->withErrors(['paid_amount' => 'Amount exceeds total due.']);
         }
 
-        return back()->with('success', 'Payment updated successfully.');
+        BillPayment::create([
+            'bill_id' => $bill->id,
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+        ]);
+
+        $bill->paid_amount += $request->paid_amount;
+        $bill->due_amount = max($bill->total_amount - $bill->paid_amount, 0);
+        $bill->save();
+
+        return back()->with('success', 'Payment updated and logged successfully.');
     }
 
     public function destroy(Bill $bill)

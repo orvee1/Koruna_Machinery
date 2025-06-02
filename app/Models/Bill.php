@@ -48,4 +48,9 @@ class Bill extends Model
     {
         return $this->hasMany(PartStockSale::class, 'bill_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(BillPayment::class);
+    }
 }

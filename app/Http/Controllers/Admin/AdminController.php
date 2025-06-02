@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bill;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Investor;
@@ -25,107 +26,85 @@ class AdminController extends Controller
     }
 
      public function dashboard(Request $request)
-    {
-        $branchId = session('active_branch_id');
+{
+    $branchId = session('active_branch_id');
 
-        if (!$branchId) {
-            return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
-        }
-
-        $branch = Branch::find($branchId);
-
-        $from = $request->filled('from_date') ? Carbon::parse($request->from_date)->startOfDay() : null;
-        $to = $request->filled('to_date') ? Carbon::parse($request->to_date)->endOfDay() : null;
-        $month = $request->month;
-        $year = $request->year;
-
-        $productSaleQuery = ProductSale::where('branch_id', $branchId);
-        $partSaleQuery = PartStockSale::where('branch_id', $branchId);
-        $productListQuery = ProductList::where('branch_id', $branchId);
-        $stockQuery = Stock::where('branch_id', $branchId);
-        $partStockQuery = PartStock::where('branch_id', $branchId);
-
-        $productProfitQuery = ProductSale::with('stock')->where('branch_id', $branchId);
-        $partProfitQuery = PartStockSale::with('partStock')->where('branch_id', $branchId);
-
-        if ($from && $to) {
-            $productSaleQuery->whereBetween('created_at', [$from, $to]);
-            $partSaleQuery->whereBetween('created_at', [$from, $to]);
-            $productListQuery->whereBetween('created_at', [$from, $to]);
-            $stockQuery->whereBetween('created_at', [$from, $to]);
-            $partStockQuery->whereBetween('created_at', [$from, $to]);
-
-            $productProfitQuery->whereBetween('created_at', [$from, $to]);
-            $partProfitQuery->whereBetween('created_at', [$from, $to]);
-        } elseif ($month) {
-            $productSaleQuery->whereMonth('created_at', $month);
-            $partSaleQuery->whereMonth('created_at', $month);
-            $productListQuery->whereMonth('created_at', $month);
-            $stockQuery->whereMonth('created_at', $month);
-            $partStockQuery->whereMonth('created_at', $month);
-
-            $productProfitQuery->whereMonth('created_at', $month);
-            $partProfitQuery->whereMonth('created_at', $month);
-        } elseif ($year) {
-            $productSaleQuery->whereYear('created_at', $year);
-            $partSaleQuery->whereYear('created_at', $year);
-            $productListQuery->whereYear('created_at', $year);
-            $stockQuery->whereYear('created_at', $year);
-            $partStockQuery->whereYear('created_at', $year);
-
-            $productProfitQuery->whereYear('created_at', $year);
-            $partProfitQuery->whereYear('created_at', $year);
-        } else {
-          
-            $today = Carbon::today();
-            $tomorrow = Carbon::tomorrow();
-
-            $productProfitQuery->whereBetween('created_at', [$today, $tomorrow]);
-            $partProfitQuery->whereBetween('created_at', [$today, $tomorrow]);
-        }
-
-        $totalProductSales = $productSaleQuery->sum('total_amount');
-        $totalPartStockSales = $partSaleQuery->sum('total_amount');
-        $totalSales = $totalProductSales + $totalPartStockSales;
-
-        // $totalProductValue = $productListQuery->sum('total_amount');
-        $stockValue = $stockQuery->sum('total_amount');
-        $partStockValue = $partStockQuery->sum('total_amount');
-        $totalProductValue = $stockValue + $partStockValue;
-        
-        $productDue = $stockQuery->sum('due_amount');
-        $partStockDue = $partStockQuery->sum('due_amount');
-        $totalDue = $productDue + $partStockDue;
-
-        $productDueToHave = $productSaleQuery->sum('due_amount');
-        $partStockDueToHave = $partSaleQuery->sum('due_amount');
-        $totalDueToHave = $productDueToHave + $partStockDueToHave;
-
-        $productProfit = $productProfitQuery->get()->sum(function ($s) {
-            return ($s->unit_price - optional($s->stock)->buying_price) * $s->quantity;
-        });
-
-        $partStockProfit = $partProfitQuery->get()->sum(function ($s) {
-            return ($s->unit_price - optional($s->partStock)->buying_price) * $s->quantity;
-        });
-
-        $totalProfit = $productProfit + $partStockProfit;
-
-        $users = User::where('branch_id', $branchId)->with('branch')->get();
-
-        return view('admin.dashboard', compact(
-            'totalSales',
-            'totalProductValue',
-            'users',
-            'totalProfit',
-            'totalDue',
-            'totalDueToHave',
-            'from',
-            'to',
-            'month',
-            'year'
-        ));
+    if (!$branchId) {
+        return redirect()->route('admin.select-branch')->with('error', 'Please select a branch first.');
     }
+
+    $from = $request->filled('from_date') ? Carbon::parse($request->from_date)->startOfDay() : null;
+    $to = $request->filled('to_date') ? Carbon::parse($request->to_date)->endOfDay() : null;
+    $month = $request->month;
+    $year = $request->year;
+
+    // Filtered queries
+    $billQuery = Bill::where('branch_id', $branchId);
+    $stockQuery = Stock::where('branch_id', $branchId);
+    $partStockQuery = PartStock::where('branch_id', $branchId);
+    $productSaleQuery = ProductSale::with('stock')->where('branch_id', $branchId);
+    $partSaleQuery = PartStockSale::with('partStock')->where('branch_id', $branchId);
+    $producListQuery = ProductList::where('branch_id', $branchId);
+
+    if ($from && $to) {
+        $billQuery->whereBetween('created_at', [$from, $to]);
+        $productSaleQuery->whereBetween('created_at', [$from, $to]);
+        $partSaleQuery->whereBetween('created_at', [$from, $to]);
+    } elseif ($month) {
+        $billQuery->whereMonth('created_at', $month);
+        $productSaleQuery->whereMonth('created_at', $month);
+        $partSaleQuery->whereMonth('created_at', $month);
+    } elseif ($year) {
+        $billQuery->whereYear('created_at', $year);
+        $productSaleQuery->whereYear('created_at', $year);
+        $partSaleQuery->whereYear('created_at', $year);
+    } else {
+        $today = Carbon::today();
+        $tomorrow = Carbon::tomorrow();
+        $billQuery->whereBetween('created_at', [$today, $tomorrow]);
+        $productSaleQuery->whereBetween('created_at', [$today, $tomorrow]);
+        $partSaleQuery->whereBetween('created_at', [$today, $tomorrow]);
+    }
+
+    // ✅ Total Sale = sum of all bill total_amount
+    $totalSales = $billQuery->sum('total_amount');
+    $stockDue = $stockQuery->sum('due_amount');
+    $partStockDue = $partStockQuery->sum('due_amount');
+    $totalDue = $stockDue + $partStockDue;
+    // ✅ Total Paid = sum of all bill paid_amount (can use for totalDueToHave if needed)
+    $totalDueToHave = $billQuery->sum('due_amount');
+
+    // ✅ Profit Calculations
+    $productProfit = $productSaleQuery->get()->sum(function ($sale) {
+        return ($sale->unit_price - optional($sale->stock)->buying_price) * $sale->quantity;
+    });
+
+    $partStockProfit = $partSaleQuery->get()->sum(function ($sale) {
+        return ($sale->unit_price - optional($sale->partStock)->buying_price) * $sale->quantity;
+    });
+
+    $totalProfit = $productProfit + $partStockProfit;
+
+    // ✅ Product Value = stock value + part stock value
+    $stockValue = Stock::where('branch_id', $branchId)->sum('total_amount');
+    $partStockValue = PartStock::where('branch_id', $branchId)->sum('total_amount');
+    $totalProductValue = $stockValue + $partStockValue;
+
+    $users = User::where('branch_id', $branchId)->get();
+
+    return view('admin.dashboard', compact(
+        'totalSales',
+        'totalProductValue',
+        'users',
+        'totalProfit',
+        'totalDue',
+        'totalDueToHave',
+        'from',
+        'to',
+        'month',
+        'year'
+    ));
+}
 
     
     public function index()

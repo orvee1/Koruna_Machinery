@@ -102,7 +102,7 @@ Route::middleware('auth')->group(function () {
             Route::get('sales',[UnifiedSaleController::class, 'index'])->name('sales.index');
             Route::get('sales/{bill}', [UnifiedSaleController::class, 'show'])->name('sales.show');
             Route::delete('sales/{bill}', [UnifiedSaleController::class, 'destroy'])->name('sales.destroy');
-            Route::post('/sales/{type}/{id}/update-payment', [UnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
+            Route::post('/sales/{bill}/update-payment', [UnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
 
 
             // Inventory: Stocks
@@ -165,8 +165,9 @@ Route::middleware('auth')->group(function () {
             Route::resource('customers', ManagerCustomerController::class);
             Route::get('products', [ManagerProductListController::class, 'index'])->name('products.index');
             Route::get('sales',[ManagerUnifiedSaleController::class, 'index'])->name('sales.index');
-            Route::get('sales/{bill}', [UnifiedSaleController::class, 'show'])->name('sales.show');
-            Route::delete('sales/{bill}', [UnifiedSaleController::class, 'destroy'])->name('sales.destroy');
+            Route::get('sales/{bill}', [ManagerUnifiedSaleController::class, 'show'])->name('sales.show');
+            Route::delete('sales/{bill}', [ManagerUnifiedSaleController::class, 'destroy'])->name('sales.destroy');
+            Route::post('/sales/{bill}/update-payment', [ManagerUnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
             Route::resource('investors', ManagerInvestorController::class);
         });
 
@@ -202,6 +203,7 @@ Route::middleware('auth')->group(function () {
             Route::get('sales',[WorkerUnifiedSaleController::class, 'index'])->name('sales.index');
             Route::get('sales/{bill}', [WorkerUnifiedSaleController::class, 'show'])->name('sales.show');
             Route::delete('sales/{bill}', [WorkerUnifiedSaleController::class, 'destroy'])->name('sales.destroy');
+            Route::post('/sales/{bill}/update-payment', [WorkerUnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
 
         });
 });
