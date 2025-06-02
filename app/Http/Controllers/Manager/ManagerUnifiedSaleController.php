@@ -1,24 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\Worker;
+namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\BillPayment;
 use Illuminate\Http\Request;
 
-class WorkerUnifiedSaleController extends Controller
+class ManagerUnifiedSaleController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('checkRole:admin,worker');
+        $this->middleware('checkRole:admin,manager');
     }
 
     public function index(Request $request)
     {
-        $branchId = auth()->user()->branch_id;
+       $branchId = auth()->user()->branch_id;
 
-        $bills = Bill::with(['customer', 'productSales.stock', 'partStockSales.partStock', 'seller'])
+       $bills = Bill::with(['customer','seller'])
             ->where('branch_id', $branchId)
             ->when($request->date, fn($q) => $q->whereDate('created_at', $request->date))
             ->when($request->month, fn($q) => $q->whereMonth('created_at', $request->month))
@@ -28,16 +28,16 @@ class WorkerUnifiedSaleController extends Controller
             ->latest()
             ->get();
 
-        return view('worker.sales.index', compact('bills'));
+        return view('manager.sales.index', compact('bills'));
     }
 
     public function show(Bill $bill)
     {
-        $bill->load(['customer', 'productSales.stock', 'partStockSales.partStock', 'seller']);
-        return view('worker.sales.show', compact('bill'));
+        $bill->load(['customer', 'seller']);
+        return view('manager.sales.show', compact('bill'));
     }
 
-       public function updatePayment(Request $request, Bill $bill)
+    public function updatePayment(Request $request, Bill $bill)
     {
         $request->validate([
             'paid_amount' => 'required|numeric|min:0.01',
@@ -61,12 +61,11 @@ class WorkerUnifiedSaleController extends Controller
         return back()->with('success', 'Payment updated and logged successfully.');
     }
 
+
     public function destroy(Bill $bill)
     {
-        $bill->productSales()->delete();
-        $bill->partStockSales()->delete();
         $bill->delete();
 
-        return redirect()->route('worker.sales.index')->with('success', 'Bill and all related sales deleted successfully.');
+        return redirect()->route('manager.sales.index')->with('success', 'Bill and all related sales deleted successfully.');
     }
 }

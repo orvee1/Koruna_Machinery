@@ -42,18 +42,17 @@ class BranchController extends Controller
     {
         $branch->load([
             'customers',
-            'products',
-            'productSales',
-            'partStockSales',
+            'user',
+            'stock',
             'partStocks',
+            'investors',
+            'bills',
         ]);
 
-        $productIncome = $branch->productSales->sum('total_amount');
-        $partStockIncome = $branch->partStockSales->sum('total_amount');
-        $totalIncome = $productIncome + $partStockIncome;
+        $totalIncome = $branch->bills->sum('total_amount');
 
-        $productExpense = $branch->products->sum(function ($product) {
-            return $product->buying_price * $product->stock_quantity;
+        $productExpense = $branch->stock->sum(function ($stock) {
+            return $stock->buying_price * $stock->quantity;
         });
 
         $partstockExpense = $branch->partStocks->sum('amount');
@@ -63,8 +62,6 @@ class BranchController extends Controller
 
         return view('admin.branches.show', compact(
             'branch',
-            'productIncome',
-            'partstockIncome',
             'totalIncome',
             'productExpense',
             'partstockExpense',
@@ -73,19 +70,17 @@ class BranchController extends Controller
         ));
     }
 
-    public function edit($id)
+    public function edit(Branch $branch)
     {
-        $branch = Branch::findOrFail($id);
         return view('admin.branches.edit', compact('branch'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Branch $branch)
     {
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-        $branch = Branch::findOrFail($id);
         $branch->update([
             'name' => $request->name,
         ]);

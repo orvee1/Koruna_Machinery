@@ -30,7 +30,10 @@ class CustomerController extends Controller
 
     public function create()
     {
-        $branches = Branch::all();
+       $branchId = auth()->user()->branch_id;
+
+       $branch = Branch::findOrFail($branchId);
+
         return view('manager.customers.create', compact('branches'));
     }
 
@@ -59,8 +62,6 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
-        $this->authorizeAccess($customer);
-
         $request->validate([
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:customers,phone,' . $customer->id,
@@ -75,13 +76,16 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
+        $branchId = auth()->user()->branch_id;
 
-        $sales = $customer->productsales()
-        ->with(['product', 'seller']) // eager load
-        ->latest()
+        $branch = Branch::findOrFail($branchId);
+
+        $bills = $customer->bills()
+        ->with(['payments', 'seller'])
+        ->orderBy('created_at')
         ->get();
 
-        return view('manager.customers.show', compact('customer','sales'));
+        return view('manager.customers.show', compact('customer','bills'));
     }
 
 }

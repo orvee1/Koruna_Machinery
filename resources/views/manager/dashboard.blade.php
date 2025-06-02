@@ -62,7 +62,7 @@
         <button type="submit" class="btn btn-primary w-100">
             <i class="bi bi-funnel-fill me-1"></i> Filter
         </button>
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary w-100">
+        <a href="{{ route('manager.dashboard') }}" class="btn btn-outline-secondary w-100">
             <i class="bi bi-x-circle me-1"></i> Clear
         </a>
         </div>

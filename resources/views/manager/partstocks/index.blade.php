@@ -74,7 +74,6 @@
                         </td>
                         <td>৳{{ number_format($partstock->total_profit, 2) }}</td>
                         <td>
-                            <a href="{{ route('manager.partstocks.edit', $partstock->id) }}" class="btn btn-sm btn-warning">Edit</a>
                             <a href="{{ route('manager.partstocks.show', $partstock->id) }}" class="btn btn-sm btn-info">View</a>
                         </td>
                     </tr>

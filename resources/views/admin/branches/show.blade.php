@@ -10,29 +10,20 @@
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5>Total Product Income</h5>
-                    <p class="fs-4 text-success">{{ number_format($productIncome, 2) }} ৳</p>
+                    <h5>Total Income (from Bills)</h5>
+                    <p class="fs-4 text-success">{{ number_format($totalIncome, 2) }} ৳</p>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5>Total Part Stock Income</h5>
-                    <p class="fs-4 text-success">{{ number_format($partstockIncome, 2) }} ৳</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5>Total Income</h5>
-                    <p class="fs-4 text-primary">{{ number_format($totalIncome, 2) }} ৳</p>
+                    <h5>Total Expenses</h5>
+                    <p class="fs-4 text-danger">{{ number_format($totalExpense, 2) }} ৳</p>
                 </div>
             </div>
         </div>
@@ -42,8 +33,8 @@
         <div class="col-md-6">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5>Total Product Expenses</h5>
-                    <p class="fs-4 text-danger">{{ number_format($productExpense, 2) }} ৳</p>
+                    <h6>Product Purchase Expenses</h6>
+                    <p class="fs-5 text-danger">{{ number_format($productExpense, 2) }} ৳</p>
                 </div>
             </div>
         </div>
@@ -51,8 +42,8 @@
         <div class="col-md-6">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5>Total Part Stock Expenses</h5>
-                    <p class="fs-4 text-danger">{{ number_format($partstockExpense, 2) }} ৳</p>
+                    <h6>Part Stock Purchase Expenses</h6>
+                    <p class="fs-5 text-danger">{{ number_format($partstockExpense, 2) }} ৳</p>
                 </div>
             </div>
         </div>
@@ -62,7 +53,7 @@
         <div class="col-md-12">
             <div class="card text-center bg-light">
                 <div class="card-body">
-                    <h4 class="text-dark">Profit</h4>
+                    <h4 class="text-dark">Net Profit</h4>
                     <h2 class="text-success">{{ number_format($profit, 2) }} ৳</h2>
                 </div>
             </div>
@@ -90,7 +81,7 @@
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $customer->name }}</td>
                             <td>{{ $customer->phone }}</td>
-                            <td>{{ $customer->district }}</td>
+                            <td>{{ $customer->district ?? 'N/A' }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -101,6 +92,5 @@
             </table>
         </div>
     </div>
-
 </div>
 @endsection

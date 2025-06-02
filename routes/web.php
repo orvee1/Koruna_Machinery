@@ -111,7 +111,13 @@ Route::middleware('auth')->group(function () {
                 ->name('stocks.updatePayment');
 
             // Inventory: Part Stocks
-            Route::resource('partstocks', AdminPartStockController::class);
+            // Route::resource('partstocks', AdminPartStockController::class);
+            Route::get('partstocks', [AdminPartStockController::class, 'index'])->name('partstocks.index');
+            Route::get('partstocks/create', [AdminPartStockController::class, 'create'])->name('partstocks.create');
+            Route::post('partstocks', [AdminPartStockController::class, 'store'])->name('partstocks.store');
+            Route::get('partstocks/{partStock}', [AdminPartStockController::class, 'show'])->name('partstocks.show');
+            Route::get('partstocks/{partStock}/edit', [AdminPartStockController::class, 'edit'])->name('partstocks.edit');
+            Route::put('partstocks/{partStock}', [AdminPartStockController::class, 'update'])->name('partstocks.update');
             Route::post('partstocks/{partStock}/update-payment', [AdminPartStockController::class, 'updatePayment'])
                 ->name('partstocks.updatePayment');
 

@@ -101,7 +101,6 @@ class StockController extends Controller
         ]);
 
         $branchId = session('active_branch_id');
-
         $previousQuantity = $stock->quantity;
 
         $stock->update($data);
@@ -122,26 +121,27 @@ class StockController extends Controller
     }
 
 
- public function updatePayment(Request $request, Stock $stock)
-{
-    $request->validate([
-        'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
-        'payment_date' => 'required|date',
-    ]);
 
-    ProductPayment::create([
-        'paid_amount' => $request->paid_amount,
-        'payment_date' => $request->payment_date,
-        'stock_id' => $stock->id,
-    ]);
+    public function updatePayment(Request $request, Stock $stock)
+    {
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
+            'payment_date' => 'required|date',
+        ]);
 
-    $stock->deposit_amount += $request->paid_amount;
+        ProductPayment::create([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'stock_id' => $stock->id,
+        ]);
 
-    $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
-    $stock->save();
+        $stock->deposit_amount += $request->paid_amount;
 
-    return back()->with('success', 'Payment updated successfully.');
-}
+        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
+        $stock->save();
+
+        return back()->with('success', 'Payment updated successfully.');
+    }
 
 
 

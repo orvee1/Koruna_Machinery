@@ -43,7 +43,9 @@ class PartStockController extends Controller
 
     public function create()
     {
-        return view('manager.partstocks.create');
+        $branchId = auth()->user()->branch_id;
+        $branch = Branch::findOrFail($branchId);
+        return view('manager.partstocks.create', compact('branch'));
     }
 
     public function store(Request $request)
@@ -69,18 +71,11 @@ class PartStockController extends Controller
 
     public function edit(PartStock $partStock)
     {
-        if ($partStock->branch_id !== auth()->user()->branch_id) {
-            abort(403, 'Unauthorized access to part stock.');
-        }
-
         return view('manager.partstocks.edit', compact('partStock'));
     }
 
     public function update(Request $request, PartStock $partStock)
     {
-        if ($partStock->branch_id !== auth()->user()->branch_id) {
-            abort(403, 'Unauthorized update attempt.');
-        }
 
         $validated = $request->validate([
             'product_name'    => 'required|string|max:255',
@@ -102,43 +97,28 @@ class PartStockController extends Controller
 
     public function updatePayment(Request $request, PartStock $partStock)
     {
-        if ($partStock->branch_id !== auth()->user()->branch_id) {
-            abort(403, 'Unauthorized payment update.');
-        }
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStock->due_amount,
+            'payment_date' => 'required|date',
+        ]);
 
-        $rules = [
-            'paid_amount' => ['required', 'numeric', 'min:0.01'],
-            'payment_date' => ['required', 'date'],
-        ];
-
-        if (!is_null($partStock->due_amount)) {
-            $rules['paid_amount'][] = 'max:' . $partStock->due_amount;
-        }
-
-        $request->validate($rules);
-
-        $payment = new PartStockPayment([
+        PartStockPayment::create([
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
             'part_stock_id' => $partStock->id,
         ]);
-        $payment->save();
 
         $partStock->deposit_amount += $request->paid_amount;
+
         $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
         $partStock->save();
 
-        return redirect()->route('manager.partstocks.show', $partStock->id)
-            ->with('success', 'Payment updated successfully.');
+        return back()->with('success', 'Payment updated successfully.');
     }
 
-    public function show(PartStock $partStock)
+    public function show($id)
     {
-        if ($partStock->branch_id !== auth()->user()->branch_id) {
-            abort(403, 'Unauthorized view access.');
-        }
-
-        $partStock->load('branch', 'payments');
+         $partStock = PartStock::with('payments')->find($id);
 
         return view('manager.partstocks.show', compact('partStock'));
     }

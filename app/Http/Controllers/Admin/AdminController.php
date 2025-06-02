@@ -122,9 +122,8 @@ class AdminController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'required|unique:users,phone,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
             'password_confirmation' => 'nullable|string|min:6',
@@ -132,85 +131,87 @@ class AdminController extends Controller
             'branch_id' => 'nullable|exists:branches,id',
         ]);
 
-        if ($request->has('password') && $request->password) {
-            $user->password = bcrypt($request->password);
+        if ($validated['role'] === 'admin') {
+            $validated['branch_id'] = null;
         }
 
-        if ($request->role === 'admin') {
-            $request->merge(['branch_id' => null]);
+        if (!empty($validated['password'])) {
+            $validated['password'] = bcrypt($validated['password']);
+        } else {
+            unset($validated['password']);
         }
 
-        $user->update($request->all());
+        $user->update($validated);
 
-        return redirect()->route('admin.dashboard')->with('success', 'User updated successfully!');
+        return redirect()->route('admin.users.index')->with('success', 'User updated successfully!');
     }
 
-    public function show(User $user, Request $request)
-{
+        public function show(User $user, Request $request)
+    {
 
-    $bills = Bill::with(['customer'])
-        ->where('seller_id', $user->id)
-        ->when($request->from_date && $request->to_date, fn($q) =>
-            $q->whereBetween('created_at', [$request->from_date, $request->to_date])
-        )
-        ->when($request->month, fn($q) => $q->whereMonth('created_at', $request->month))
-        ->when($request->year, fn($q) => $q->whereYear('created_at', $request->year))
-        ->latest()
-        ->paginate(20);
+        $bills = Bill::with(['customer'])
+            ->where('seller_id', $user->id)
+            ->when($request->from_date && $request->to_date, fn($q) =>
+                $q->whereBetween('created_at', [$request->from_date, $request->to_date])
+            )
+            ->when($request->month, fn($q) => $q->whereMonth('created_at', $request->month))
+            ->when($request->year, fn($q) => $q->whereYear('created_at', $request->year))
+            ->latest()
+            ->paginate(20);
 
-    $totalRevenue = 0;
-    $totalProfit = 0;
-    $salesList = [];
+        $totalRevenue = 0;
+        $totalProfit = 0;
+        $salesList = [];
 
-    foreach ($bills as $bill) {
-        foreach ($bill->product_details ?? [] as $item) {
-            $type = $item['type'] ?? null;
-            $id = $item['id'] ?? null;
-            $qty = $item['quantity'] ?? 0;
-            $unitPrice = $item['unit_price'] ?? 0;
-            $total = $qty * $unitPrice;
+        foreach ($bills as $bill) {
+            foreach ($bill->product_details ?? [] as $item) {
+                $type = $item['type'] ?? null;
+                $id = $item['id'] ?? null;
+                $qty = $item['quantity'] ?? 0;
+                $unitPrice = $item['unit_price'] ?? 0;
+                $total = $qty * $unitPrice;
 
-            $productName = 'Unknown';
-            $buyingPrice = 0;
+                $productName = 'Unknown';
+                $buyingPrice = 0;
 
-            if ($type === 'product') {
-                $stock = \App\Models\Stock::find($id);
-                if ($stock) {
-                    $productName = $stock->product_name;
-                    $buyingPrice = $stock->buying_price;
+                if ($type === 'product') {
+                    $stock = \App\Models\Stock::find($id);
+                    if ($stock) {
+                        $productName = $stock->product_name;
+                        $buyingPrice = $stock->buying_price;
+                    }
+                } elseif ($type === 'partstock') {
+                    $part = \App\Models\PartStock::find($id);
+                    if ($part) {
+                        $productName = $part->product_name;
+                        $buyingPrice = $part->buying_price;
+                    }
                 }
-            } elseif ($type === 'partstock') {
-                $part = \App\Models\PartStock::find($id);
-                if ($part) {
-                    $productName = $part->product_name;
-                    $buyingPrice = $part->buying_price;
-                }
+
+                $profit = ($unitPrice - $buyingPrice) * $qty;
+                $totalRevenue += $total;
+                $totalProfit += $profit;
+
+                $salesList[] = [
+                    'bill_id' => $bill->id,
+                    'customer' => $bill->customer?->name ?? 'N/A',
+                    'product_name' => $productName,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'total_amount' => $total,
+                    'date' => $bill->created_at->format('d M, Y'),
+                    'type' => $type,
+                ];
             }
-
-            $profit = ($unitPrice - $buyingPrice) * $qty;
-            $totalRevenue += $total;
-            $totalProfit += $profit;
-
-            $salesList[] = [
-                'bill_id' => $bill->id,
-                'customer' => $bill->customer?->name ?? 'N/A',
-                'product_name' => $productName,
-                'quantity' => $qty,
-                'unit_price' => $unitPrice,
-                'total_amount' => $total,
-                'date' => $bill->created_at->format('d M, Y'),
-                'type' => $type,
-            ];
         }
-    }
 
-    return view('admin.users.show', [
-        'user' => $user,
-        'bills' => $bills,
-        'salesList' => collect($salesList),
-        'totalRevenue' => $totalRevenue,
-        'totalProfit' => $totalProfit,
-    ]);
-}
+        return view('admin.users.show', [
+            'user' => $user,
+            'bills' => $bills,
+            'salesList' => collect($salesList),
+            'totalRevenue' => $totalRevenue,
+            'totalProfit' => $totalProfit,
+        ]);
+    }
 
 }

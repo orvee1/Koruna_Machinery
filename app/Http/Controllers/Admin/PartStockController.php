@@ -87,19 +87,23 @@ class PartStockController extends Controller
 
     public function edit(PartStock $partStock)
     {
-        if ($partStock->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized action.');
+        $branchId = session('active_branch_id');
+
+        if (!$branchId || $partStock->branch_id !== $branchId) {
+            return redirect()
+                ->route('admin.partstocks.index')
+                ->with('error', 'You are not authorized to edit this part stock.');
         }
 
-        $branch = Branch::find(session('active_branch_id'));
+        $branch = Branch::findOrFail($branchId);
+
         return view('admin.partstocks.edit', compact('partStock', 'branch'));
     }
 
+
+
     public function update(Request $request, PartStock $partStock)
     {
-        if ($partStock->branch_id !== session('active_branch_id')) {
-            abort(403, 'Unauthorized action.');
-        }
 
         $request->validate([
             'product_name'    => 'required|string|max:255',
@@ -127,30 +131,26 @@ class PartStockController extends Controller
     }
 
 
-public function updatePayment(Request $request, PartStock $partStock)
-{
-    $request->validate([
-        'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStock->due_amount,
-        'payment_date' => 'required|date',
-    ]);
+    public function updatePayment(Request $request, PartStock $partStock)
+    {
+        $request->validate([
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStock->due_amount,
+            'payment_date' => 'required|date',
+        ]);
 
-    PartStockPayment::create([
-        'paid_amount' => $request->paid_amount,
-        'payment_date' => $request->payment_date,
-        'part_stock_id' => $partStock->id,
-    ]);
+        PartStockPayment::create([
+            'paid_amount' => $request->paid_amount,
+            'payment_date' => $request->payment_date,
+            'part_stock_id' => $partStock->id,
+        ]);
 
-    $partStock->deposit_amount += $request->paid_amount;
+        $partStock->deposit_amount += $request->paid_amount;
 
-    $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
-    $partStock->save();
+        $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
+        $partStock->save();
 
-    return back()->with('success', 'Payment updated successfully.');
-}
-
-
-
-
+        return back()->with('success', 'Payment updated successfully.');
+    }
 
     public function show($id)
     {

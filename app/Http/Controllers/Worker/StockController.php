@@ -73,18 +73,12 @@ class StockController extends Controller
 
     public function edit(Stock $stock)
     {
-        if ($stock->branch_id !== auth()->user()->branch_id) {
-            abort(403);
-        }
 
         return view('worker.stocks.edit', compact('stock'));
     }
 
     public function update(Request $request, Stock $stock)
     {
-        if ($stock->branch_id !== auth()->user()->branch_id) {
-            abort(403);
-        }
 
         $data = $request->validate([
             'product_name' => 'required|string|max:255',
@@ -108,26 +102,22 @@ class StockController extends Controller
         return redirect()->route('worker.stocks.index')->with('success', 'Stock updated successfully.');
     }
 
-    public function updatePayment(Request $request, Stock $stock)
+      public function updatePayment(Request $request, Stock $stock)
     {
-        if ($stock->branch_id !== auth()->user()->branch_id) {
-            abort(403);
-        }
-
         $request->validate([
             'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
             'payment_date' => 'required|date',
         ]);
 
         ProductPayment::create([
-            'stock_id' => $stock->id,
             'paid_amount' => $request->paid_amount,
             'payment_date' => $request->payment_date,
+            'stock_id' => $stock->id,
         ]);
 
         $stock->deposit_amount += $request->paid_amount;
-        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
 
+        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
         $stock->save();
 
         return back()->with('success', 'Payment updated successfully.');
@@ -136,11 +126,7 @@ class StockController extends Controller
     public function show($id)
     {
         $stock = Stock::with('payments')->findOrFail($id);
-
-        if ($stock->branch_id !== auth()->user()->branch_id) {
-            abort(403);
-        }
-
+        
         return view('worker.stocks.show', compact('stock'));
     }
 }
