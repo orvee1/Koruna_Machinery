@@ -121,21 +121,6 @@ Route::middleware('auth')->group(function () {
             Route::post('partstocks/{partStock}/update-payment', [AdminPartStockController::class, 'updatePayment'])
                 ->name('partstocks.updatePayment');
 
-            // Sales Management
-            // Route::resource('product-sales', AdminProductSaleController::class);
-            // Route::post('product-sales/{productSale}/update-payment', [AdminProductSaleController::class, 'updatePayment'])
-            //     ->name('productSales.updatePayment');
-            // Route::resource('partstock-sales', AdminPartStockSaleController::class);
-            // Route::get('partstock-sales', [AdminPartStockSaleController::class, 'index'])->name('partstock-sales.index');
-            // Route::get('partstock-sales/create', [AdminPartStockSaleController::class, 'create'])->name('partstock-sales.create');
-            // Route::post('partstock-sales', [AdminPartStockSaleController::class, 'store'])->name('partstock-sales.store');
-            // Route::get('partstock-sales/{partStockSale}', [AdminPartStockSaleController::class, 'show'])->name('partstock-sales.show');
-            // Route::get('partstock-sales/{partStockSale}/edit', [AdminPartStockSaleController::class, 'edit'])->name('partstock-sales.edit');
-            // Route::put('partstock-sales/{partStockSale}', [AdminPartStockSaleController::class, 'update'])->name('partstock-sales.update');
-            // Route::delete('partstock-sales/{partStockSale}', [AdminPartStockSaleController::class, 'destroy'])->name('partstock-sales.destroy');
-            // Route::post('partstock-sales/{partStockSale}/update-payment', [AdminPartStockSaleController::class, 'updatePayment'])
-            //     ->name('partStockSales.updatePayment');
-
             // Investment Management
             Route::resource('investors', AdminInvestorController::class);
             Route::resource('investment-histories', AdminInvestmentHistoryController::class);

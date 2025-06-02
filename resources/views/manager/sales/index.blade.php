@@ -6,7 +6,7 @@
     <h2 class="mb-4">🧾 Unified Sales Panel (Bill Based)</h2>
 
     {{-- 🔍 Filter --}}
-    <form method="GET" action="{{ route('admin.sales.index') }}" class="row gy-2 gx-3 align-items-end mb-4">
+    <form method="GET" action="{{ route('manager.sales.index') }}" class="row gy-2 gx-3 align-items-end mb-4">
         <div class="col-auto">
             <label>Date</label>
             <input type="date" name="date" class="form-control" value="{{ request('date') }}">
@@ -80,8 +80,8 @@
                         <td>{{ $bill->seller->name ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($bill->created_at)->format('Y-m-d') }}</td>
                         <td class="text-center">
-                        <a href="{{ route('admin.sales.show', $bill->id) }}" class="btn btn-sm btn-outline-info">View</a>
-                        <form action="{{ route('admin.sales.destroy', $bill->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this bill and all related sales?');">
+                        <a href="{{ route('manager.sales.show', $bill->id) }}" class="btn btn-sm btn-outline-info">View</a>
+                        <form action="{{ route('manager.sales.destroy', $bill->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this bill and all related sales?');">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger">🗑️ Delete</button>
