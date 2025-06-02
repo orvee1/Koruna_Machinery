@@ -127,33 +127,28 @@ class PartStockController extends Controller
     }
 
 
-        public function updatePayment(Request $request, PartStock $partStock)
-    {
-     
-        $rules = [
-            'paid_amount' => ['required', 'decimal:0,2', 'min:0.01'],
-            'payment_date' => ['required', 'date'],
-        ];
+public function updatePayment(Request $request, PartStock $partStock)
+{
+    $request->validate([
+        'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStock->due_amount,
+        'payment_date' => 'required|date',
+    ]);
 
-        if (!is_null($partStock->due_amount)) {
-            $rules['paid_amount'][] = 'max:' . $partStock->due_amount;
-        }
+    PartStockPayment::create([
+        'paid_amount' => $request->paid_amount,
+        'payment_date' => $request->payment_date,
+        'part_stock_id' => $partStock->id,
+    ]);
 
-        $request->validate($rules);
+    $partStock->deposit_amount += $request->paid_amount;
 
-        $payment = new PartStockPayment([
-            'paid_amount' => $request->paid_amount,
-            'payment_date' => $request->payment_date,
-            'part_stock_id' => $partStock->id,
-        ]);
-        $payment->save();
+    $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
+    $partStock->save();
 
-        $partStock->deposit_amount += $request->paid_amount;
-        $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
-        $partStock->save();
+    return back()->with('success', 'Payment updated successfully.');
+}
 
-        return back()->with('success', 'Payment updated successfully.');
-    }
+
 
 
 

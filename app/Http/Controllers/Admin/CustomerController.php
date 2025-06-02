@@ -94,7 +94,7 @@ class CustomerController extends Controller
         public function show(Customer $customer)
     {
           $bills = $customer->bills()
-        ->with(['productSales.stock', 'partStockSales.partStock', 'payments', 'seller'])
+        ->with(['payments', 'seller'])
         ->orderBy('created_at')
         ->get();
 

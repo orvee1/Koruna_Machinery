@@ -74,11 +74,11 @@
                 </div>
 
                 <!-- Payment Date -->
-                <div class="col-md-6 mb-3">
+              <div class="col-md-6 mb-3">
                     <label for="payment_date" class="form-label">Payment Date</label>
                     <input type="date" name="payment_date" id="payment_date"
                         class="form-control @error('payment_date') is-invalid @enderror"
-                        value="{{ old('payment_date') }}" required>
+                        value="{{ old('payment_date', date('Y-m-d')) }}" required>
                     @error('payment_date')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror

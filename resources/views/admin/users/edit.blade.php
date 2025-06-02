@@ -33,18 +33,6 @@
                 </div>
             </div>
 
-            <!-- Email field -->
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $user->email) }}" required>
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-        </div>
-
         <div class="row">
             <!-- Phone field -->
             <div class="col-md-6">

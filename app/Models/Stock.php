@@ -28,11 +28,6 @@ class Stock extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function productSales()
-    {
-        return $this->hasMany(ProductSale::class, 'stock_id', 'id');
-    }
-
     public function payments()
     {
         return $this->hasMany(ProductPayment::class, 'stock_id', 'id');

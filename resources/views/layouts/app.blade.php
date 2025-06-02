@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 
-    customerInput.addEventListener('change', function () {
+    customerInput.addEventListener('input', function () {
         const options = Array.from(datalist.options);
         const match = options.find(opt => opt.value === customerInput.value);
         if (match) {
@@ -458,7 +458,13 @@ document.addEventListener('DOMContentLoaded', function () {
             districtInput.value = match.dataset.district;
             previousDue.textContent = match.dataset.total_due;
             calculateTotals();
-        }
+        } else {
+        customerIdInput.value = '';
+        phoneInput.value = '';
+        districtInput.value = '';
+        previousDue.textContent = '0';
+        calculateTotals();
+    }
     });
 
     // ✅ Add Product Input Block
@@ -469,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div id="product_block_${uid}" class="border p-2 mb-2 rounded bg-light">
                 <h6>${name}</h6>
                 <input type="hidden" name="product_details[${uid}][id]" value="${uid.split('_')[1]}">
-                <input type="hidden" name="product_details[${uid}][type]" value="${type === 'partstock' ? 'part' : 'product'}">
+                <input type="hidden" name="product_details[${uid}][type]" value="${type}">
                 <div class="mb-2">
                     <label>Quantity (Max: ${availableQty})</label>
                     <input type="number" name="product_details[${uid}][quantity]" class="form-control" required max="${availableQty}" data-max="${availableQty}">

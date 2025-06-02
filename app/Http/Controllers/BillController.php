@@ -7,8 +7,6 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\Stock;
 use App\Models\PartStock;
-use App\Models\ProductSale;
-use App\Models\PartStockSale;
 use Illuminate\Support\Facades\DB;
 
 class BillController extends Controller
@@ -53,109 +51,69 @@ class BillController extends Controller
         return response()->json($results);
     }
 
-    public function getCustomers(Request $request)
+     public function getCustomers(Request $request)
     {
         $branchId = session('active_branch_id');
         $query = $request->get('name');
 
-        $customers = Customer::withSum([
-            'productSales as product_due' => fn($q) => $q->where('payment_status', '!=', 'paid'),
-            'partsStockSales as part_due' => fn($q) => $q->where('payment_status', '!=', 'paid'),
-        ], 'due_amount')
-            ->where('branch_id', $branchId)
+        $customers = Customer::where('branch_id', $branchId)
             ->where('name', 'like', "%{$query}%")
             ->limit(5)
-            ->get();
-
-        $customers = $customers->map(function ($c) {
-            $c->total_due = round(($c->product_due ?? 0) + ($c->part_due ?? 0), 2);
-            return $c;
-        });
+            ->get()
+            ->map(function ($c) {
+                $c->total_due = $c->bills()->where('payment_status', '!=', 'paid')->sum('due_amount');
+                return $c;
+            });
 
         return response()->json($customers);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'branch_id' => 'required|exists:branches,id',
-            'paid_amount' => 'required|numeric|min:0|max:99999999.99',
-            'product_details' => 'required|array|min:1',
-            'product_details.*.type' => 'required|in:product,part',
-            'product_details.*.id' => 'required|integer',
-            'product_details.*.quantity' => 'required|integer|min:1',
-            'product_details.*.unit_price' => 'required|numeric|min:0|max:99999999.99',
-            'customer_id' => 'nullable|exists:customers,id',
-            'customer_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'district' => 'nullable|string|max:255',
-        ]);
 
-        $branchId = $validated['branch_id'];
-        $paidAmount = $validated['paid_amount'];
-        $details = $validated['product_details'];
-        $totalBillAmount = 0;
+       public function store(Request $request)
+{
+    $validated = $request->validate([
+        'branch_id' => 'required|exists:branches,id',
+        'paid_amount' => 'required|numeric|min:0|max:99999999.99',
+        'product_details' => 'required|array|min:1',
+        'product_details.*.type' => 'required|in:product,partstock',
+        'product_details.*.id' => 'required|integer',
+        'product_details.*.quantity' => 'required|integer|min:1',
+        'product_details.*.unit_price' => 'required|numeric|min:0|max:99999999.99',
+        'customer_id' => 'nullable|exists:customers,id',
+        'customer_name' => 'required|string|max:255',
+        'phone' => 'nullable|string|max:20',
+        'district' => 'nullable|string|max:255',
+    ]);
 
-        if (empty($validated['customer_id'])) {
-            $newCustomer = Customer::create([
-                'name' => $validated['customer_name'],
-                'phone' => $validated['phone'] ?? null,
-                'district' => $validated['district'] ?? null,
-                'branch_id' => $branchId,
-                'type' => 2,
-                'status' => 1,
-            ]);
-            $customerId = $newCustomer->id;
-        } else {
-            $customerId = $validated['customer_id'];
-        }
+    $branchId = $validated['branch_id'];
+    $paidAmount = $validated['paid_amount'];
+    $details = $validated['product_details'];
+    $totalBillAmount = 0;
 
-        $bill = Bill::create([
-            'customer_id' => $customerId,
-            'branch_id' => $branchId,
-            'seller_id' => auth()->id(),
-            'total_amount' => 0,
-            'paid_amount' => 0,
-            'due_amount' => 0,
-            'payment_status' => 'due',
-        ]);
-
-        foreach ($details as $item) {
-            $type = $item['type'];
-            $id = $item['id'];
-            $quantity = $item['quantity'];
-            $unitPrice = $item['unit_price'];
-            $total = $quantity * $unitPrice;
-            $totalBillAmount += $total;
-
-            $saleData = [
-                'branch_id' => $branchId,
-                'customer_id' => $customerId,
-                'seller_id' => auth()->id(),
-                'quantity' => $quantity,
-                'unit_price' => $unitPrice,
-                'paid_amount' => 0,
-                'due_amount' => $total,
-                'payment_status' => 'due',
-                'bill_id' => $bill->id,
-            ];
-
-            if ($type === 'product') {
-                $saleData['stock_id'] = $id;
-                ProductSale::create($saleData);
-            } elseif ($type === 'part') {
-                $saleData['part_stock_id'] = $id;
-                PartStockSale::create($saleData);
-            }
-        }
-
-        $bill->total_amount = $totalBillAmount;
-        $bill->paid_amount = $paidAmount;
-        $bill->due_amount = max(0, $totalBillAmount - $paidAmount);
-        $bill->payment_status = $bill->due_amount <= 0 ? 'paid' : 'due';
-        $bill->save();
-
-        return redirect()->back()
-            ->with('success', 'Bill created successfully with ID: ' . $bill->id);
+    foreach ($details as $item) {
+        $totalBillAmount += $item['unit_price'] * $item['quantity'];
     }
+
+    $customerId = $validated['customer_id'] ?? Customer::create([
+        'name' => $validated['customer_name'],
+        'phone' => $validated['phone'] ?? null,
+        'district' => $validated['district'] ?? null,
+        'branch_id' => $branchId,
+        'type' => 2,
+        'status' => 1,
+    ])->id;
+    $bill = Bill::create([
+        'customer_id'     => $customerId,
+        'branch_id'       => $branchId,
+        'seller_id'       => auth()->id(),
+        'total_amount'    => $totalBillAmount,
+        'paid_amount'     => $paidAmount,
+        'due_amount'      => max(0, $totalBillAmount - $paidAmount),
+        'payment_status'  => $totalBillAmount <= $paidAmount ? 'paid' : 'due',
+        'product_details' => $details, 
+    ]);
+
+    return redirect()->back()->with('success', 'Bill created successfully with ID: ' . $bill->id);
+    }
+
 }

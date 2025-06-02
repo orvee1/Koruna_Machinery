@@ -13,20 +13,15 @@
     <p><strong>Date:</strong> {{ $bill->created_at->format('Y-m-d') }}</p>
 
     <hr>
+
     {{-- Unified Sales List --}}
     <h5>🛒 All Sold Items</h5>
     <ul class="list-group mb-4">
-        @foreach($bill->productSales as $sale)
+        @foreach($bill->product_details ?? [] as $item)
             <li class="list-group-item">
-                {{ $sale->stock->product_name ?? 'N/A' }} — Qty: {{ $sale->quantity }} × {{ number_format($sale->unit_price, 2) }} = 
-                ৳{{ number_format($sale->total_amount, 2) }}
-            </li>
-        @endforeach
-
-        @foreach($bill->partStockSales as $sale)
-            <li class="list-group-item">
-                {{ $sale->partStock->product_name ?? 'N/A' }} — Qty: {{ $sale->quantity }} × {{ number_format($sale->unit_price, 2) }} = 
-                ৳{{ number_format($sale->total_amount, 2) }}
+                {{ $item['name'] ?? ($item['type'] === 'product' ? 'Product' : 'Part Stock') }} —
+                Qty: {{ $item['quantity'] }} × ৳{{ number_format($item['unit_price'], 2) }} =
+                ৳{{ number_format($item['quantity'] * $item['unit_price'], 2) }}
             </li>
         @endforeach
     </ul>
@@ -35,16 +30,18 @@
     <h5>Total Summary</h5>
     <p><strong>Total Amount:</strong> ৳{{ number_format($bill->total_amount, 2) }}</p>
     <p><strong>Paid Amount:</strong> ৳{{ number_format($bill->paid_amount, 2) }}</p>
-    <p class="{{ $bill->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}"><strong>Due Amount:</strong> ৳{{ number_format($bill->due_amount, 2) }}</p>
+    <p class="{{ $bill->due_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+        <strong>Due Amount:</strong> ৳{{ number_format($bill->due_amount, 2) }}
+    </p>
 
     <hr>
-     {{-- New Payment Form --}}
-      <div class="card shadow-lg p-4 mb-5">
+
+    {{-- New Payment Form --}}
+    <div class="card shadow-lg p-4 mb-5">
         <h5 class="mb-3">Update Customer Payment</h5>
         <form action="{{ route('admin.sales.updatePayment', $bill->id) }}" method="POST">
             @csrf
             <div class="row">
-                <!-- Paid Amount -->
                 <div class="col-md-6 mb-3">
                     <label for="paid_amount" class="form-label">Paid Amount (৳)</label>
                     <input type="number" name="paid_amount" id="paid_amount"
@@ -56,7 +53,6 @@
                     @enderror
                 </div>
 
-                <!-- Payment Date -->
                 <div class="col-md-6 mb-3">
                     <label for="payment_date" class="form-label">Payment Date</label>
                     <input type="date" name="payment_date" id="payment_date"
@@ -73,8 +69,8 @@
     </div>
 
     {{-- Payment History --}}
-   <div class="card shadow-lg p-4 mb-5">
-        <h5 class="mb-3">Supplier Payment History</h5>
+    <div class="card shadow-lg p-4 mb-5">
+        <h5 class="mb-3">Customer Payment History</h5>
         <table class="table table-bordered table-striped">
             <thead class="table-light">
                 <tr>
@@ -96,7 +92,5 @@
             </tbody>
         </table>
     </div>
-
-   
 </div>
 @endsection

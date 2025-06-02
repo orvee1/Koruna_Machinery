@@ -48,17 +48,6 @@ class Branch extends Model
         return $this->hasMany(PartStock::class);
     }
 
-    // One-to-many relationship with sales
-    public function productSales()
-    {
-        return $this->hasMany(ProductSale::class);
-    }
-
-    public function partStockSales()
-    {
-        return $this->hasMany(PartStockSale::class);
-    }
-    // One-to-many relationship with customers
     public function customers()
     {
         return $this->hasMany(Customer::class);
@@ -72,5 +61,10 @@ class Branch extends Model
     public function investors()
     {
         return $this->hasMany(Investor::class);
+    }
+
+    public function bills()
+    {
+        return $this->hasMany(Bill::class);
     }
 }

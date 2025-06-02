@@ -122,27 +122,27 @@ class StockController extends Controller
     }
 
 
-        public function updatePayment(Request $request, Stock $stock)
-    {
-        $request->validate([
-            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
-            'payment_date' => 'required|date',
-        ]);
+ public function updatePayment(Request $request, Stock $stock)
+{
+    $request->validate([
+        'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $stock->due_amount,
+        'payment_date' => 'required|date',
+    ]);
 
-        $payment = new ProductPayment([
-            'paid_amount' => $request->paid_amount,
-            'payment_date' => $request->payment_date,
-            'stock_id' => $stock->id,
-        ]);
-        $payment->save();
+    ProductPayment::create([
+        'paid_amount' => $request->paid_amount,
+        'payment_date' => $request->payment_date,
+        'stock_id' => $stock->id,
+    ]);
 
-        $stock->deposit_amount += $request->paid_amount;
-        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
+    $stock->deposit_amount += $request->paid_amount;
 
-        $stock->save();
+    $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
+    $stock->save();
 
-        return back()->with('success', 'Payment updated successfully.');
-    }
+    return back()->with('success', 'Payment updated successfully.');
+}
+
 
 
     public function show($id)

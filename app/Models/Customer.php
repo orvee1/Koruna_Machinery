@@ -21,16 +21,6 @@ class Customer extends Model
         return $this->hasMany(Bill::class);
     }
 
-    public function productSales()
-    {
-        return $this->hasMany(ProductSale::class);
-    }
-
-    public function partsStockSales()
-    {
-    return $this->hasMany(PartStockSale::class);
-    }
-
     public static function boot()
     {
         parent::boot();

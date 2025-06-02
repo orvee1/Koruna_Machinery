@@ -5,10 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\BillPayment;
-use App\Models\PartStockSale;
-use App\Models\PartStockSalePayment;
-use App\Models\ProductSale;
-use App\Models\ProductSalePayment;
 use Illuminate\Http\Request;
 
 class UnifiedSaleController extends Controller
@@ -22,7 +18,7 @@ class UnifiedSaleController extends Controller
     {
         $branchId = session('active_branch_id');
 
-        $bills = Bill::with(['customer', 'productSales.stock', 'partStockSales.partStock', 'seller'])
+        $bills = Bill::with(['customer','seller'])
             ->where('branch_id', $branchId)
             ->when($request->date, fn($q) => $q->whereDate('created_at', $request->date))
             ->when($request->month, fn($q) => $q->whereMonth('created_at', $request->month))
@@ -37,7 +33,7 @@ class UnifiedSaleController extends Controller
 
     public function show(Bill $bill)
     {
-        $bill->load(['customer', 'productSales.stock', 'partStockSales.partStock', 'seller']);
+        $bill->load(['customer', 'seller']);
 
         return view('admin.sales.show', compact('bill'));
     }
@@ -67,15 +63,7 @@ class UnifiedSaleController extends Controller
     }
 
     public function destroy(Bill $bill)
-    {
-        foreach ($bill->productSales as $sale) {
-            $sale->delete();
-        }
-
-        foreach ($bill->partStockSales as $sale) {
-            $sale->delete();
-        }
-
+    {   
         $bill->delete();
 
         return redirect()->route('admin.sales.index')->with('success', 'Bill and all related sales deleted successfully.');
