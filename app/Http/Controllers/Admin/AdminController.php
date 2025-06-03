@@ -20,7 +20,7 @@ class AdminController extends Controller
         $this->middleware('checkRole:admin');
     }
 
-    public function dashboard(Request $request)
+        public function dashboard(Request $request)
     {
         $branchId = session('active_branch_id');
 
@@ -33,9 +33,9 @@ class AdminController extends Controller
         $month = $request->month;
         $year = $request->year;
 
-       $billQuery = Bill::with('customer')->where('branch_id', $branchId);
         $stockQuery = Stock::where('branch_id', $branchId);
         $partStockQuery = PartStock::where('branch_id', $branchId);
+        $billQuery = Bill::with('customer')->where('branch_id', $branchId);
 
         if ($from && $to) {
             $billQuery->whereBetween('created_at', [$from, $to]);
@@ -43,10 +43,6 @@ class AdminController extends Controller
             $billQuery->whereMonth('created_at', $month);
         } elseif ($year) {
             $billQuery->whereYear('created_at', $year);
-        } else {
-            $today = Carbon::today();
-            $tomorrow = Carbon::tomorrow();
-            $billQuery->whereBetween('created_at', [$today, $tomorrow]);
         }
 
         $bills = $billQuery->get();
@@ -56,15 +52,46 @@ class AdminController extends Controller
         $stockDue = $stockQuery->sum('due_amount');
         $partStockDue = $partStockQuery->sum('due_amount');
         $totalDue = $stockDue + $partStockDue;
-
-        $productProfit = Stock::where('branch_id', $branchId)->sum('total_profit');
-        $partStockProfit = PartStock::where('branch_id', $branchId)->sum('total_profit');
-        $totalProfit = $productProfit + $partStockProfit;
-
-
         $stockValue = $stockQuery->sum('total_amount');
         $partStockValue = $partStockQuery->sum('total_amount');
         $totalProductValue = $stockValue + $partStockValue;
+
+        $profitBills = clone $billQuery;
+
+        if (!$from && !$month && !$year) {
+            $today = Carbon::today();
+            $tomorrow = Carbon::tomorrow();
+            $profitBills->whereBetween('created_at', [$today, $tomorrow]);
+        }
+
+        $productProfit = 0;
+        $partStockProfit = 0;
+
+        foreach ($profitBills->get() as $bill) {
+            foreach ($bill->product_details ?? [] as $item) {
+                $type = $item['type'];
+                $id = $item['id'];
+                $quantity = $item['quantity'];
+                $unitPrice = $item['unit_price'];
+                $profit = 0;
+
+                if ($type === 'product') {
+                    $stock = \App\Models\Stock::find($id);
+                    if ($stock) {
+                        $profit = ($unitPrice - $stock->buying_price) * $quantity;
+                        $productProfit += $profit > 0 ? $profit : 0;
+                    }
+                } elseif ($type === 'partstock') {
+                    $part = \App\Models\PartStock::find($id);
+                    if ($part) {
+                        $profit = ($unitPrice - $part->buying_price) * $quantity;
+                        $partStockProfit += $profit > 0 ? $profit : 0;
+                    }
+                }
+            }
+        }
+
+        $totalProfit = $productProfit + $partStockProfit;
 
         $users = User::where('branch_id', $branchId)->get();
 
@@ -81,6 +108,7 @@ class AdminController extends Controller
             'year'
         ));
     }
+
 
     public function index()
     {

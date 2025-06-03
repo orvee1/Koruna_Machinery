@@ -26,11 +26,10 @@ class Bill extends Model
         'product_details' => 'array',
     ];
 
-    protected static function booted()
+   protected static function booted()
 {
-    // When bill is created → reduce quantity & add profit
     static::created(function (Bill $bill) {
-          $details = $bill->product_details ?? [];
+        $details = $bill->product_details ?? [];
 
         foreach ($details as $item) {
             $type = $item['type'];
@@ -43,7 +42,8 @@ class Bill extends Model
                 if ($stock) {
                     $stock->quantity = max(0, $stock->quantity - $quantity);
                     $stock->total_amount = $stock->buying_price * $stock->quantity;
-                    $stock->total_profit += ($unitPrice - $stock->buying_price) * $quantity;
+                    $profit = ($unitPrice - $stock->buying_price) * $quantity;
+                    $stock->total_profit += $profit > 0 ? $profit : 0;
                     $stock->saveQuietly();
                 }
             } elseif ($type === 'partstock') {
@@ -51,16 +51,16 @@ class Bill extends Model
                 if ($part) {
                     $part->quantity = max(0, $part->quantity - $quantity);
                     $part->total_amount = $part->buying_price * $part->quantity;
-                    $part->total_profit += ($unitPrice - $part->buying_price) * $quantity;
+                    $profit = ($unitPrice - $part->buying_price) * $quantity;
+                    $part->total_profit += $profit > 0 ? $profit : 0;
                     $part->saveQuietly();
                 }
             }
         }
     });
 
-    // When bill is deleted → restore quantity & revert profit
     static::deleting(function (Bill $bill) {
-          $details = $bill->product_details ?? [];
+        $details = $bill->product_details ?? [];
 
         foreach ($details as $item) {
             $type = $item['type'];
@@ -73,7 +73,8 @@ class Bill extends Model
                 if ($stock) {
                     $stock->quantity += $quantity;
                     $stock->total_amount = $stock->buying_price * $stock->quantity;
-                    $stock->total_profit = max(0, $stock->total_profit - (($unitPrice - $stock->buying_price) * $quantity));
+                    $profit = ($unitPrice - $stock->buying_price) * $quantity;
+                    $stock->total_profit = max(0, $stock->total_profit - ($profit > 0 ? $profit : 0));
                     $stock->saveQuietly();
                 }
             } elseif ($type === 'partstock') {
@@ -81,13 +82,15 @@ class Bill extends Model
                 if ($part) {
                     $part->quantity += $quantity;
                     $part->total_amount = $part->buying_price * $part->quantity;
-                    $part->total_profit = max(0, $part->total_profit - (($unitPrice - $part->buying_price) * $quantity));
+                    $profit = ($unitPrice - $part->buying_price) * $quantity;
+                    $part->total_profit = max(0, $part->total_profit - ($profit > 0 ? $profit : 0));
                     $part->saveQuietly();
                 }
             }
         }
     });
 }
+
 
 
     public function customer()
