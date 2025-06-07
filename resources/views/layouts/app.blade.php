@@ -364,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const selectedProducts = new Set();
 
-    // ✅ Fetch Products
     fetch(`/bills/products`)
         .then(res => res.json())
         .then(data => {
@@ -389,7 +388,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 checkbox.dataset.name = p.name.toLowerCase();
 
                 checkbox.innerHTML = `
-                    <input class="form-check-input" type="checkbox" value="${id}" id="${id}" data-quantity="${p.quantity}" ${p.quantity === 0 ? 'disabled' : ''}>
+                    <input class="form-check-input" type="checkbox" value="${id}" id="${id}"
+                        data-quantity="${p.quantity}"
+                        ${p.type === 'product' ? `data-buying-price="${p.buying_price}"` : ''}
+                        ${p.type === 'partstock' ? `data-selling-price="${p.selling_price}"` : ''}
+                        ${p.quantity === 0 ? 'disabled' : ''}>
                     <label class="form-check-label" for="${id}">${labelParts.join(' — ')}</label>
                 `;
 
@@ -402,13 +405,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         selectedProducts.delete(id);
                         document.getElementById(`product_block_${id}`)?.remove();
-                        calculateTotals(); // recalculate when removed
+                        calculateTotals();
                     }
                 });
             });
         });
 
-    // 🔍 Search
     productSearchInput.addEventListener('input', function () {
         const query = this.value.toLowerCase();
         const checkboxes = productSelect.querySelectorAll('.form-check');
@@ -420,7 +422,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ✅ Customer Auto Suggest
     customerInput.addEventListener('input', function () {
         const query = this.value.trim();
         customerIdInput.value = '';
@@ -459,17 +460,21 @@ document.addEventListener('DOMContentLoaded', function () {
             previousDue.textContent = match.dataset.total_due;
             calculateTotals();
         } else {
-        customerIdInput.value = '';
-        phoneInput.value = '';
-        districtInput.value = '';
-        previousDue.textContent = '0';
-        calculateTotals();
-    }
+            customerIdInput.value = '';
+            phoneInput.value = '';
+            districtInput.value = '';
+            previousDue.textContent = '0';
+            calculateTotals();
+        }
     });
 
-    // ✅ Add Product Input Block
     function addProductInput(uid, type, name, availableQty) {
         if (document.getElementById(`product_block_${uid}`)) return;
+
+        const checkbox = document.getElementById(uid);
+        const minPrice = type === 'product'
+            ? parseFloat(checkbox?.dataset.buyingPrice || 0)
+            : parseFloat(checkbox?.dataset.sellingPrice || 0);
 
         container.insertAdjacentHTML('beforeend', `
             <div id="product_block_${uid}" class="border p-2 mb-2 rounded bg-light">
@@ -478,21 +483,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="hidden" name="product_details[${uid}][type]" value="${type}">
                 <div class="mb-2">
                     <label>Quantity (Max: ${availableQty})</label>
-                    <input type="number" name="product_details[${uid}][quantity]" class="form-control" required max="${availableQty}" data-max="${availableQty}">
+                    <input type="number" name="product_details[${uid}][quantity]" class="form-control"
+                        required max="${availableQty}" data-max="${availableQty}">
                 </div>
                 <div class="mb-2">
-                    <label>Selling Price</label>
-                    <input type="number" name="product_details[${uid}][unit_price]" class="form-control" step="0.01" required>
+                    <label>Selling Price (Min: ৳${minPrice})</label>
+                    <input type="number" name="product_details[${uid}][unit_price]" class="form-control"
+                        step="0.01" required data-min="${minPrice}">
                 </div>
             </div>
         `);
 
-        // ⚠️ Delay added to ensure DOM inputs are ready
         setTimeout(() => calculateTotals(), 50);
     }
 
-    // ✅ Listen to quantity/price/paid change
-    document.addEventListener('input', function (e) {
+     document.addEventListener('input', function (e) {
         const name = e.target.name || '';
 
         if (name.includes('[quantity]')) {
@@ -504,43 +509,65 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        if (name.includes('[unit_price]')) {
+            const input = e.target;
+            const min = parseFloat(input.dataset.min || '0');
+            const uid = input.name.match(/product_details\[(.*?)\]/)?.[1];
+
+            if (unitPriceTimers[uid]) {
+                clearTimeout(unitPriceTimers[uid]);
+            }
+
+            unitPriceTimers[uid] = setTimeout(() => {
+                const val = parseFloat(input.value || 0);
+                if (!isNaN(val) && val < min) {
+                    alert(`❌ Selling price cannot be below ৳${min}`);
+                    input.value = min.toFixed(2);
+                }
+                calculateTotals();
+            }, 800);
+        }
+
         if (
             name.includes('[quantity]') ||
-            name.includes('[unit_price]') ||
             name === 'paid_amount'
         ) {
             calculateTotals();
         }
     });
 
-    // ✅ Totals
+    document.addEventListener('blur', function (e) {
+        if (e.target.name?.includes('[unit_price]')) {
+            const input = e.target;
+            const min = parseFloat(input.dataset.min || 0);
+            const val = parseFloat(input.value || 0);
+            if (!isNaN(val) && val < min) {
+                alert(`❌ Selling price cannot be below ৳${min}`);
+                input.value = min.toFixed(2);
+                calculateTotals();
+            }
+        }
+    }, true);
+
     function calculateTotals() {
         let total = 0;
-        const previous = parseFloat(previousDue.textContent) || 0;
-        const paid = parseFloat(paidInput.value || 0);
+        const previous = parseFloat(document.getElementById('previousDue').textContent) || 0;
+        const paid = parseFloat(document.querySelector('[name="paid_amount"]').value || 0);
 
-        const blocks = container.querySelectorAll('[id^="product_block_"]');
+        const blocks = document.querySelectorAll('[id^="product_block_"]');
         blocks.forEach(block => {
             const qtyInput = block.querySelector('[name$="[quantity]"]');
             const priceInput = block.querySelector('[name$="[unit_price]"]');
-
             const qty = parseFloat(qtyInput?.value || 0);
             const price = parseFloat(priceInput?.value || 0);
             total += qty * price;
         });
 
-        totalAmount.textContent = total.toFixed(2);
-        totalDue.textContent = Math.max(0, total - paid + previous).toFixed(2);
+        document.getElementById('totalAmount').textContent = total.toFixed(2);
+        document.getElementById('totalDue').textContent = Math.max(0, total - paid + previous).toFixed(2);
     }
 });
 </script>
-
-
-
-
-
-
-
 
 
 

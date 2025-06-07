@@ -68,8 +68,7 @@ class BillController extends Controller
         return response()->json($customers);
     }
 
-
-       public function store(Request $request)
+public function store(Request $request)
 {
     $validated = $request->validate([
         'branch_id' => 'required|exists:branches,id',
@@ -91,7 +90,32 @@ class BillController extends Controller
     $totalBillAmount = 0;
 
     foreach ($details as $item) {
-        $totalBillAmount += $item['unit_price'] * $item['quantity'];
+        $type = $item['type'];
+        $productId = $item['id'];
+        $unitPrice = $item['unit_price'];
+        $quantity = $item['quantity'];
+
+        if ($type === 'product') {
+            $product = \App\Models\Stock::where('branch_id', $branchId)->findOrFail($productId);
+
+            if ($unitPrice < $product->buying_price) {
+                return back()->withErrors([
+                    "product_details.{$productId}.unit_price" => 
+                        "Selling price for '{$product->product_name}' cannot be below buying price (৳{$product->buying_price})."
+                ])->withInput();
+            }
+        } elseif ($type === 'partstock') {
+            $part = \App\Models\PartStock::where('branch_id', $branchId)->findOrFail($productId);
+
+            if ($unitPrice < $part->sell_value) {
+                return back()->withErrors([
+                    "product_details.{$productId}.unit_price" => 
+                        "Selling price for '{$part->product_name}' cannot be below minimum (৳{$part->sell_value})."
+                ])->withInput();
+            }
+        }
+
+        $totalBillAmount += $unitPrice * $quantity;
     }
 
     $customerId = $validated['customer_id'] ?? Customer::create([
@@ -102,6 +126,7 @@ class BillController extends Controller
         'type' => 2,
         'status' => 1,
     ])->id;
+
     $bill = Bill::create([
         'customer_id'     => $customerId,
         'branch_id'       => $branchId,
@@ -110,10 +135,11 @@ class BillController extends Controller
         'paid_amount'     => $paidAmount,
         'due_amount'      => max(0, $totalBillAmount - $paidAmount),
         'payment_status'  => $totalBillAmount <= $paidAmount ? 'paid' : 'due',
-        'product_details' => $details, 
+        'product_details' => $details,
     ]);
 
     return redirect()->back()->with('success', 'Bill created successfully with ID: ' . $bill->id);
-    }
+}
+
 
 }
