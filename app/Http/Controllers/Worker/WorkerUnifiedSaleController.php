@@ -25,6 +25,11 @@ class WorkerUnifiedSaleController extends Controller
             ->when($request->year, fn($q) => $q->whereYear('created_at', $request->year))
             ->when($request->status === 'paid', fn($q) => $q->where('due_amount', 0))
             ->when($request->status === 'due', fn($q) => $q->where('due_amount', '>', 0))
+            ->when($request->customer, function ($q) use ($request) {
+                $q->whereHas('customer', function ($query) use ($request) {
+                    $query->where('name', 'like', '%' . $request->customer . '%');
+                });
+            })
             ->latest()
             ->get();
 

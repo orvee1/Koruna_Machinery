@@ -39,6 +39,11 @@
             </select>
         </div>
         <div class="col-auto">
+            <label>Customer Name</label>
+            <input type="text" name="customer" class="form-control" placeholder="type customer name"
+                value="{{ request('customer') }}">
+        </div>
+        <div class="col-auto">
             <button type="submit" class="btn btn-primary">Filter</button>
         </div>
     </form>
@@ -50,7 +55,6 @@
                 <tr>
                     <th>SL No</th>
                     <th>Customer</th>
-                    {{-- <th>Items</th> --}}
                     <th>Total (৳)</th>
                     <th>Paid (৳)</th>
                     <th>Due (৳)</th>
@@ -60,18 +64,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($bills as $bill)
+                @forelse($bills as $bill)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $bill->customer->name ?? 'N/A' }}</td>
-                        {{-- <td>
-                            @foreach($bill->productSales as $sale)
-                                🟢 {{ $sale->stock->product_name ?? 'N/A' }} ({{ $sale->quantity }}x{{ number_format($sale->unit_price, 2) }})<br>
-                            @endforeach
-                            @foreach($bill->partStockSales as $sale)
-                                🔵 {{ $sale->partStock->product_name ?? 'N/A' }} ({{ $sale->quantity }}x{{ number_format($sale->unit_price, 2) }})<br>
-                            @endforeach
-                        </td> --}}
                         <td>{{ number_format($bill->total_amount, 2) }}</td>
                         <td>{{ number_format($bill->paid_amount, 2) }}</td>
                         <td class="{{ $bill->due_amount > 0 ? 'text-danger' : 'text-success' }}">
@@ -80,16 +76,19 @@
                         <td>{{ $bill->seller->name ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($bill->created_at)->format('Y-m-d') }}</td>
                         <td class="text-center">
-                        <a href="{{ route('admin.sales.show', $bill->id) }}" class="btn btn-sm btn-outline-info">View</a>
-                        <form action="{{ route('admin.sales.destroy', $bill->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this bill and all related sales?');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger">🗑️ Delete</button>
-                        </form>
+                            <a href="{{ route('admin.sales.show', $bill->id) }}" class="btn btn-sm btn-outline-info">View</a>
+                            <form action="{{ route('admin.sales.destroy', $bill->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this bill and all related sales?');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger">🗑️ Delete</button>
+                            </form>
                         </td>
-
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">No bills found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

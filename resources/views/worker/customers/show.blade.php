@@ -1,145 +1,96 @@
 @extends('layouts.app')
-
-@section('title', 'Customer Invoice')
+@section('title', 'Customer View')
 
 @section('content')
-<div class="container" id="invoice-section">
-    {{-- 🔷 Header --}}
-    <div class="text-center border-bottom pb-3 mb-3">
-        <h2 class="fw-bold">KARUNA MACHINERY</h2>
-        <p>২৫, জুবলি রোড, চট্টগ্রাম। ফোন: ০১৮৮১-০৮৭৭১৬</p>
-        <h5 class="mt-3 border-top pt-2">ক্যাশ মেমো</h5>
-    </div>
+<div class="container">
+    <h3 class="mb-4">🧾 Customer History: {{ $customer->name }}</h3>
 
-    {{-- 🔶 Customer Info --}}
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <p><strong>গ্রাহকের নাম:</strong> {{ $customer->name }}</p>
-            <p><strong>ফোন:</strong> {{ $customer->phone }}</p>
-            <p><strong>জেলা:</strong> {{ $customer->district ?? 'N/A' }}</p>
-        </div>
-        <div class="col-md-6 text-end">
-            <p><strong>তারিখ:</strong> {{ now()->format('d/m/Y') }}</p>
-            <p><strong>মেমো নং:</strong> {{ $customer->customer_id ?? 'N/A' }}</p>
-        </div>
-    </div>
+    <p><strong>Phone:</strong> {{ $customer->phone }}</p>
+    <p><strong>District:</strong> {{ $customer->district ?? 'N/A' }}</p>
 
     @php
-        $mergedSales = collect();
-
-        // product sales
-        foreach ($customer->productSales()->with(['stock', 'seller'])->get() as $sale) {
-            $mergedSales->push([
-                'name'       => $sale->stock->product_name ?? 'N/A',
-                'quantity'   => $sale->quantity,
-                'unit_price' => $sale->unit_price,
-                'total'      => $sale->unit_price * $sale->quantity,
-                'paid'       => $sale->paid_amount,
-                'due'        => $sale->due_amount,
-                'seller'     => $sale->seller->name ?? 'N/A',
-            ]);
-        }
-
-        // part stock sales
-        foreach ($customer->partsStockSales()->with(['partStock', 'seller'])->get() as $sale) {
-            $mergedSales->push([
-                'name'       => $sale->partStock->product_name ?? 'N/A',
-                'quantity'   => $sale->quantity,
-                'unit_price' => $sale->unit_price,
-                'total'      => $sale->unit_price * $sale->quantity,
-                'paid'       => $sale->paid_amount,
-                'due'        => $sale->due_amount,
-                'seller'     => $sale->seller->name ?? 'N/A',
-            ]);
-        }
-
-        $grandTotal = $mergedSales->sum('total');
-        $grandPaid = $mergedSales->sum('paid');
-        $grandDue = $mergedSales->sum('due');
-        $lastSeller = $mergedSales->isNotEmpty() ? $mergedSales->last()['seller'] : 'N/A';
+        $grandTotal = 0;
+        $grandPaid = 0;
+        $grandDue = 0;
     @endphp
 
-    @if($mergedSales->isNotEmpty())
-    <table class="table table-bordered text-center align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>ক্রম</th>
-                <th>পণ্যের নাম</th>
-                <th>পরিমাণ</th>
-                <th>দর (৳)</th>
-                <th>মোট (৳)</th>
-                <th>পেইড (৳)</th>
-                <th>বাকি (৳)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($mergedSales as $i => $item)
-                <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $item['name'] }}</td>
-                    <td>{{ $item['quantity'] }}</td>
-                    <td>{{ number_format($item['unit_price'], 2) }}</td>
-                    <td>{{ number_format($item['total'], 2) }}</td>
-                    <td>{{ number_format($item['paid'], 2) }}</td>
-                    <td class="{{ $item['due'] > 0 ? 'text-danger' : 'text-success' }}">
-                        {{ $item['due'] > 0 ? number_format($item['due'], 2) . ' (Due)' : 'Paid' }}
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr class="table-light">
-                <td colspan="4" class="text-end fw-bold">মোট</td>
-                <td>{{ number_format($grandTotal, 2) }}</td>
-                <td>{{ number_format($grandPaid, 2) }}</td>
-                <td class="{{ $grandDue > 0 ? 'text-danger' : 'text-success' }}">
-                    {{ $grandDue > 0 ? number_format($grandDue, 2) . ' (Due)' : 'Paid' }}
-                </td>
-            </tr>
-        </tfoot>
-    </table>
-    @else
-        <p class="text-center text-muted">কোন বিক্রয় রেকর্ড পাওয়া যায়নি।</p>
-    @endif
+    @forelse($bills as $bill)
+        @php
+            $billTotal = $bill->total_amount;
+            $billPaid = $bill->paid_amount;
+            $billDue = $bill->due_amount;
 
-    {{-- 🔷 Signature --}}
-    <div class="text-end mt-5">
-        <p><strong>পক্ষে - {{ $lastSeller }}</strong></p>
-    </div>
+            $grandTotal += $billTotal;
+            $grandPaid += $billPaid;
+            $grandDue += $billDue;
+            $details = $bill->product_details ?? [];
+        @endphp
 
-    <div class="text-center no-print mt-4">
-        <button class="btn btn-outline-primary" onclick="printInvoice()">🖨️ প্রিন্ট করুন</button>
-    </div>
-    <div class="mt-3 no-print">
-        <a href="{{ route('worker.customers.index') }}" class="btn btn-secondary">← ফিরে যান</a>
-    </div>
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <span>📄 <strong>Bill #{{ $bill->id }}</strong> | {{ $bill->created_at->format('d M Y') }}</span>
+                <span><strong>Seller:</strong> {{ $bill->seller->name ?? 'N/A' }}</span>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-bordered text-center m-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SL No</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php $serial = 1; @endphp
+                        @foreach($details as $item)
+                            @php
+                                $productName = 'N/A';
+                                if ($item['type'] === 'product') {
+                                    $stock = \App\Models\Stock::find($item['id']);
+                                    $productName = $stock->product_name ?? 'N/A';
+                                } elseif ($item['type'] === 'partstock') {
+                                    $part = \App\Models\PartStock::find($item['id']);
+                                    $productName = $part->product_name ?? 'N/A';
+                                }
+                            @endphp
+                            <tr>
+                                <td>{{ $serial++ }}</td>
+                                <td>{{ $productName }}</td>
+                                <td>{{ $item['quantity'] }}</td>
+                                <td>{{ number_format($item['unit_price'], 2) }}</td>
+                                <td>{{ number_format($item['quantity'] * $item['unit_price'], 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="3" class="text-end fw-bold">Subtotal</td>
+                            <td>{{ number_format($billPaid, 2) }} Paid</td>
+                            <td class="{{ $billDue > 0 ? 'text-danger' : 'text-success' }}">
+                                {{ number_format($billDue, 2) }} {{ $billDue > 0 ? '(Due)' : '(Paid)' }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    @empty
+        <p class="text-muted">No sales records available for this customer.</p>
+    @endforelse
+
+    <hr>
+    <h5 class="mt-4">🔢 Grand Summary</h5>
+    <ul>
+        <li><strong>Total Amount:</strong> ৳{{ number_format($grandTotal, 2) }}</li>
+        <li><strong>Total Paid:</strong> ৳{{ number_format($grandPaid, 2) }}</li>
+        <li><strong>Total Due:</strong> 
+            <span class="{{ $grandDue > 0 ? 'text-danger' : 'text-success' }}">
+                ৳{{ number_format($grandDue, 2) }}
+            </span>
+        </li>
+    </ul>
 </div>
-
-<script>
-function printInvoice() {
-    window.print();
-}
-</script>
-
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #invoice-section, #invoice-section * {
-        visibility: visible;
-    }
-    #invoice-section {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-    }
-    .no-print {
-        display: none !important;
-    }
-    .text-danger { color: red !important; }
-    .text-success { color: green !important; }
-}
-</style>
 @endsection

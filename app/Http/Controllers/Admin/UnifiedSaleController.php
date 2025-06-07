@@ -14,22 +14,28 @@ class UnifiedSaleController extends Controller
         $this->middleware('checkRole:admin');
     }
 
-    public function index(Request $request)
+        public function index(Request $request)
     {
         $branchId = session('active_branch_id');
 
-        $bills = Bill::with(['customer','seller'])
+        $bills = Bill::with(['customer', 'seller'])
             ->where('branch_id', $branchId)
             ->when($request->date, fn($q) => $q->whereDate('created_at', $request->date))
             ->when($request->month, fn($q) => $q->whereMonth('created_at', $request->month))
             ->when($request->year, fn($q) => $q->whereYear('created_at', $request->year))
             ->when($request->status === 'paid', fn($q) => $q->where('due_amount', 0))
             ->when($request->status === 'due', fn($q) => $q->where('due_amount', '>', 0))
+            ->when($request->customer, function ($q) use ($request) {
+                $q->whereHas('customer', function ($query) use ($request) {
+                    $query->where('name', 'like', '%' . $request->customer . '%');
+                });
+            })
             ->latest()
             ->get();
 
         return view('admin.sales.index', compact('bills'));
     }
+
 
     public function show(Bill $bill)
     {

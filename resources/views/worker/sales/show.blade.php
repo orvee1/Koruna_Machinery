@@ -14,17 +14,46 @@
 
     <hr>
 
-    {{-- Unified Sales List --}}
-    <h5>🛒 All Sold Items</h5>
-    <ul class="list-group mb-4">
-        @foreach($bill->product_details ?? [] as $item)
-            <li class="list-group-item">
-                {{ $item['name'] ?? ($item['type'] === 'product' ? 'Product' : 'Part Stock') }} —
-                Qty: {{ $item['quantity'] }} × ৳{{ number_format($item['unit_price'], 2) }} =
-                ৳{{ number_format($item['quantity'] * $item['unit_price'], 2) }}
-            </li>
-        @endforeach
-    </ul>
+    {{-- Sold Product Table --}}
+    <h5 class="mb-3">🛍️ Sold Product Details</h5>
+    <table class="table table-bordered table-hover">
+        <thead class="table-light text-center">
+            <tr>
+                <th>SL</th>
+                <th>Product Name</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Unit Price (৳)</th>
+                <th>Total (৳)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($bill->product_details ?? [] as $item)
+                @php
+                    $productName = 'N/A';
+                    if ($item['type'] === 'product') {
+                        $stock = \App\Models\Stock::find($item['id']);
+                        $productName = $stock->product_name ?? 'Deleted Product';
+                    } elseif ($item['type'] === 'partstock') {
+                        $part = \App\Models\PartStock::find($item['id']);
+                        $productName = $part->product_name ?? 'Deleted Part Stock';
+                    }
+                @endphp
+                <tr class="text-center">
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $productName }}</td>
+                    <td>{{ ucfirst($item['type']) }}</td>
+                    <td>{{ $item['quantity'] }}</td>
+                    <td>{{ number_format($item['unit_price'], 2) }}</td>
+                    <td>{{ number_format($item['quantity'] * $item['unit_price'], 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No product details available.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 
     {{-- Bill Summary --}}
     <h5>Total Summary</h5>
@@ -39,7 +68,7 @@
     {{-- New Payment Form --}}
     <div class="card shadow-lg p-4 mb-5">
         <h5 class="mb-3">Update Customer Payment</h5>
-        <form action="{{ route('worker.sales.updatePayment', $bill->id) }}" method="POST">
+        <form action="{{ route('admin.sales.updatePayment', $bill->id) }}" method="POST">
             @csrf
             <div class="row">
                 <div class="col-md-6 mb-3">
