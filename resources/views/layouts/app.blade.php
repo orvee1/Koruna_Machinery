@@ -363,6 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const paidInput = document.querySelector('[name="paid_amount"]');
 
     const selectedProducts = new Set();
+    const unitPriceTimers = {};
 
     fetch(`/bills/products`)
         .then(res => res.json())
@@ -458,14 +459,13 @@ document.addEventListener('DOMContentLoaded', function () {
             phoneInput.value = match.dataset.phone;
             districtInput.value = match.dataset.district;
             previousDue.textContent = match.dataset.total_due;
-            calculateTotals();
         } else {
             customerIdInput.value = '';
             phoneInput.value = '';
             districtInput.value = '';
             previousDue.textContent = '0';
-            calculateTotals();
         }
+        calculateTotals();
     });
 
     function addProductInput(uid, type, name, availableQty) {
@@ -494,10 +494,10 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `);
 
-        setTimeout(() => calculateTotals(), 50);
+        setTimeout(() => calculateTotals(), 100);
     }
 
-     document.addEventListener('input', function (e) {
+    document.addEventListener('input', function (e) {
         const name = e.target.name || '';
 
         if (name.includes('[quantity]')) {
@@ -507,12 +507,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.target.value = max;
                 alert(`You cannot sell more than ${max} units for this product.`);
             }
+            calculateTotals(); // ✅ real-time update
         }
 
         if (name.includes('[unit_price]')) {
             const input = e.target;
-            const min = parseFloat(input.dataset.min || '0');
-            const uid = input.name.match(/product_details\[(.*?)\]/)?.[1];
+            const min = parseFloat(input.dataset.min || 0);
+            const uid = input.name.match(/product_details\\[(.*?)\\]/)?.[1];
 
             if (unitPriceTimers[uid]) {
                 clearTimeout(unitPriceTimers[uid]);
@@ -526,12 +527,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 calculateTotals();
             }, 800);
+
+            calculateTotals(); // ✅ live update even during debounce
         }
 
-        if (
-            name.includes('[quantity]') ||
-            name === 'paid_amount'
-        ) {
+        if (name === 'paid_amount') {
             calculateTotals();
         }
     });
@@ -544,15 +544,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!isNaN(val) && val < min) {
                 alert(`❌ Selling price cannot be below ৳${min}`);
                 input.value = min.toFixed(2);
-                calculateTotals();
             }
+            calculateTotals();
         }
     }, true);
 
     function calculateTotals() {
         let total = 0;
-        const previous = parseFloat(document.getElementById('previousDue').textContent) || 0;
-        const paid = parseFloat(document.querySelector('[name="paid_amount"]').value || 0);
+        const previous = parseFloat(previousDue.textContent) || 0;
+        const paid = parseFloat(paidInput.value || 0);
 
         const blocks = document.querySelectorAll('[id^="product_block_"]');
         blocks.forEach(block => {
@@ -563,11 +563,12 @@ document.addEventListener('DOMContentLoaded', function () {
             total += qty * price;
         });
 
-        document.getElementById('totalAmount').textContent = total.toFixed(2);
-        document.getElementById('totalDue').textContent = Math.max(0, total - paid + previous).toFixed(2);
+        totalAmount.textContent = total.toFixed(2);
+        totalDue.textContent = Math.max(0, total - paid + previous).toFixed(2);
     }
 });
 </script>
+
 
 
 
