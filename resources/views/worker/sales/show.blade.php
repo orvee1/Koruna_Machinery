@@ -68,7 +68,7 @@
     {{-- New Payment Form --}}
     <div class="card shadow-lg p-4 mb-5">
         <h5 class="mb-3">Update Customer Payment</h5>
-        <form action="{{ route('admin.sales.updatePayment', $bill->id) }}" method="POST">
+        <form action="{{ route('worker.sales.updatePayment', $bill->id) }}" method="POST">
             @csrf
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -120,6 +120,9 @@
                 @endforelse
             </tbody>
         </table>
+         <a href="{{ route('worker.sales.index') }}" class="btn btn-secondary mt-3">
+            ← Back to List
+        </a>
     </div>
 </div>
 @endsection

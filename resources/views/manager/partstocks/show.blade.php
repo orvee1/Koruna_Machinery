@@ -58,7 +58,9 @@
             <td>{{ $partStock->total_profit }}</td>
         </tr>   
     </table>
-
+     <a href="{{ route('manager.partstocks.index') }}" class="btn btn-secondary mt-3">
+            ← Back to List
+     </a>
      <div class="card shadow-lg p-4 mb-5">
         <h5 class="mb-3">Update Supplier Payment</h5>
         <form action="{{ route('manager.partstocks.updatePayment', $partStock->id) }}" method="POST">

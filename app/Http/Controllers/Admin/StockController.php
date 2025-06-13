@@ -16,7 +16,7 @@ class StockController extends Controller
         $this->middleware('checkRole:admin');
     }
 
-       public function index(Request $request)
+    public function index(Request $request)
     {
         $date = $request->get('date');
         $search = $request->get('search', '');
@@ -89,7 +89,7 @@ class StockController extends Controller
         return view('admin.stocks.edit', compact('stock'));
     }
 
-        public function update(Request $request, Stock $stock)
+    public function update(Request $request, Stock $stock)
     {
         $data = $request->validate([
             'product_name' => 'required|string|max:255',
@@ -120,8 +120,6 @@ class StockController extends Controller
         return redirect()->route('admin.stocks.index')->with('success', 'Stock entry updated successfully.');
     }
 
-
-
     public function updatePayment(Request $request, Stock $stock)
     {
         $request->validate([
@@ -142,8 +140,6 @@ class StockController extends Controller
 
         return back()->with('success', 'Payment updated successfully.');
     }
-
-
 
     public function show($id)
     {

@@ -120,6 +120,9 @@
                 @endforelse
             </tbody>
         </table>
+        <a href="{{ route('admin.sales.index') }}" class="btn btn-secondary mt-3">
+            ← Back to List
+     </a>
     </div>
 </div>
 @endsection

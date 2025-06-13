@@ -98,10 +98,11 @@ class PartStockController extends Controller
             ->with('success', 'Part stock updated successfully.');
     }
 
-    public function updatePayment(Request $request, PartStock $partStock)
+     public function updatePayment(Request $request, $id)
     {
+        $partStock = PartStock::findOrFail($id);
         $request->validate([
-            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . $partStock->due_amount,
+            'paid_amount' => 'required|decimal:0,2|min:0.01|max:' . ($partStock->due_amount ?? 0),
             'payment_date' => 'required|date',
         ]);
 
@@ -121,8 +122,12 @@ class PartStockController extends Controller
 
     public function show($id)
     {
-         $partStock = PartStock::with('payments')->find($id);
+        $partStock = PartStock::with('payments')->find($id);
 
+         if (!$partStock) {
+           
+            return redirect()->route('worker.partstocks.index')->with('error', 'Part Stock not found.');
+        }
         return view('worker.partstocks.show', compact('partStock'));
     }
 }

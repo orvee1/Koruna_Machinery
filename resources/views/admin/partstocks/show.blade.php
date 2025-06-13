@@ -59,6 +59,10 @@
         </tr>   
     </table>
 
+     <a href="{{ route('admin.partstocks.index') }}" class="btn btn-secondary mt-3">
+            ← Back to List
+     </a>
+     
      <div class="card shadow-lg p-4 mb-5">
         <h5 class="mb-3">Update Supplier Payment</h5>
         <form action="{{ route('admin.partstocks.updatePayment', $partStock->id) }}" method="POST">
