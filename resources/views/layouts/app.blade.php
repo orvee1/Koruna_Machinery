@@ -363,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const paidInput = document.querySelector('[name="paid_amount"]');
 
     const selectedProducts = new Set();
-    const unitPriceTimers = {};
 
     fetch(`/bills/products`)
         .then(res => res.json())
@@ -497,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => calculateTotals(), 100);
     }
 
+    // ✅ Instantly update total on typing
     document.addEventListener('input', function (e) {
         const name = e.target.name || '';
 
@@ -507,35 +507,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.target.value = max;
                 alert(`You cannot sell more than ${max} units for this product.`);
             }
-            calculateTotals(); // ✅ real-time update
         }
 
-        if (name.includes('[unit_price]')) {
-            const input = e.target;
-            const min = parseFloat(input.dataset.min || 0);
-            const uid = input.name.match(/product_details\\[(.*?)\\]/)?.[1];
-
-            if (unitPriceTimers[uid]) {
-                clearTimeout(unitPriceTimers[uid]);
-            }
-
-            unitPriceTimers[uid] = setTimeout(() => {
-                const val = parseFloat(input.value || 0);
-                if (!isNaN(val) && val < min) {
-                    alert(`❌ Selling price cannot be below ৳${min}`);
-                    input.value = min.toFixed(2);
-                }
-                calculateTotals();
-            }, 800);
-
-            calculateTotals(); // ✅ live update even during debounce
-        }
-
-        if (name === 'paid_amount') {
+        if (
+            name.includes('[quantity]') ||
+            name.includes('[unit_price]') ||
+            name === 'paid_amount'
+        ) {
             calculateTotals();
         }
     });
 
+    // ✅ Validate price only when user leaves input field
     document.addEventListener('blur', function (e) {
         if (e.target.name?.includes('[unit_price]')) {
             const input = e.target;
@@ -544,8 +527,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!isNaN(val) && val < min) {
                 alert(`❌ Selling price cannot be below ৳${min}`);
                 input.value = min.toFixed(2);
+                calculateTotals();
             }
-            calculateTotals();
         }
     }, true);
 
@@ -568,6 +551,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
 
 
 
