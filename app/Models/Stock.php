@@ -43,7 +43,6 @@ class Stock extends Model
         static::updating(function (Stock $stock) {
         $stock->total_amount = $stock->buying_price * $stock->quantity;
         $depositAmount = $stock->deposit_amount ?? 0;
-        $stock->due_amount = max($stock->total_amount - $depositAmount, 0);
     });
 
 
