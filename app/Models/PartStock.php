@@ -16,6 +16,7 @@ class PartStock extends Model
         'buying_price',
         'quantity',
         'total_amount',
+        'original_total_amount',
         'deposit_amount',
         'due_amount',
         'sell_value',
@@ -37,14 +38,15 @@ class PartStock extends Model
     {
         static::creating(function (PartStock $partStock) {
             $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
+            $partStock->original_total_amount = $partStock->total_amount;
             $depositAmount = $partStock->deposit_amount ?? 0;
-            $partStock->due_amount = max($partStock->total_amount - $depositAmount, 0);
+            $partStock->due_amount = max($partStock->original_total_amount - $depositAmount, 0);
         });
 
         static::updating(function (PartStock $partStock) {
             $partStock->total_amount = $partStock->buying_price * $partStock->quantity;
             $depositAmount = $partStock->deposit_amount ?? 0;
-            $partStock->due_amount = max($partStock->total_amount - $depositAmount, 0);
+            $partStock->due_amount = max($partStock->original_total_amount - $depositAmount, 0);
         });
 
         static::created(function (PartStock $partStock) {

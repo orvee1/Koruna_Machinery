@@ -146,7 +146,7 @@ class PartStockController extends Controller
 
         $partStock->deposit_amount += $request->paid_amount;
 
-        $partStock->due_amount = max($partStock->total_amount - $partStock->deposit_amount, 0);
+        $partStock->due_amount = max($partStock->original_total_amount - $partStock->deposit_amount, 0);
         $partStock->save();
 
         return back()->with('success', 'Payment updated successfully.');

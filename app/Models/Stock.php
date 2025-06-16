@@ -36,16 +36,18 @@ class Stock extends Model
     protected static function booted()
     {
         static::creating(function (Stock $stock) {
-        $stock->total_amount = $stock->buying_price * $stock->quantity;
-        $depositAmount = $stock->deposit_amount ?? 0;
-        $stock->due_amount = max($stock->total_amount - $depositAmount, 0);
-    });
+            $stock->total_amount = $stock->buying_price * $stock->quantity;
+            $stock->original_total_amount = $stock->total_amount;
+            $depositAmount = $stock->deposit_amount ?? 0;
+            $stock->due_amount = max($stock->original_total_amount - $depositAmount, 0);
+        });
+
         static::updating(function (Stock $stock) {
-        $stock->total_amount = $stock->buying_price * $stock->quantity;
-        $depositAmount = $stock->deposit_amount ?? 0;
-    });
-
-
+            $stock->total_amount = $stock->buying_price * $stock->quantity;
+            $depositAmount = $stock->deposit_amount ?? 0;
+            $stock->due_amount = max($stock->original_total_amount - $depositAmount, 0);
+        });
+    
           static::created(function (Stock $stock) {
             \App\Models\ProductList::create([
                 'branch_id' => $stock->branch_id,

@@ -117,7 +117,7 @@ class StockController extends Controller
 
         $stock->deposit_amount += $request->paid_amount;
 
-        $stock->due_amount = max($stock->total_amount - $stock->deposit_amount, 0);
+        $stock->due_amount = max($stock->original_total_amount - $stock->deposit_amount, 0);
         $stock->save();
 
         return back()->with('success', 'Payment updated successfully.');
