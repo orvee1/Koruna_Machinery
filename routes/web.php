@@ -103,6 +103,7 @@ Route::middleware('auth')->group(function () {
             Route::get('sales/{bill}', [UnifiedSaleController::class, 'show'])->name('sales.show');
             Route::delete('sales/{bill}', [UnifiedSaleController::class, 'destroy'])->name('sales.destroy');
             Route::post('/sales/{bill}/update-payment', [UnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
+            Route::get('/sales/{bill}/print', [UnifiedSaleController::class, 'print'])->name('sales.print');
 
 
             // Inventory: Stocks

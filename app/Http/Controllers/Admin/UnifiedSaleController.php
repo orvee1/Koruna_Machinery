@@ -44,6 +44,13 @@ class UnifiedSaleController extends Controller
         return view('admin.sales.show', compact('bill'));
     }
 
+    public function print(Bill $bill)
+    {
+        $bill->load(['customer', 'seller']);
+
+        return view('admin.sales.print', compact('bill'));
+    }
+    
         public function updatePayment(Request $request, Bill $bill)
     {
         $request->validate([
