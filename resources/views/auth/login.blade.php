@@ -37,12 +37,23 @@
         .btn-primary:hover {
             background-color: #1a5ed8;
         }
+
+        .login-card h3 {
+    color: #2575fc;
+    font-weight: 800;
+    margin-bottom: 10px;
+    }
+
     </style>
 </head>
 <body>
+     <div class="text-center mb-4 text-white">
+        <h2><strong>Koruna Machinery</strong></h2>
+    </div>
+   <div class="login-card">
+    {{-- <h3 class="text-center mb-2 text-primary fw-bold">Koruna Machinery</h3> --}}
+    <h4>Login to Your Account</h4>
 
-    <div class="login-card">
-        <h4>Login to Your Account</h4>
 
         <!-- Success Message -->
         @if(session('status'))
