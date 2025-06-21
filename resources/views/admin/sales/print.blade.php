@@ -121,7 +121,15 @@
     </tbody>
   </table>
 
-  <p style="margin-top: 15px;"><strong>টাকা (কথায়):</strong> ...............................................................................................</p>
+  @php
+      use App\Helpers\NumberToBangla;
+  @endphp
+
+  <p style="margin-top: 15px;">
+    <strong>টাকা (কথায়):</strong>
+    {{ NumberToBangla::convert($bill->total_amount ?? 0) }}
+  </p>
+
 
   <div class="footer-signature">
     <div></div>
