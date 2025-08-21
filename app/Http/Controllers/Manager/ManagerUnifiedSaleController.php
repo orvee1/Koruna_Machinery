@@ -42,6 +42,13 @@ class ManagerUnifiedSaleController extends Controller
         return view('manager.sales.show', compact('bill'));
     }
 
+      public function print(Bill $bill)
+    {
+        $bill->load(['customer', 'seller']);
+
+        return view('manager.sales.print', compact('bill'));
+    }
+
     public function updatePayment(Request $request, Bill $bill)
     {
         $request->validate([

@@ -160,6 +160,7 @@ Route::middleware('auth')->group(function () {
             Route::get('sales/{bill}', [ManagerUnifiedSaleController::class, 'show'])->name('sales.show');
             Route::delete('sales/{bill}', [ManagerUnifiedSaleController::class, 'destroy'])->name('sales.destroy');
             Route::post('/sales/{bill}/update-payment', [ManagerUnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
+            Route::get('/sales/{bill}/print', [ManagerUnifiedSaleController::class, 'print'])->name('sales.print');
             Route::resource('investors', ManagerInvestorController::class);
         });
 
@@ -196,6 +197,8 @@ Route::middleware('auth')->group(function () {
             Route::get('sales/{bill}', [WorkerUnifiedSaleController::class, 'show'])->name('sales.show');
             Route::delete('sales/{bill}', [WorkerUnifiedSaleController::class, 'destroy'])->name('sales.destroy');
             Route::post('/sales/{bill}/update-payment', [WorkerUnifiedSaleController::class, 'updatePayment'])->name('sales.updatePayment');
+            Route::get('/sales/{bill}/print', [WorkerUnifiedSaleController::class, 'print'])->name('sales.print');
+
 
         });
 });

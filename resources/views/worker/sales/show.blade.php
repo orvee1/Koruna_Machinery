@@ -4,7 +4,9 @@
 @section('content')
 <div class="container">
     <h3 class="mb-3">🧾 Bill #{{ $bill->id }}</h3>
-
+     <a href="{{ route('worker.sales.print', $bill->id) }}" target="_blank" class="btn btn-outline-primary mb-4">
+    🖨️ Print Invoice
+    </a>
     {{-- Customer and Bill Info --}}
     <p><strong>Customer:</strong> {{ $bill->customer->name ?? 'N/A' }}</p>
     <p><strong>Phone:</strong> {{ $bill->customer->phone ?? 'N/A' }}</p>

@@ -14,38 +14,57 @@ class BillController extends Controller
     public function getProducts(Request $request)
     {
         $branchId = session('active_branch_id');
+        $q = trim($request->get('q', ''));  
+        $limit = (int) $request->get('limit', 10);
 
         $products = Stock::where('branch_id', $branchId)
-            ->select(
+         ->when($q, function ($qr) use ($q) {
+            $qr->where('product_name', 'like', "%{$q}%");
+        })    
+         ->select(
                 'id',
                 'product_name as name',
                 'quantity',
                 'buying_price',
                 DB::raw('NULL as selling_price'),
-                DB::raw("'product' as type")
+                DB::raw("'product' as type"),
+                'updated_at'
             );
 
         $partStocks = PartStock::where('branch_id', $branchId)
+            ->when($q, function ($qr) use ($q) {
+            $qr->where('product_name', 'like', "%{$q}%");
+            })
             ->select(
                 'id',
                 'product_name as name',
                 'quantity',
                 DB::raw('NULL as buying_price'),
                 DB::raw('sell_value as selling_price'),
-                DB::raw("'partstock' as type")
+                DB::raw("'partstock' as type"),
+                'updated_at'
             );
 
-        $results = $products->unionAll($partStocks)->get();
+                $union = DB::query()->fromSub(
+                $products->unionAll($partStocks),
+                'u'
+                )
+                ->orderBy('updated_at', 'desc')
+                ->when(!$q, function ($qr) use ($limit) {
+                $qr->limit($limit);
+                })
+                ->get();
 
-        $results = $results->map(function ($item) {
-            if ($item->type === 'product') {
-                $item->buying_price = (float) $item->buying_price;
-                $item->selling_price = null;
-            } elseif ($item->type === 'partstock') {
-                $item->buying_price = null;
-                $item->selling_price = (float) $item->selling_price;
-            }
-            return $item;
+        $results = $union->map(function ($item) {
+        if ($item->type === 'product') {
+            $item->buying_price = (float) $item->buying_price;
+            $item->selling_price = null;
+        } else {
+            $item->buying_price = null;
+            $item->selling_price = (float) $item->selling_price;
+        }
+        unset($item->updated_at);
+        return $item;
         });
 
         return response()->json($results);

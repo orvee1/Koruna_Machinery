@@ -42,6 +42,13 @@ class WorkerUnifiedSaleController extends Controller
         return view('worker.sales.show', compact('bill'));
     }
 
+      public function print(Bill $bill)
+    {
+        $bill->load(['customer', 'seller']);
+
+        return view('worker.sales.print', compact('bill'));
+    }
+
     public function updatePayment(Request $request, Bill $bill)
     {
         $request->validate([
